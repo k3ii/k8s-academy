@@ -50,10 +50,20 @@ eviction cascades are on the syllabus anyway, so a cramped lab produces them for
 
 ## Layout
 
-Filled in as the map resolves. The document format is itself a ticket
-([#11](../../issues/11)) — a full phase gets drafted first so the structure is chosen against
-something concrete rather than in the abstract.
+The document format is settled ([#11](../../issues/11)) — chosen by drafting one full phase
+against real source material rather than in the abstract. The prototype is
+[`phases/08-storage.md`](../../blob/prototype/phase-08-format/phases/08-storage.md), on a branch
+until the strand docs it links into exist.
 
 | Path | Contents |
 |------|----------|
-| `research/` | Findings from `wayfinder:research` tickets — source-reading corpus, talk lists, exam curricula, tooling comparisons |
+| `phases/NN-name.md` | One file per phase, `00`–`12`. Ten fixed sections: objectives, modules, build artifact, chaos drills, talks, ecosystem, cert drill block, capstone, checklist, gate — absent sections omitted, not padded |
+| `strands/` | The cross-cutting material each phase links into rather than restates: source corpus, chaos catalogue, talk index, cert curricula, build mechanics, source archaeology |
+| `research/` | Findings from `wayfinder:research` tickets — source-reading corpus, talk lists, exam curricula, tooling comparisons. Ports into `strands/` as the strand docs get written |
+| `journal/NN-name.md` | The learner's own notes, traces and lab writeups |
+| `build/NN-artifact/` | The learner's Go modules — eleven of them, real and buildable, so the hand-wired-versus-scaffolded comparisons are a `git diff` |
+
+Two conventions worth knowing before reading any phase file: **no source-reading item gets a bare
+link** — every one carries a question to answer from the source, so reading has a target. And the
+words *understand* and *know* appear in no objective, checklist item or gate; everything is an
+artifact, a timed production, or a claim you could be publicly wrong about.
