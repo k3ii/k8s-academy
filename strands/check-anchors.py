@@ -35,14 +35,20 @@ for name, ids in published.items():
         owner[i] = name
 
 sources = sorted(STRANDS.glob("*.md")) + sorted(PHASES.glob("*.md"))
-broken = []
+UNWRITTEN = re.compile(r"^\d\d-[a-z-]+\.md$")   # a phase file that does not exist yet
+broken, pending = [], set()
 for f in sources:
     for target, anchor in LINK.findall(f.read_text()):
         rel = f.relative_to(ROOT)
         # resolve the target relative to the linking file's own directory
         path = (f.parent / target) if (f.parent / target).exists() else (STRANDS / target)
         if not path.exists():
-            broken.append(f"{rel} -> {target} (no such file)")
+            # forward references between phase files are fog, not breakage: the
+            # phase is planned and unwritten. A missing strand doc is breakage.
+            if f.parent == PHASES and UNWRITTEN.match(target):
+                pending.add(target)
+            else:
+                broken.append(f"{rel} -> {target} (no such file)")
         elif anchor and path.parent == STRANDS and anchor not in published.get(target, set()):
             broken.append(f"{rel} -> {target}#{anchor} (no such anchor)")
 
@@ -50,6 +56,9 @@ for i, a, b in collisions:
     print(f"COLLISION: id '{i}' published by both {a} and {b}")
 for b in broken:
     print(f"BROKEN: {b}")
+
+if pending:
+    print(f"pending phase files, linked but not yet written: {', '.join(sorted(pending))}")
 
 total_ids = sum(len(v) for v in published.values())
 print(f"{len(published)} strand docs, {total_ids} anchors, "
