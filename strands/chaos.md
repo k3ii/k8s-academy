@@ -211,7 +211,13 @@ helm install chaos-mesh chaos-mesh/chaos-mesh -n chaos-mesh --create-namespace \
   debug server → cluster-wide DoS) and `CVE-2025-59359/59360/59361` (**9.8**, OS
   command injection → full cluster takeover), all in the **chaos-dashboard**
   `CtrlServer`, fixed in v2.7.3. Turning it off costs nothing and removes the surface.
-  This chain is also the candidate anchor for the CVE-driven security-incident lab.
+  **This is not only a hardening default — it is a loop.** `CVE-2025-59359` anchors
+  P10's security-incident capstone ([#15](https://github.com/k3ii/k8s-academy/issues/15)):
+  the learner deliberately re-enables the dashboard on a pinned pre-2.7.3 install,
+  exploits it, catches it with a Falco rule they wrote, and **remediates by returning
+  to exactly the config on this line.** Incident response arrives at the hardening
+  prescribed here four phases earlier — so the P6 reader who wonders why the dashboard
+  is off gets the answer as a P10 exercise rather than a footnote.
 - **Set `resources.limits` explicitly on every component.** The chart leaves limits
   unset on the controller manager, dashboard and DNS server. On a node deliberately
   run near its ceiling, the chart's requests are a floor and not a ceiling.
