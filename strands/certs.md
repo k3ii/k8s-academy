@@ -23,6 +23,7 @@ but need not be *active*, and under the CARE programme passing CKS reinstates an
 expired CKA — so the ordering that falls out of the spine is also the ordering that
 buys the most validity. See [Cert ordering](#ordering).
 
+<a id="rules"></a>
 ## Three standing rules for this strand
 
 1. **Cert results are never a gate.** A phase does not wait on an exam booking. The
