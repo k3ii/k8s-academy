@@ -3,10 +3,17 @@
 A self-paced **expert-track Kubernetes curriculum** — from never having touched Kubernetes to
 control-plane-level mastery: able to design, operate, debug, extend and secure production
 clusters, read and reason about `kubernetes/kubernetes` source, and diagnose problems from
-first principles. CKAD, CKA and CKS along the way as external validation.
+first principles. Then back up the stack, to building GitOps delivery and internal platforms on
+top of it. CKAD, CKA and CKS along the way as external validation.
 
 Optimised hard for **depth over speed**. A month on etcd internals beats a week skimming ten
 topics.
+
+The curriculum runs in two directions. Eleven phases **remove** abstraction — down through the
+API machinery to Raft, cgroups and veth pairs, building toy versions of the scheduler, the
+controller, the CNI plugin and the CSI driver along the way. One final phase **rebuilds** it
+deliberately, as a platform other people could use. Knowing what your abstraction costs its
+users is the point of doing it in that order.
 
 ## Status
 
@@ -23,6 +30,12 @@ The curriculum is being **charted**, not yet written. Planning happens as a
 
 Read the map first. It carries the learner profile and lab constraints that every ticket
 assumes.
+
+The **phase spine** ([#10](../../issues/10)) is settled — thirteen phases, their order, durations,
+capstones and strand attachment, plus the recorded argument for where "Kubernetes the Very Hard
+Way" sits and why kubeadm and k0s are deliberately separated. It is the resolution to read
+before any other. Everything in this repo is written in Go
+([#9](../../issues/9)).
 
 ## Lab environment
 
