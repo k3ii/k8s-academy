@@ -9,6 +9,7 @@
 | **Unlocks** | The **CKA** checkpoint (this is the last phase whose material the exam covers). [P12](12-gitops-platform.md)'s platform API provisions storage, so this is where you learn what you'll be abstracting. |
 | **Source area** | [Area 6 — Storage](../strands/source-reading.md#area-6-storage) |
 | **Language** | Go ([#9](https://github.com/k3ii/k8s-academy/issues/9)) |
+| **Strands** | [certs](../strands/certs.md#cka) · [chaos](../strands/chaos.md#catalogue) · [talks](../strands/talks.md#storage) · [build mechanics](../strands/build-mechanics.md#artifact-table) · [source archaeology](../strands/source-archaeology.md#stale-paths) |
 
 ---
 
@@ -93,7 +94,7 @@ The conceptual centre of the phase, and the place where P5 pays off.
 
 **Read** — Area 6 item 11, `design-proposals-archive/storage/volume-topology-scheduling.md`, **before** any code. The corpus is explicit that item 12's code is "nearly unreadable without it." Then item 12, `pkg/scheduler/framework/plugins/volumebinding/volume_binding.go`.
 
-> **Path note, and a live example of the [source-archaeology skill](../strands/source-archaeology.md) from P2:** this moved from `pkg/controller/volume/scheduling/`, which **no longer exists**. Any material citing that path is stale. Verify it yourself with `git log --follow` before trusting anything else that resource says.
+> **Path note, and a live example of [source archaeology](../strands/source-archaeology.md#stale-paths) from P2:** this moved from `pkg/controller/volume/scheduling/`, which **no longer exists**. Any material citing that path is stale. Before reading the plugin, do [archaeology drill 1](../strands/source-archaeology.md#drills) — find the commit that deleted the old path and read its PR. The move *is* the lesson: the decision has to be made where the node is chosen.
 
 > **Question to answer from the source:** `volume_binding.go` implements `PreFilter`, `Filter`, `Reserve` and `PreBind`. What does each one do about volumes, and why does the work have to be split across four extension points rather than done in one?
 
@@ -187,10 +188,10 @@ The phase's build component, inline per the spine. Roughly a week, running along
 **Build**
 - All three services: **Identity** (`GetPluginInfo`, `GetPluginCapabilities`, `Probe`), **Controller** (`CreateVolume`, `DeleteVolume`, and `ControllerGetCapabilities`), **Node** (`NodeStageVolume`, `NodePublishVolume`, their unwinds, `NodeGetInfo`).
 - Back it with directories on the host. The storage backend is deliberately trivial: the lesson is the **contract and the lifecycle**, not a filesystem.
-- Deploy the Controller service as a Deployment with the `csi-provisioner` sidecar; deploy the Node service as a DaemonSet with the `node-driver-registrar` sidecar.
+- Deploy the Controller service as a Deployment with the `csi-provisioner` sidecar; deploy the Node service as a DaemonSet with the `node-driver-registrar` sidecar. Each gets [its own ServiceAccount and hand-written ClusterRole](../strands/build-mechanics.md#identity) and [a memory request taken from `kubectl top`](../strands/build-mechanics.md#sizing) — the Controller and Node services need genuinely different permissions, which makes this the artifact where separate identities are least arbitrary.
 - The DaemonSet needs `hostPath` access to `/var/lib/kubelet/plugins` and **`mountPropagation: Bidirectional`**. When you find out why — you will, the hard way — write it down. That single field is the phase's best lesson about mount namespaces, and it connects directly to [P0](00-linux-primitives.md).
 
-**Ship it** — cross-compiled static binary in a distroless image, imported to each node's containerd. See [build-track mechanics](../strands/build-mechanics.md).
+**Ship it** — built on [`forge`](../strands/build-mechanics.md#forge), a static binary in a [`scratch` image](../strands/build-mechanics.md#base-image), pushed to `forge`'s registry and pulled by the nodes. Both halves of the [two-stage rule](../strands/build-mechanics.md#two-stages) apply here: stage 1 is `csi-sanity` over a UNIX socket with no Kubernetes present at all, and only then do the sidecars arrive. Note that a `scratch` image has no shell — `kubectl exec` into the DaemonSet will fail, and the way in is `kubectl debug --target=`.
 
 **The objective gate**
 ```
@@ -204,14 +205,14 @@ csi-sanity --csi.endpoint=/tmp/csi.sock
 
 ## 4. Chaos drills
 
-Storage failures are slow, which makes them a different diagnostic skill from the fast failures of earlier phases — the symptom often appears minutes after the cause. All drills use **Chaos Mesh** (introduced in [P6](06-kubelet-node.md), 582Mi minimised) except where noted.
+Storage failures are slow, which makes them a different diagnostic skill from the fast failures of earlier phases — the symptom often appears minutes after the cause. All drills use **Chaos Mesh** (introduced in [P6](06-kubelet-node.md), 582Mi minimised) except where noted; the mechanism behind each action is in the [chaos catalogue](../strands/chaos.md#catalogue), and [the principle](../strands/chaos.md#principle) still holds — by hand first, scripted second.
 
 | # | Drill | Mechanism | What you must be able to say afterwards |
 |---|---|---|---|
 | 8.C1 | **Slow disk under a workload** | `IOChaos` — `latency` action against the volume's mount path | Which layer surfaced the symptom first, and why a pod can be `Running` and useless simultaneously |
 | 8.C2 | **I/O errors** | `IOChaos` — `fault` action, injecting `EIO` on a percentage of calls | What the application saw versus what the kubelet reported. Partial failure is harder than total failure |
 | 8.C3 | **Volume detach failure** | Manual: make your own driver return an error from `NodeUnstageVolume` | Where the retry loop lives, its period, and what the `VolumeAttachment` looks like while stuck |
-| 8.C4 | **Node loss with a volume attached** | `qm stop` on Proxmox — genuinely manual, per the [chaos catalogue](../strands/chaos.md); Chaos Mesh has **no native node-failure kind** | How long until the volume is released and reattached elsewhere, and which flag governs that. This is drill 8.C4 *and* the answer to module 8.4's reading question |
+| 8.C4 | **Node loss with a volume attached** | `qm stop` on Proxmox — genuinely manual, because [Chaos Mesh has no native node-failure kind](../strands/chaos.md#cannot-express) and Litmus's substitute wants an SSH private key in a Secret | How long until the volume is released and reattached elsewhere, and which flag governs that. This is drill 8.C4 *and* the answer to module 8.4's reading question |
 | 8.C5 | **Disk fill** | `chaosd disk-fill` on the host, or `StressChaos` | The eviction path for disk pressure versus memory pressure — connects to P6 |
 | 8.C6 | **Kubelet restart with mounts held** | `systemctl restart kubelet` | What reconstruction recovers and what it cannot (KEP-3756) |
 
@@ -221,7 +222,7 @@ Storage failures are slow, which makes them a different diagnostic skill from th
 
 ## 5. Talks
 
-Slotted where they reinforce this phase. See the [talk index](../strands/talks.md) for the full corpus.
+Slotted where they reinforce this phase. Full entries, with exact runtimes, under [Storage](../strands/talks.md#storage) in the talk index.
 
 - **Container Storage Interface: Present and Future** — the CSI architecture from the people who designed it. Watch after module 8.1, so the spec is fresh.
 - **Kubernetes Storage Lingo 101** — worth it only if the PV/PVC/SC/VolumeAttachment vocabulary is still slippery after 8.2. Skip if not.
@@ -245,23 +246,15 @@ One light rock this phase, deliberately — the build artifact is the heavy item
 
 > **This section is a different activity from everything above.** Everything above optimises for understanding; this optimises for **speed and correctness under a clock**. Do not blend them. Do not read source during this block. When it ends, it ends.
 
-**Why the checkpoint is here:** CKA's domains span P3 (Cluster Architecture, 25%), P5 (Workloads & Scheduling, 15%), P7 (Services & Networking, 20%) and P8 (Storage, 10%) — this is the first phase where all of it is covered.
+Domain weights, exam mechanics, the practice-resource verdicts, the currency test and the speed tactics all live in the [certs strand](../strands/certs.md#cka) and are not restated here. What follows is only what is specific to *this* phase's relationship with the exam.
 
-**What this phase contributed to the exam.** A rare genuine alignment, worth noticing: CKA **v1.32 moved Storage from "understand" to "implement"**, making dynamic provisioning explicit, and **added "Understand extension interfaces (CNI, CSI, CRI, etc.)"**. So the CSI driver in §3 is not just internals indulgence — it services a listed competency, and you will be the rare candidate who has written one.
+**Why the checkpoint is here:** CKA's domains span P3 (Cluster Architecture), P5 (Workloads & Scheduling), P7 (Services & Networking) and P8 (Storage) — this is the first phase where all of it is covered.
 
-**What NOT to drill, despite every older course insisting:** **etcd backup and restore was removed from the CKA curriculum entirely in v1.32.** It is the most-drilled classic CKA task in every legacy question bank and it is no longer a listed competency. P2's etcd month was internals work and is *not* billed as exam prep.
+**What this phase contributed to the exam.** A rare genuine alignment, worth noticing: CKA **v1.32 moved Storage from "understand" to "implement"** and added *"Understand extension interfaces (CNI, CSI, CRI, etc.)"* — see [Recent changes (CKA)](../strands/certs.md#cka-changes). So the CSI driver in §3 is not just internals indulgence: it services a listed competency, and you will be the rare candidate who has written one.
 
-**Currency litmus test for any resource** — including ones not listed here: *if it predates ~February 2025 and never mentions Gateway API, Helm/Kustomize as a CKA install competency, or CRDs/operators, it is describing the pre-v1.32 CKA and is stale.* The live exam is on v1.35.
+**What NOT to drill, despite every older course insisting:** **etcd backup and restore was removed from the CKA curriculum entirely in v1.32.** P2's etcd month was internals work and is *not* billed as exam prep — which is a [standing rule of the certs strand](../strands/certs.md), not a note about this phase.
 
-**Resources**
-- **killer.sh** — bundled with your voucher: 2 sessions × 36h, 17 questions each. Its environment is on Kubernetes 1.35, matching the live exam. **Do not activate until this block starts** — the 36h clock begins on activation. Session 1 as a diagnostic ~2 weeks out; session 2 as a dress rehearsal a few days out.
-  - On its harder-than-the-real-exam reputation: that is community consensus, **not** an official claim — killer.sh explicitly declines to map its scores to real ones. Use it as "train harder than the test", but **do not read a mediocre simulator score as a fail signal.** That inference is unsupported.
-- **`kubernetes.io/docs/tasks/`** — the only general-purpose docs site permitted in-exam, so navigation fluency is a direct speed multiplier rather than background reading. Drill `/docs/tasks/debug/` hardest: **Troubleshooting is 30% of the exam**, the largest single domain across all three certifications.
-- Killercoda's free `killer-shell-*` scenario sets are **discontinued** — do not plan around them.
-
-**Drill focus, weighted to the exam rather than to this phase:** troubleshooting above all (30%), then cluster architecture (25%) and networking (20%). Storage is only 10% — resist the temptation to over-drill what you have just spent a month on.
-
-**Do not drill:** `kubectl` aliases or completion setup. `k` and completion are **pre-provisioned in the exam environment**; time spent building muscle memory for setting them up is time wasted.
+**Drill focus, weighted to the exam rather than to this phase:** troubleshooting above all, then cluster architecture and networking. **Storage is the smallest of the four** — resist the temptation to over-drill what you have just spent a month on. Weights and the drill list: [Speed tactics](../strands/certs.md#speed-tactics), [Practice resources](../strands/certs.md#practice).
 
 **Exit:** CKA passed. If it is not passed, that is a drill-block problem, not a phase problem — the gate below is independent of it.
 
