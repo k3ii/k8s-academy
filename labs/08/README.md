@@ -2,10 +2,10 @@
 
 Twenty exercises in the order they are meant to run. Each states one claim to test or
 one artifact to produce, links its [topology](../../strands/lab-topologies.md) rather
-than restating a footprint, and ends with a teardown line — which is usually a
-*continuity marker*, because [teardown is ruled per
-phase](../../strands/lab-topologies.md#teardown) and a provision costs minutes before
-any teaching happens.
+than restating a footprint, and ends with a teardown that does two things: **deletes what
+that exercise created**, then says whether the topology stays or goes. It usually stays —
+[a provision costs minutes](../../strands/lab-topologies.md#teardown) before any teaching
+happens — so most of these end in a *continuity marker* naming what comes next.
 
 The framing — why each module exists, what to read and the question to answer from it —
 stays in [`phases/08-storage.md`](../../phases/08-storage.md). These files hold only what
