@@ -16,7 +16,7 @@ collected under [What is not confirmed](#unverified).
 ## The invocations below are a contract, not a description
 
 **`tofu/labs` does not exist in [`k3ii/factory`](https://github.com/k3ii/factory)
-today, and neither do seven of the eight topologies.** Every provision and teardown
+today, and neither do eight of the nine topologies.** Every provision and teardown
 command in this document — and therefore in every exercise that links here — is a
 specification `factory` is expected to implement, written ahead of the module rather
 than after it. Run one today and it fails at the `-chdir`.
@@ -61,7 +61,7 @@ heartbeats, and a cluster that looks broken for reasons unrelated to the lesson.
 Staying under budget is the whole mechanism.
 
 <a id="topologies"></a>
-## The eight topologies
+## The nine topologies
 
 Sizing is an **allocation decision, not a measurement** — see
 [what is not confirmed](#unverified). Link to a row, not to the table.
@@ -73,18 +73,29 @@ Sizing is an **allocation decision, not a measurement** — see
 | <a id="workhorse"></a>**`workhorse`** | 3 | CP 3072MB / 2c / 25G · `.140`<br>2 × worker 2048MB / **1c** / 20G · `.141`–`.142` | 7.0GB | 65G | Scheduling at scale, drain/cordon, chaos |
 | <a id="ha"></a>**`ha`** | 3 | 3 × stacked CP 2560MB / 2c / 20G, untainted · `.150`–`.152` | 7.5GB | 60G | Quorum loss, etcd member failure, upgrades |
 | <a id="etcd-only"></a>**`etcd-only`** | 3 | 3 × 1024MB / 1c / 10G, **no Kubernetes** · `.160`–`.162` | 3.0GB | 30G | Raft, watch, MVCC, compaction, defrag, backup |
+| <a id="bare"></a>**`bare`** | 1 | 2048MB / 2c / 20G, **no Kubernetes, no container runtime** · `.192` | 2.0GB | 20G | [P0](../phases/00-linux-primitives.md) — namespaces, cgroups, veth and `pivot_root` by hand |
 | <a id="k0s-light"></a>**`k0s-light`** | 1 | 2048MB / 2c / 20G, single binary · `.170` | 2.0GB | 20G | Distro contrast |
 | <a id="nested"></a>**`nested`** | 1 | 6144MB / 4c / 40G, kind/k3d inside · `.190` | 6.0GB | 40G | Multi-cluster escape hatch |
 | <a id="platform"></a>**`platform`** | 1 | 6144MB / 4c / 40G, real kubeadm, untainted · `.191` | 6.0GB | 40G | P12 ([#14](https://github.com/k3ii/k8s-academy/issues/14)) |
+
+**`bare` is the only topology that is not a cluster.** No kubeadm, no k0s, not even
+containerd — [the Ansible baseline](#provision) and nothing else, because P0's entire
+subject is what a container is *before* a runtime exists to make one. It is also the
+cheapest thing in the curriculum: 2.0GB of a 9.5GB budget, which is why P0 can afford to
+fork-bomb it, fill it and OOM it without arithmetic.
 
 **`nested` and `platform` are the same shape and are not the same topology.**
 kind-in-a-VM versus a real single-node kubeadm cluster: the first is a place to run
 several throwaway clusters, the second is the thing a platform gets built on.
 
-**The seven come from [#8](https://github.com/k3ii/k8s-academy/issues/8); `platform`
-comes from [#14](https://github.com/k3ii/k8s-academy/issues/14).** #14 proposed it as
-an addition and #8's resolution was never edited, so the repo mis-cited it in two
-places until this document.
+**The seven come from [#8](https://github.com/k3ii/k8s-academy/issues/8), `platform`
+from [#14](https://github.com/k3ii/k8s-academy/issues/14), and `bare` from
+[#34](https://github.com/k3ii/k8s-academy/issues/34).** #14 proposed `platform` as an
+addition and #8's resolution was never edited, so the repo mis-cited it in two places
+until this document. `bare` was added when generating P0's exercises found that they had
+no topology they could name: `solo` and `k0s-light` both install a cluster P0 exists to
+do without, and running P0 on [`forge`](#build-guest) would fork-bomb, disk-fill and
+`pivot_root` the one guest eleven other phases depend on.
 
 **`workhorse`'s workers get 1 core each, not 2.** Deliberate: the third node exists so
 the scheduler has somewhere to choose *between*, and six vCPU on a six-core host is
@@ -99,7 +110,7 @@ octet**.
 | Range | Use |
 |---|---|
 | `.110`–`.129` | Persistent infrastructure — `hopper` `110`, `jeremie` `111`, `carthage` `120`, [`forge`](#build-guest) `125` |
-| `.130`–`.199` | Lab topologies, one block of ten each — see the table above |
+| `.130`–`.199` | Lab topologies, one block of ten each — see the table above. **`.190`–`.199` is the single-node block**, and holds `nested`, `platform` and `bare` rather than one topology's ten |
 | `.200`–`.250` | MetalLB, [reserved by prose only](#unverified) |
 
 Blocks of ten waste nothing and keep each topology's nodes contiguous, which matters

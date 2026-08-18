@@ -7,7 +7,7 @@
 
 **Do**
 
-1. Delete one of the bound PVCs from 8.1. Watch its PV.
+1. Delete one of the bound PVCs from [the bind predictions](01-predict-the-bind.md). Watch its PV.
 2. State, before checking, what `Released` means that `Available` does not — in terms of the `claimRef` still sitting on the PV object.
 3. Make it `Available` again. Do it by the mechanism the controller respects, not by deleting and recreating the PV.
 4. Repeat with a PV whose `persistentVolumeReclaimPolicy` is `Delete` rather than `Retain`, and with `Recycle` if the API still accepts it. Note which of the three the cluster actually performs and which is deprecated scaffolding.

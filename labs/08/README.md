@@ -34,12 +34,13 @@ you type and what you should see.
 | 19 | [8.C4 — lose a node with a volume attached](19-chaos-node-loss.md) | The gate names this one. Manual `qm stop`, and the answer is not the one the drill originally expected. |
 | 20 | [The CKA drill block, as a timed harness](20-cka-drill-block.md) | A different activity with a different success condition: a clock, not a mechanism. |
 
-**One cluster runs 8.1 through 8.18.** [`pair`](../../strands/lab-topologies.md#pair) comes
-up once at 8.1 and is destroyed by 8.19, which ends the phase's cluster on purpose. 8.12
-needs no topology — it runs on [`forge`](../../strands/lab-topologies.md#build-guest)
-alone — and 8.20 wants a **fresh** `pair` it did not build.
+**One cluster runs exercises 1 through 18.** [`pair`](../../strands/lab-topologies.md#pair)
+comes up once at exercise 1 and is destroyed by exercise 19, which ends the phase's cluster
+on purpose. Exercise 12 needs no topology — it runs on
+[`forge`](../../strands/lab-topologies.md#build-guest) alone — and exercise 20 wants a
+**fresh** `pair` it did not build.
 
-Two things arrive mid-chain and are worth provisioning attention: **Chaos Mesh** at 8.14
-([minimised install, 582Mi](../../strands/chaos.md#install), installed once and left up),
-and **`external-snapshotter`** at 8.10, which is a controller the phase's original
-costing did not include.
+Two things arrive mid-chain and are worth provisioning attention: **Chaos Mesh** at
+exercise 14 ([minimised install, 582Mi](../../strands/chaos.md#install), installed once and
+left up), and **`external-snapshotter`** at exercise 10, which is a controller the phase's
+original costing did not include.
