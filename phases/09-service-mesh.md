@@ -9,7 +9,8 @@
 | **Unlocks** | [P12](12-gitops-platform.md)'s progressive-delivery module — Flagger drives metric-based canaries **through this mesh**; without a mesh it degrades to blunt `maxSurge` rollouts. Cutting P9 partially guts that module ([#10](https://github.com/k3ii/k8s-academy/issues/10)). |
 | **Source** | **No k/k area** — like [P0](00-linux-primitives.md), the source is not the Kubernetes tree. Here it is a **live sidecar**: the `iptables-save` output inside a real pod and the Envoy `/config_dump`, read against Envoy's own architecture docs. The "file:line" the capstone demands is a line of a config dump you can re-pull, not a path in `k/k`. |
 | **Build track** | **None** ([build mechanics](../strands/build-mechanics.md#artifact-table) lists no P9 artifact). The *Build Your Own Envoy Control Plane* talk is an optional stretch, not a required artifact — this phase reads a config plane, it does not ship one. |
-| **Lab** | [`pair`](https://github.com/k3ii/k8s-academy/issues/8), **everything else torn down — a big rock.** `istiod`'s chart default (500m / 2Gi) is **un-installable as shipped here**; it needs an explicit request override, which is itself the phase's first lesson about what a mesh costs. |
+| **Lab** | [`pair`](../strands/lab-topologies.md#pair), **everything else torn down — a big rock.** `istiod`'s chart default is **un-installable as shipped here**; it needs an explicit request override, which is itself the phase's first lesson about what a mesh costs. |
+| **Labs** | [`labs/09/`](../labs/09/README.md) — 25 exercises, in order. Three of them need no cluster at all, and the index gives the point the topology arrives and the point it goes. |
 | **Strands** | [talks](../strands/talks.md#mesh) · [chaos](../strands/chaos.md#principle) |
 
 ---
@@ -39,67 +40,69 @@ There is no reading list from the corpus here — the "source" is a running side
 <a id="m9-1"></a>
 ### Module 9.1 — Envoy's object model, before any mesh (~3 days)
 
-You cannot read a config dump without the object model, so it comes first, from Envoy's docs and the Klein talk — no Istio yet.
+You cannot read a config dump without the object model, so it comes first, from Envoy's docs and the Klein talk — no Istio yet, and for these three days no cluster either.
 
 **Read** — Envoy's architecture docs (listeners, filter chains, clusters, endpoints, and the threading model) alongside the *Envoy Internals Deep Dive* talk.
 
 > **Question to answer from the source:** trace a single connection through the four objects — **listener → filter chain → cluster → endpoint**. Which object picks the upstream, and which one terminates the downstream connection? Name the doc section.
 
-**Write down** — the four-object path as a diagram, annotated with which thread handles each (the threading model is why a mesh scales *and* why it costs a core per busy sidecar).
+**Labs** — [The four objects, in a file you typed](../labs/09/01-four-objects-in-a-file-you-typed.md) · [A dump with nothing pushed into it](../labs/09/02-a-dump-with-nothing-pushed-into-it.md) · [Which object owns the failure](../labs/09/03-which-object-owns-the-failure.md)
+
+---
 
 <a id="m9-2"></a>
 ### Module 9.2 — Sidecar interception: the `iptables` rules (~4 days)
 
-**The entire internals payload.** Install Istio in **sidecar mode** — the only mode with a pod whose interception you can read directly.
-
-**Do** — inject a sidecar, then `nsenter` into the pod's netns (or `kubectl exec` the sidecar) and run `iptables-save`. Find the `REDIRECT`/`TPROXY` rules in the `ISTIO_*` chains that send inbound traffic to 15006 and outbound to 15001. Map each rule to an arg the `istio-init` container was invoked with.
+**The entire internals payload.** Istio goes on in **sidecar mode** — the only mode with a pod whose interception you can read directly. The install is where the phase's footprint problem becomes concrete rather than predicted, and the exercises resolve it before they inject anything.
 
 > **Question to answer from the source (the live pod):** which chain redirects **inbound** vs **outbound**, and which ports/UIDs are *excluded* from redirection so that Envoy's own traffic doesn't loop? Cite the rule.
 
-**Break it** — chaos drill [9.C1](#chaos): exclude an app port from redirection (or add it to the exclude list) and watch that traffic bypass the mesh entirely — no mTLS, no telemetry, no policy. The rule that was missing is the proof the mesh is *only* those rules.
+> **Question to answer from the cluster:** the pod has two containers and the Deployment's template has one. Which object rewrote it, and what happens to a pod created while that object's backend is gone? The second half is [module 9.3](#m9-3)'s drill, predicted here.
 
-**Write down** — the inbound and outbound `REDIRECT` rules with their port numbers, mapped one-to-one to `istio-init`'s args — the interception, reduced to netfilter.
+**Labs** — [The request that does not fit](../labs/09/04-the-request-that-does-not-fit.md) · [A pod the webhook rewrote](../labs/09/05-a-pod-the-webhook-rewrote.md) · [Interception reduced to netfilter](../labs/09/06-interception-reduced-to-netfilter.md) · [The UID that breaks the loop](../labs/09/07-the-uid-that-breaks-the-loop.md) · [9.C1 — a port outside the mesh](../labs/09/08-9c1-a-port-outside-the-mesh.md)
+
+---
 
 <a id="m9-3"></a>
 ### Module 9.3 — xDS and the config dump (~4 days)
 
-`istiod` is a controller; xDS is how it pushes state to the data plane. Read the result, not the magic.
-
-**Do** — pull the Envoy config with `istioctl proxy-config {listeners,routes,clusters,endpoints}` and the raw admin `/config_dump`. Walk one Service: the **LDS** listener → its **RDS** route config → the **CDS** cluster → the **EDS** endpoints, confirming the final endpoint IPs against `kubectl get endpointslice` (the [P7](07-networking.md) data structure, now consumed by a second reader).
+`istiod` is a controller; xDS is how it pushes state to the data plane. Read the result, not the magic. The endpoints at the far end are [P7](07-networking.md)'s `EndpointSlice` data, now consumed by a second reader.
 
 > **Question to answer from the source (the dump):** find the `version_info`/`nonce` on one resource type. What does Envoy send back to `istiod` to **ACK** a push, and what happens to the version on a NACK? Cite the field in the dump.
 
-**Break it** — chaos drill [9.C3](#chaos): kill `istiod` and re-pull the dump. The config is *unchanged* and traffic keeps flowing — Envoy serves its last-ACKed state. Then create a new Service and watch it **never appear** in the dump. That gap is control-plane/data-plane separation, observed.
+> **Question to answer by counting:** one Service produces objects of how many resource types, and which of those types moves when you only change the *number* of pods behind it? The answer is what makes EDS a separate stream rather than a field.
 
-**Write down** — the LDS→RDS→CDS→EDS chain for one Service with the concrete resource names at each hop, and the `version_info` field that carries the ACK.
+**Labs** — [The same dump, now dynamic](../labs/09/09-the-same-dump-now-dynamic.md) · [One Service, four resource types](../labs/09/10-one-service-four-resource-types.md) · [An ACK and a NACK](../labs/09/11-an-ack-and-a-nack.md) · [A scale event is one resource type](../labs/09/12-a-scale-event-is-one-resource-type.md) · [9.C4 — a delay you declared](../labs/09/13-9c4-a-delay-you-declared.md) · [9.C3 — `istiod` killed, and the planes come apart](../labs/09/14-9c3-istiod-killed-and-the-planes-come-apart.md)
+
+---
 
 <a id="m9-4"></a>
 ### Module 9.4 — mTLS and workload identity (~3 days)
 
 The security payload — the part [P10](10-security.md) builds on.
 
-**Do** — pull the sidecar's certificate (`istioctl proxy-config secret`) and decode it. Find the **SPIFFE URI SAN** (`spiffe://…/ns/…/sa/…`) — the pod's identity is its ServiceAccount, not its IP. Then set `PeerAuthentication` to `STRICT` and attempt a plaintext connection.
-
 > **Question to answer from the source (the cert):** what is the exact SPIFFE URI, and which Kubernetes object (not the IP) does each path segment name? Where did the cert come from, and what rotates it?
 
-**Break it** — chaos drill [9.C2](#chaos): break mTLS trust (wrong root, or a plaintext client against `STRICT`) and read the rejection at the Envoy layer, not just "connection refused" — the filter that dropped it and why.
+> **Question to answer from the listener:** `STRICT` is enforced by *removing* something from the inbound listener rather than by adding a check. What is removed, and what does the client see because of it? Then: which addresses is `STRICT` actually a statement about? One of the four probes in [the boundary exercise](../labs/09/17-the-boundary-is-the-netns.md) succeeds in plaintext under `STRICT`, and the reason it does is [P10](10-security.md)'s opening, not this phase's.
 
-**Write down** — the SPIFFE identity decoded to its ServiceAccount, and the observed plaintext-rejection under `STRICT`.
+**Labs** — [A certificate that names a ServiceAccount](../labs/09/15-a-certificate-that-names-a-serviceaccount.md) · [`STRICT`, and the plaintext refused](../labs/09/16-strict-and-the-plaintext-refused.md) · [The boundary is the netns](../labs/09/17-the-boundary-is-the-netns.md) · [9.C2 — a root that no longer signs](../labs/09/18-9c2-a-root-that-no-longer-signs.md)
+
+---
 
 <a id="m9-5"></a>
 ### Module 9.5 — Ambient mode, and Linkerd by contrast (~3 days)
 
-Ambient second — the sidecar-free architecture, **and the OOM escape hatch** when per-pod Envoys won't fit.
+Ambient second — the sidecar-free architecture, **and the OOM escape hatch** when per-pod Envoys won't fit. The module opens by measuring the thing ambient is an escape from, on a node small enough that the measurement has an end.
 
-**Do** — switch a namespace to ambient and confirm the pods have **no sidecar**. Find `ztunnel` as a per-node DaemonSet and identify where redirection now happens (node-level, not per-pod `iptables`), and where L7 processing goes (a **waypoint** proxy, only when an L7 policy needs one). Watch the *Life of a Packet: Ambient Edition* talk against what you observe.
+**Watch** — *Life of a Packet: Ambient Edition*, against what you observe on your own node rather than against its slides.
 
 **Read-and-contrast (never install)** — Linkerd's micro-proxy (`linkerd2-proxy`, Rust, not Envoy). It **cannot coexist with Istio on this node** ([#6](https://github.com/k3ii/k8s-academy/issues/6)), so it is read, not run: what does a purpose-built L7 proxy give up versus Envoy's generality, and what does it win (footprint)?
 
-> **Question to answer from observation:** in ambient, where is the packet redirected and by what — contrasted with module 9.2's per-pod rules? What did moving interception to the node *remove* from every pod?
+> **Question to answer from observation:** in ambient, where is the packet redirected and by what — contrasted with module 9.2's per-pod rules? What did moving interception to the node *remove* from every pod, and what is now holding the pod's sockets?
 
-**Break it** — remove the waypoint from an L7-policied namespace and watch L7 policy silently stop applying while L4 mTLS keeps working — the two planes ambient splits that the sidecar fused.
+> **Question to answer from the policy:** an L7 rule in a namespace with no L7 proxy in the path — does it fail open or closed? Record what your version did rather than what the docs say it should, then remove the proxy again and find the object that reports the loss. Nothing does.
 
-**Write down** — the ambient redirection point vs the sidecar's, and the one-line statement of what a waypoint is *for*.
+**Labs** — [What a sidecar costs](../labs/09/19-what-a-sidecar-costs.md) · [A namespace with no sidecars](../labs/09/20-a-namespace-with-no-sidecars.md) · [The same curve, flat](../labs/09/21-the-same-curve-flat.md) · [The waypoint an L7 policy needs](../labs/09/22-the-waypoint-l7-policy-needs.md) · [The waypoint removed, and the silence](../labs/09/23-the-waypoint-removed-and-the-silence.md) · [Linkerd read and never installed](../labs/09/24-linkerd-read-and-never-installed.md)
 
 ---
 
@@ -108,14 +111,14 @@ Ambient second — the sidecar-free architecture, **and the OOM escape hatch** w
 
 Anchored in [`chaos.md#principle`](../strands/chaos.md#principle). The twist this phase: **the data plane is itself a fault injector** — Envoy's fault filter means the mesh injects its own L7 faults (delay, abort) declaratively, so drill 9.C4 needs no external tool. The other three attack the mesh's own guarantees.
 
-| # | Drill | Mechanism | What you must produce afterwards |
-|---|---|---|---|
-| 9.C1 | **Bypass interception** | by hand (edit the exclude list) | The app traffic flowing outside the mesh, and the missing `REDIRECT` rule that let it |
-| 9.C2 | **Break mTLS trust** | by hand (`STRICT` + plaintext) | The rejection read at the Envoy filter layer, not "connection refused" |
-| 9.C3 | **Kill `istiod`** | by hand (`kubectl delete`) | Existing traffic still flowing + a new Service that never reaches the dump — the two planes, separated |
-| 9.C4 | **Inject an L7 fault** | mesh-native (`VirtualService` `HTTPFaultInjection`) | A declarative delay/abort applied by Envoy's fault filter, found in the config dump |
+| # | Drill | What you must produce afterwards |
+|---|---|---|
+| 9.C1 | [**Bypass interception**](../labs/09/08-9c1-a-port-outside-the-mesh.md) | The app traffic flowing outside the mesh, the missing `REDIRECT` rule that let it, and the header that stopped arriving because of it |
+| 9.C2 | [**Break mTLS trust**](../labs/09/18-9c2-a-root-that-no-longer-signs.md) | Two workloads holding certificates from two different roots, and which half of the pair stopped working — recorded as observed, because the direction is version-dependent |
+| 9.C3 | [**Kill `istiod`**](../labs/09/14-9c3-istiod-killed-and-the-planes-come-apart.md) | Existing traffic still flowing, a new Service that never reaches the dump, and a pod that cannot be created at all — the two planes, separated, plus the seam that is neither |
+| 9.C4 | [**Inject an L7 fault**](../labs/09/13-9c4-a-delay-you-declared.md) | A declarative delay applied by Envoy's fault filter, found in the config dump — and the filter shown to have been in the chain before you declared anything |
 
-9.C1 and 9.C2 stay by-hand because reading the broken rule *is* the lesson; 9.C4 is mesh-native because the point is that the proxy you're studying is also a chaos engine.
+All four are by-hand or mesh-native, so **no chaos tooling is installed this phase** — which is also the only reason the mesh fits. 9.C1 and 9.C2 stay by-hand because reading the broken rule *is* the lesson; 9.C4 is mesh-native because the point is that the proxy you're studying is also a chaos engine.
 
 ---
 
@@ -154,6 +157,8 @@ One request, end to end, both halves:
 
 **Cite "file:line" a hostile reader could check** — but here the "file" is a **re-pullable runtime artifact**, not a source path: the config-dump resource name and JSON path at each hop, and the `iptables-save` rule line. A reader re-pulls the dump and the rules and checks every claim. This is the [P2 archaeology standard](../strands/source-archaeology.md#drills) applied to a live proxy instead of a source tree — the one phase where the corpus offers no `k/k` line to cite, so the running system *is* the citation.
 
+**Lab** — [One request, both halves](../labs/09/25-one-request-both-halves.md), which is also where the topology goes.
+
 ---
 
 <a id="checklist"></a>
@@ -168,7 +173,7 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 - [ ] A sidecar cert decoded to its SPIFFE ServiceAccount identity; plaintext rejected under `STRICT` (9.4).
 - [ ] Ambient enabled; sidecar-free pods and `ztunnel`/waypoint redirection observed (9.5).
 
-**Written artifacts (each is a module's Write-down):**
+**Written artifacts — each is an exercise's write-down step:**
 - [ ] The four-object Envoy path, annotated by thread (9.1).
 - [ ] The inbound/outbound `REDIRECT` rules mapped to `istio-init` args (9.2).
 - [ ] The LDS→RDS→CDS→EDS chain with concrete resource names + the ACK `version_info` field (9.3).
