@@ -9,7 +9,8 @@
 | **Unlocks** | [P8](08-storage.md) — the last descent phase; storage is the one major subsystem left below the abstraction line. [P9](09-service-mesh.md) — the service mesh is an L7 layer *on top of* the L3/L4 datapath built here, and Cilium (entered here) is where mesh and CNI start to merge. |
 | **Source area** | [Area 5 — Networking](../strands/source-reading.md#area-5-networking), entry point `discovery/v1/types.go`. **kube-proxy in iptables *and* nftables**, IPVS comparative-only (KEP-5495 deprecates it; nftables is GA and slated default). |
 | **Language** | Go — **two build artifacts** ([CNI plugin, eBPF program](../strands/build-mechanics.md#artifact-table)), both **on-node-only**: unlike the webhooks and CSI driver, neither has an out-of-cluster stage 1, because you cannot wire a netns or attach a tc hook without a node. The eBPF build carries the [kernel-lockstep gate](../strands/build-mechanics.md#kernel-lockstep). |
-| **Lab** | [`pair`](https://github.com/k3ii/k8s-academy/issues/8) — Cilium is a DaemonSet, so two nodes beat three. |
+| **Lab** | [`pair`](../strands/lab-topologies.md#pair) — Cilium is a DaemonSet, so two nodes beat three. **`forge` never changes size this phase**: what the two artifacts need from it is [the nodes' kernel](../strands/build-mechanics.md#kernel-lockstep), not RAM. |
+| **Labs** | [`labs/07/`](../labs/07/README.md) — 34 exercises, in order. One topology for 33 of them, and **three tenants that cannot all be resident at once** — the index gives the order they arrive and leave in. |
 | **Strands** | [source reading](../strands/source-reading.md#area-5-networking) · [build](../strands/build-mechanics.md#artifact-table) · [talks](../strands/talks.md#networking) · [eBPF talks](../strands/talks.md#ebpf) |
 
 ---
@@ -22,7 +23,7 @@ Every one is falsifiable — an artifact, a timed production, or a claim a hosti
 By the end you can:
 
 1. **Wire a pod's network by hand** — `ip netns`, veth pair, bridge, routes — and then say exactly what a CNI plugin automates, citing the CNI `SPEC.md` operations.
-2. **Read `discovery/v1/types.go`** and explain what EndpointSlice replaced and why `Endpoints` didn't scale (O(n) watch fan-out on every pod churn), citing KEP-752 — **the far end of [P6](06-kubelet-node.md)'s trace, now understood in source.**
+2. **Read `discovery/v1/types.go`** and explain what EndpointSlice replaced and why `Endpoints` didn't scale (O(n) watch fan-out on every pod churn), citing KEP-752 — **the far end of [P6](06-kubelet-node.md)'s trace, now cited in source.**
 3. **Build a CNI plugin** (ADD/DEL, JSON on stdin, wires a netns) that gives pods a `ping`-able network. **Build artifact 1.**
 4. **Compare `syncProxyRules` in iptables and nftables `proxier.go`** and name the structural difference (chain-per-service vs verdict maps) — the comparison is the lesson.
 5. **Trace a Service packet** from ClusterIP to the kube-proxy rule/map that DNATs it to an endpoint, shown in a live `iptables-save` / `nft list ruleset` dump — repaying P6's far half in source (`endpointschangetracker` → `syncProxyRules`).
@@ -50,22 +51,16 @@ The Linux primitives first, by hand — then the data structure the whole servic
 | `network/networking.md` design doc (item 3) | The IP-per-pod model, no NAT between pods, the four communication paths. What are the axioms every CNI must satisfy? |
 | `discovery/v1/types.go` (item 4, ⭐) + KEP-752 (item 5) + KEP-4974 (item 6) | **The entry point:** `Endpoint`, `EndpointConditions{Ready,Serving,Terminating}`, the `addressType` split. Why did one `Endpoints` object per Service melt the apiserver, and what does slicing fix? **This is the data structure [P6](06-kubelet-node.md)'s trace passed through.** |
 
-**Do** — reproduce the Jacobs *Container Networking From Scratch* talk on one node: two `ip netns`, a veth pair each, a bridge, routes — two namespaces that can `ping`. No Kubernetes.
-
-**Break it** — delete one route and watch connectivity drop; name which of the four communication paths you just severed.
-
-**Write down** — the by-hand netns wiring, annotated with which step the CNI plugin (module 7.2) will automate.
+**Labs** — [1](../labs/07/01-the-four-paths-and-what-p0-wired.md) the four paths, three of them P0's · [2](../labs/07/02-the-kernel-both-sides-must-share.md) the kernel both sides must share · [3](../labs/07/03-what-the-runtime-hands-a-plugin.md) what the runtime hands a plugin · [4](../labs/07/04-eleven-kilobytes-of-endpointslice.md) `Ready`/`Serving`/`Terminating` predicted · [5](../labs/07/05-make-the-packing-visible.md) the packing heuristic made visible · [6](../labs/07/06-the-api-that-is-being-deleted.md) the API that is being deleted.
 
 <a id="m7-2"></a>
 ### Module 7.2 — Build artifact 1: the CNI plugin (~1 week)
 
 CNI demystified: a spec for an executable that receives JSON on stdin and wires a netns. Module 7.1 done by hand; now automate it.
 
-**Do** — write a CNI plugin (Go) that on `ADD` creates the veth pair, moves one end into the pod netns, assigns an IP from a simple IPAM, sets routes, and returns the CNI result JSON; on `DEL` tears it down. Install it and give real pods a `ping`-able network. **On-node-only — there is no out-of-cluster stage 1** (you cannot wire a netns without a node), which is why the [artifact table](../strands/build-mechanics.md#artifact-table) lists no stage 1 for it.
+**On-node-only — there is no out-of-cluster stage 1**, because you cannot wire a netns without a node, which is why the [artifact table](../strands/build-mechanics.md#artifact-table) lists none for it. What replaces the fast loop the other nine artifacts get is the first exercise of the module, not a footnote.
 
-**Break it** — return a malformed result from `ADD` and watch the kubelet reject the pod sandbox; trace the failure back through `kubelet-cri-networking.md`'s CRI→CNI seam (the exact boundary [P6](06-kubelet-node.md) named as owed).
-
-**Write down** — the `ADD` handler's veth+IPAM+route steps mapped one-to-one to module 7.1's by-hand commands.
+**Labs** — [7](../labs/07/07-what-replaces-stage-1.md) what replaces stage 1 · [8](../labs/07/08-add-and-del-that-cnitool-accepts.md) **artifact 1**, judged by `cnitool` · [9](../labs/07/09-an-ipam-that-does-not-leak.md) an IPAM that does not leak · [10](../labs/07/10-the-plugin-the-kubelet-calls.md) stage 2, real pods on the worker · [11](../labs/07/11-two-nodes-two-pod-cidrs-no-route.md) two pod CIDRs, no route · [12](../labs/07/12-a-malformed-result-at-the-cri-seam.md) a malformed result at the CRI seam · [13](../labs/07/13-a-second-plugin-in-the-chain.md) a second plugin in the chain.
 
 <a id="m7-3"></a>
 ### Module 7.3 — The Service dataplane: kube-proxy (~1 week)
@@ -81,11 +76,7 @@ Where P6's trace debt is repaid in source. Read the small model files first — 
 | `iptables/proxier.go` `syncProxyRules` **only** (item 15) + `nftables/proxier.go` `syncProxyRules` (item 16) + KEP-3866/5343 | `KUBE-SERVICES`/`KUBE-SVC-*`/`KUBE-SEP-*` chains vs nftables verdict maps. **Read each beside a live dump.** What is the structural reason nftables scales where iptables' chain-per-service does not? |
 | KEP-265 + KEP-5495 (items 13–14) + `external-lb-source-ip-preservation.md` (item 30) | IPVS as **comparative/historical only** (it's being deprecated), and why `externalTrafficPolicy: Local` exists and what it costs on `factory`'s NAT'd bridge. |
 
-**Do** — trace one Service packet: dump `iptables-save` (then switch kube-proxy to nftables and dump `nft list ruleset`), find the `KUBE-SVC`/verdict-map entry that DNATs your ClusterIP to a pod, and confirm it against the endpoint in `discovery/v1`. Announce a MetalLB L2 LoadBalancer IP and watch the ARP reply that claims it.
-
-**Break it** — chaos drill [7.C3](#chaos): corrupt a `KUBE-SEP-*` rule by hand and watch the Service half-break (some endpoints unreachable); map the symptom to the missing rule.
-
-**Write down** — the ClusterIP→endpoint DNAT path with the `syncProxyRules` `file:line` in *both* backends — **the P6 trace's far end, now cited.**
+**Labs** — [14](../labs/07/14-the-model-files-before-the-machine.md) the model files before the machine · [15](../labs/07/15-the-reconciler-and-its-packing-heuristic.md) `reconciler.go`, cited · [16](../labs/07/16-a-clusterip-followed-to-its-kube-sep.md) a ClusterIP followed to its `KUBE-SEP` · [17](../labs/07/17-the-same-service-as-a-verdict-map.md) the same Service as a verdict map · [18](../labs/07/18-the-tracker-between-two-syncs.md) the tracker between two syncs · [19](../labs/07/19-7c3-delete-one-endpoint-rule.md) drill 7.C3 · [20](../labs/07/20-7c1-a-partition-named-by-path.md) drill 7.C1 · [21](../labs/07/21-an-address-claimed-by-arp.md) an address claimed by ARP · [22](../labs/07/22-three-backends-one-table.md) three backends, one table.
 
 <a id="m7-4"></a>
 ### Module 7.4 — NetworkPolicy and DNS (~4 days)
@@ -100,11 +91,7 @@ The semantics live in the type comments; enforcement lives in the CNI, not in Ku
 | KEP-2091 AdminNetworkPolicy (item 22) | Cluster-scoped, explicitly-ordered Allow/Deny/Pass — fixing NetworkPolicy's inability to express a real deny. **Strong [CKS](10-security.md) material** — banked toward P10. |
 | CoreDNS + the *It Wasn't DNS* method (talk) | How a pod resolves a Service name: `resolv.conf`, the `ndots` trap, the CoreDNS Service behind it. What are the first three things the diagnostic method checks? |
 
-**Do** — apply a default-deny NetworkPolicy, then a targeted allow; confirm the AND-vs-OR selector behaviour empirically (make the classic mistake on purpose and watch it over-allow).
-
-**Break it** — chaos drills [7.C2](#chaos) and [7.C4](#chaos): break DNS (watch every name-based connection fail while IPs still work), and write a NetworkPolicy that *reads* correct but doesn't do what it says (the AND/OR trap), then diagnose it.
-
-**Write down** — the AND-vs-OR rule stated correctly, and the DNS diagnostic checklist in order.
+**Labs** — [23](../labs/07/23-a-policy-nobody-enforces.md) a policy nobody enforces · [24](../labs/07/24-the-semantics-are-in-the-comments.md) ten questions sealed before an enforcer exists · [25](../labs/07/25-a-name-resolved-in-five-hops.md) a name resolved in five hops · [26](../labs/07/26-7c2-it-was-dns.md) drill 7.C2 · [27](../labs/07/27-adminnetworkpolicy-read-and-banked.md) AdminNetworkPolicy, read and banked.
 
 <a id="m7-5"></a>
 ### Module 7.5 — eBPF, and build artifact 2 (~1 week)
@@ -118,24 +105,16 @@ The datapath's future, loaded into a real kernel — so Cilium's "it uses eBPF" 
 | `cilium/.../bpf/architecture.rst` + `progtypes.rst` (item 29) | The eBPF primer: program types, maps, the verifier, tail calls, JIT. Readable without Cilium context. What does the verifier reject, and why? |
 | `cilium/.../network/ebpf/lifeofapacket.rst` (item 28) | **"Life of a Packet":** which hooks (XDP, tc ingress/egress, socket) a packet traverses and where policy is enforced. `iptables.rst` contrasts explicitly with kube-proxy. |
 
-**Do (build artifact 2)** — write an eBPF program against `cilium/ebpf`: compile it, **load it, attach it to a tc hook, read a map from userspace, and detach it.** A packet counter or a simple drop-by-map is enough — the point is owning the full load/attach/map/detach lifecycle.
-
 **Gate — [kernel lockstep](../strands/build-mechanics.md#kernel-lockstep):** CO-RE resolves against `/sys/kernel/btf/vmlinux`, so `forge`'s kernel must match the node's. **`uname -r` on `forge` and the target node must be equal before the program loads** — a mismatch is a stop-and-fix, not a warning, because the failure is either a verifier rejection or a *silently wrong field offset*.
 
-**Break it** — deliberately load against mismatched BTF (the [chaos-strand drill](../strands/chaos.md#borrowed-drills)) and observe the failure mode; then fix the lockstep.
-
-**Write down** — the load→attach→read-map→detach sequence with the `uname -r` check that gated it.
+**Labs** — [28](../labs/07/28-a-counter-loaded-attached-read-detached.md) **artifact 2**, five verbs each proven · [29](../labs/07/29-a-mismatched-btf-and-the-two-ways-it-fails.md) the mismatched-BTF drill · [30](../labs/07/30-a-drop-decided-by-a-map-entry.md) a drop decided by a map entry.
 
 <a id="m7-6"></a>
 ### Module 7.6 — Cilium (~4 days)
 
-Entered **after** the eBPF artifact exists — detailed as ecosystem in [§5](#ecosystem), this is its hands-on.
+Entered **after** the eBPF artifact exists — detailed as ecosystem in [§5](#ecosystem), this is its hands-on. It is also the module that changes the cluster's tenancy: Cilium is not co-resident with the heavy tooling on this host, so it arrives only once the drills that need Chaos Mesh are done and Chaos Mesh has come out. Ordering, not a bigger guest — the [lab index](../labs/07/README.md) has the sequence.
 
-**Do** — install Cilium on `pair` in kube-proxy-replacement mode. Read its *Life of a Packet* against the program you loaded in 7.5, and find where it enforces NetworkPolicy in eBPF — the same DNAT you read in `syncProxyRules`, now a map lookup.
-
-**Break it** — apply a Cilium-enforced NetworkPolicy and prove the drop at the eBPF layer (`cilium monitor`, the policy map) — **the capstone's enforcement proof.**
-
-**Write down** — the map entry (or `cilium monitor` drop event) that enforces one policy rule — the packet-drop evidence.
+**Labs** — [31](../labs/07/31-kube-proxy-replaced-by-map-lookups.md) kube-proxy replaced by map lookups · [32](../labs/07/32-the-prediction-scored-at-the-datapath.md) the prediction scored at the datapath · [33](../labs/07/33-7c4-a-policy-that-reads-correct.md) drill 7.C4.
 
 ---
 
@@ -144,12 +123,12 @@ Entered **after** the eBPF artifact exists — detailed as ecosystem in [§5](#e
 
 **Chaos Mesh is now installed** (since [P6](06-kubelet-node.md)); network faults are exactly where its [one-Linux-primitive-per-fault](../strands/chaos.md#mechanisms) design pays off — `NetworkChaos` is `netem` on a qdisc, `DNSChaos` is CoreDNS running the `k8s_dns_chaos` plugin. The two by-hand drills stay by-hand because reading the broken rule is the lesson.
 
-| # | Drill | Chaos Mesh / by hand | What you must produce afterwards |
-|---|---|---|---|
-| 7.C1 | **Network partition** | `NetworkChaos` (`netem` loss/partition) | Which of the four communication paths broke, and the `tc -s qdisc show` evidence |
-| 7.C2 | **DNS failure** | `DNSChaos` (`SERVFAIL`/bogus) | Every name-based connection failing while IPs still work — the *It Wasn't DNS* signature |
-| 7.C3 | **Corrupt kube-proxy rules** | by hand (`iptables`/`nft`) | The half-broken Service mapped to the specific missing `KUBE-SEP`/verdict-map entry |
-| 7.C4 | **A NetworkPolicy that lies** | by hand (the AND/OR trap) | Why the policy reads correct but over-/under-allows, proven at the datapath |
+| # | Drill | What you must produce afterwards |
+|---|---|---|
+| [7.C1](../labs/07/20-7c1-a-partition-named-by-path.md) | **Network partition** | Which of the four communication paths broke, and the `tc -s qdisc show` evidence |
+| [7.C2](../labs/07/26-7c2-it-was-dns.md) | **DNS failure** | Every name-based connection failing while IPs still work — the *It Wasn't DNS* signature |
+| [7.C3](../labs/07/19-7c3-delete-one-endpoint-rule.md) | **Corrupt kube-proxy rules** | The half-broken Service mapped to the specific missing `KUBE-SEP`/verdict-map entry |
+| [7.C4](../labs/07/33-7c4-a-policy-that-reads-correct.md) | **A NetworkPolicy that lies** | Why the policy reads correct but over-/under-allows, proven at the datapath |
 
 7.C3 and 7.C4 are by-hand because the exercise *is* reading the rule that broke.
 
@@ -191,6 +170,8 @@ Two parts, plus the debt repaid:
 3. **P6's trace debt repaid** (module 7.3): the far half of [corpus trace #2](../strands/source-reading.md#trace-pod-dies) — `EndpointSlice reconciler → endpointschangetracker → syncProxyRules` — now cited in source, closing the seam P6 could only observe.
 
 **Cite `file:line` a hostile reader could check** — at minimum: the `syncProxyRules` DNAT site (name the backend); the `reconciler.go` pod→endpoint mapping; and the datapath location of your policy drop. Every path verified live per [P2's archaeology standard](../strands/source-archaeology.md#drills) — the `proxier.go` files are 60+ KB, so a copied line number rots fast.
+
+**Lab** — [exercise 34](../labs/07/34-the-capstone-a-network-you-wrote-and-a-drop-you-can-point-at.md), which is also where the topology goes.
 
 ---
 
