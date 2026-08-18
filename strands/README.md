@@ -30,7 +30,12 @@ python3 strands/check-anchors.py    # both sides, cross-checked; non-zero on a b
 
 [`check-anchors.py`](check-anchors.py) is the enforceable form of this section: it
 fails on a duplicate id, on the same id published by two different docs, and on any
-link — from `strands/` or `phases/` — to a file or anchor that does not exist.
+link — from `strands/`, `phases/` or `labs/` — to a file or anchor that does not
+exist. **Same-file `](#id)` links are checked too.** They were not until
+[#35](https://github.com/k3ii/k8s-academy/issues/35): the link pattern required a
+`.md`, so a heading slug written same-file was neither resolved nor rejected, and 66
+of them had accumulated across the phase files — working on GitHub that day, and
+silently dead the first time a section was renumbered.
 
 Heading slugs were rejected because GitHub's slugger is not the obvious function.
 `## Area 6 — Storage` slugs to `area-6--storage`, not `area-6-storage` — the em dash

@@ -14,6 +14,7 @@
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — an artifact, a timed production, or a claim a hostile reader could check against source or a running cluster. *understand* and *know* appear nowhere.
@@ -31,10 +32,12 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 Reading is [Area 3](../strands/source-reading.md#area-3-scheduler), and its sequencing rule is as load-bearing as P4's: **the SIG docs and `interface.go` before `schedule_one.go`**, the small plugins before the big ones. Each cited item carries a question to answer — no bare links. Modules 5.1–5.5 run on `pair`; 5.6 is the `workhorse` module.
 
+<a id="m5-1"></a>
 ### Module 5.1 — The framework as a table of contents (~4 days, `pair`)
 
 `interface.go` is the whole scheduler declared as small Go interfaces with doc comments — a beginner can read it day one. Read the SIG's own tour alongside it.
@@ -50,20 +53,22 @@ Reading is [Area 3](../strands/source-reading.md#area-3-scheduler), and its sequ
 
 **Do** — draw the extension-point sequence from memory, marking which run in the scheduling cycle and which in the binding cycle.
 
-**Break it** — write a one-line `Filter` plugin that rejects every node; watch every pod go `Unschedulable` and read the event. That event message is the thread you pull in drill [5.C1](#3-chaos-drills).
+**Break it** — write a one-line `Filter` plugin that rejects every node; watch every pod go `Unschedulable` and read the event. That event message is the thread you pull in drill [5.C1](#chaos).
 
 **Write down** — the extension-point sequence with, per point, what an error there does.
 
+<a id="m5-2"></a>
 ### Module 5.2 — Build artifact 1: the from-scratch scheduler (~4 days, `pair`)
 
 Before reading the real scheduling cycle, prove scheduling isn't magic — so the real one has something naive to show up.
 
 **Do** — write a ~200-line scheduler: an informer on unscheduled pods (`spec.nodeName == ""`, your `schedulerName`), pick a node that fits, and `POST` a `Binding` to `/binding`. That is the entire contract with the apiserver. Run it against `pair`.
 
-**Break it** — kill it mid-cycle (a preview of [5.C4](#3-chaos-drills)); the unbound pod simply waits and is re-picked on restart, because your scheduler is level-triggered exactly like the P4 controller — it reads pending pods from the cache, it does not consume an event.
+**Break it** — kill it mid-cycle (a preview of [5.C4](#chaos)); the unbound pod simply waits and is re-picked on restart, because your scheduler is level-triggered exactly like the P4 controller — it reads pending pods from the cache, it does not consume an event.
 
 **Write down** — the `POST /binding` call site in your code, and **the one thing the real scheduler does that yours skips**: `assume`, the optimistic cache write that lets it schedule the next pod before this bind is durable.
 
+<a id="m5-3"></a>
 ### Module 5.3 — The real scheduling cycle (~1 week, `pair`)
 
 Now `schedule_one.go`, guided by the SIG doc — where the from-scratch scheduler is made to look naive.
@@ -82,6 +87,7 @@ Now `schedule_one.go`, guided by the SIG doc — where the from-scratch schedule
 
 **Write down** — one pod's path through `schedulingCycle`/`bindingCycle` with `file:line`, and why bind is async.
 
+<a id="m5-4"></a>
 ### Module 5.4 — The queue (~1 week, `pair`)
 
 Where mental models of the scheduler break — and a live archaeology case.
@@ -98,10 +104,11 @@ Where mental models of the scheduler break — and a live archaeology case.
 
 **Do** — submit an unschedulable pod, then free resources, and watch (`-v=10`) the QueueingHint fire and the pod move `unschedulablePods → activeQ`.
 
-**Break it** — the full drill [5.C1](#3-chaos-drills): saturate the cluster, submit a pod, and follow it *into* `unschedulablePods` and back out, timing the backoff.
+**Break it** — the full drill [5.C1](#chaos): saturate the cluster, submit a pod, and follow it *into* `unschedulablePods` and back out, timing the backoff.
 
 **Write down** — the two ways a pod leaves `unschedulablePods`, citing `scheduler_queues.md` and the current `backend/queue/` path, with a one-line note on why `internal/queue/` citations are stale.
 
+<a id="m5-5"></a>
 ### Module 5.5 — Preemption, and build artifact 2 (~1 week, build on `pair`)
 
 Read the preemption algorithm, then build the out-of-tree plugin whose scoring you'll observe at scale in 5.6.
@@ -120,18 +127,20 @@ Read the preemption algorithm, then build the out-of-tree plugin whose scoring y
 
 **Write down** — the extension point your plugin implements and the `interface.go` line declaring it, plus the `selectVictimsOnNode` site you'll reference when narrating preemption in the capstone.
 
+<a id="m5-6"></a>
 ### Module 5.6 — Scoring and preemption at scale (~4 days, `workhorse`)
 
 The one module that earns the third node. **`forge` drops to 1536 MB; run only pre-built images — nothing compiles here.**
 
 **Do** — deploy your plugin from the `forge` registry as a second scheduler (`schedulerName`, `KubeSchedulerConfiguration`) on `workhorse`. Score real workloads across three nodes and show placement differs measurably from the default profile.
 
-**Break it** — drills [5.C2](#3-chaos-drills) and [5.C3](#3-chaos-drills): drive a **real preemption with real victims** (a running pod actually evicted), and make a topology-spread constraint unsatisfiable. Scarcity here is genuine — the lab ceiling *is* the pressure, per [#8's constraint-as-curriculum](https://github.com/k3ii/k8s-academy/issues/8).
+**Break it** — drills [5.C2](#chaos) and [5.C3](#chaos): drive a **real preemption with real victims** (a running pod actually evicted), and make a topology-spread constraint unsatisfiable. Scarcity here is genuine — the lab ceiling *is* the pressure, per [#8's constraint-as-curriculum](https://github.com/k3ii/k8s-academy/issues/8).
 
 **Write down** — the capstone narrative: the queue transitions during one preemption, which victim was chosen and why, and when the preemptor left `unschedulablePods`.
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
 **Phase-authored and observed, not injected** — there is no scheduler-aware fault in either tool, and [Chaos Mesh arrives in P6](06-kubelet-node.md) regardless. These drills exploit real scarcity per [`chaos#principle`](../strands/chaos.md#principle): the homelab ceiling produces the pressure, so preemption has real victims rather than simulated ones.
@@ -147,6 +156,7 @@ The one module that earns the third node. **`forge` drops to 1536 MB; run only p
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries with runtimes under [Scheduler](../strands/talks.md#scheduler).
@@ -157,6 +167,7 @@ Full entries with runtimes under [Scheduler](../strands/talks.md#scheduler).
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 **`kubernetes-sigs/scheduler-plugins`** — the out-of-tree plugin repo that *is* build artifact 2.
@@ -167,6 +178,7 @@ Full entries with runtimes under [Scheduler](../strands/talks.md#scheduler).
 
 ---
 
+<a id="capstone"></a>
 ## 6. Capstone
 
 **A framework plugin that measurably changes placement under contention, plus a narrated preemption: which pod went where, and why it left `unschedulablePods` when it did.**
@@ -186,6 +198,7 @@ Every path verified live per [P2's archaeology standard](../strands/source-archa
 
 ---
 
+<a id="checklist"></a>
 ## 7. Checklist
 
 Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
@@ -214,6 +227,7 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 
 ---
 
+<a id="gate"></a>
 ## 8. Gate
 
 You may advance to [P6](06-kubelet-node.md) when:

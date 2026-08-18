@@ -15,6 +15,7 @@
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — an artifact, a timed production, or a claim a hostile reader could check against source or a running node. *understand* and *know* appear nowhere.
@@ -32,10 +33,12 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 Reading is [Area 7](../strands/source-reading.md#area-7-kubelet), and its rule is the strongest in the corpus: **the design docs before the code, the small sub-managers before the big files, and `kubelet.go` only for `syncLoopIteration`.** Each cited item carries a question to answer — no bare links.
 
+<a id="m6-1"></a>
 ### Module 6.1 — The map, and PLEG (~4 days)
 
 The kubelet has no readable entry loop; PLEG is the one part that reduces to one file, one loop, one idea.
@@ -55,6 +58,7 @@ The kubelet has no readable entry loop; PLEG is the one part that reduces to one
 
 **Write down** — the `relist` loop in one paragraph, with the `generic.go:line` of the health threshold.
 
+<a id="m6-2"></a>
 ### Module 6.2 — QoS and the kernel's OOM killer (~3 days)
 
 The mechanism by which the kernel — not Kubernetes — kills your BestEffort pod first. Directly load-bearing on a deliberately memory-pressured host.
@@ -68,10 +72,11 @@ The mechanism by which the kernel — not Kubernetes — kills your BestEffort p
 
 **Do** — deploy one pod of each QoS class; read each container's `oom_score_adj` from `/proc/<pid>/oom_score_adj` and match it to `policy.go`.
 
-**Break it** — chaos drill [6.C3](#3-chaos-drills) in miniature: stress one node's memory and watch which pod the *kernel* kills first, confirming the class order.
+**Break it** — chaos drill [6.C3](#chaos) in miniature: stress one node's memory and watch which pod the *kernel* kills first, confirming the class order.
 
 **Write down** — the three classes, their OOM-score-adj, and the one-line rule that assigns each — reused in the checklist.
 
+<a id="m6-3"></a>
 ### Module 6.3 — The eviction manager (~1 week)
 
 The heart of the phase: how the kubelet reclaims a node *before* the kernel has to, and who it picks.
@@ -87,10 +92,11 @@ The heart of the phase: how the kubelet reclaims a node *before* the kernel has 
 
 **Do** — set an aggressive `--eviction-hard` on a node and drive it to eviction; read the kubelet log's eviction decision against `synchronize()`.
 
-**Break it** — chaos drill [6.C4](#3-chaos-drills): a disk-pressure cascade (fill `imagefs`) and watch the manager rank and evict — reading it on the Grafana time series from [module 6.6](#module-66--observability-3-days).
+**Break it** — chaos drill [6.C4](#chaos): a disk-pressure cascade (fill `imagefs`) and watch the manager rank and evict — reading it on the Grafana time series from [module 6.6](#m6-6).
 
 **Write down** — the signal, threshold and victim order for the eviction you drove, with `eviction_manager.go`/`defaults_linux.go` citations.
 
+<a id="m6-4"></a>
 ### Module 6.4 — cgroups v2 and node-allocatable (~4 days)
 
 Where the RAM went on a 9.9 GB host, and the tree that enforces it. **cgroups v2 only** — Debian 13 is v2 by default and v1 is being removed (KEP-5573).
@@ -109,6 +115,7 @@ Where the RAM went on a 9.9 GB host, and the tree that enforces it. **cgroups v2
 
 **Write down** — the `factory` allocatable arithmetic, every subtraction cited.
 
+<a id="m6-5"></a>
 ### Module 6.5 — The node reports itself (~4 days)
 
 Static pods, node-level admission, status, heartbeats — and the single `kubelet.go` read.
@@ -124,22 +131,24 @@ Static pods, node-level admission, status, heartbeats — and the single `kubele
 
 **Do** — `systemctl stop kubelet` on one node and time how long until the node goes `NotReady` and pods are marked for eviction — the KEP-589 latency, measured.
 
-**Break it** — chaos drill [6.C2](#3-chaos-drills): kubelet stopped under load. Pods keep running while the node is `NotReady`; explain the gap from the lease mechanism.
+**Break it** — chaos drill [6.C2](#chaos): kubelet stopped under load. Pods keep running while the node is `NotReady`; explain the gap from the lease mechanism.
 
 **Write down** — the node-failure detection latency you measured, against the lease-vs-status-frequency split.
 
+<a id="m6-6"></a>
 ### Module 6.6 — Observability (~3 days)
 
-The layer that makes eviction legible. Detailed as ecosystem in [§6](#6-ecosystem) — this is its hands-on.
+The layer that makes eviction legible. Detailed as ecosystem in [§6](#ecosystem) — this is its hands-on.
 
 **Do** — install `kube-prometheus-stack` (Prometheus + Grafana + node-exporter) minimised for the lab ceiling. Point a dashboard at node memory, cgroup pressure and pod restarts.
 
-**Break it** — re-run an eviction (drill [6.C3](#3-chaos-drills) or [6.C4](#3-chaos-drills)) and read it *as a time series*: the `memory.available` slope into the threshold, the eviction, the recovery. An eviction you only saw in a log you half-saw.
+**Break it** — re-run an eviction (drill [6.C3](#chaos) or [6.C4](#chaos)) and read it *as a time series*: the `memory.available` slope into the threshold, the eviction, the recovery. An eviction you only saw in a log you half-saw.
 
 **Write down** — the PromQL for "node `memory.available` approaching the eviction threshold," and where node-exporter reads that number from (a `/proc` or `/sys` file you met in module 6.4).
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
 **Chaos Mesh is introduced here** — [installed minimised at 582 Mi](../strands/chaos.md#install), dashboard off (that switch is also the [P10](10-security.md) CVE surface — you re-enable it there deliberately). It arrives now, after four phases of hand-driven failure, so it reads as **a scripted wrapper over the [Linux primitives](../strands/chaos.md#mechanisms) met in [P0](00-linux-primitives.md)** — `StressChaos` is `stress-ng` in the target's cgroup (so the OOMKill is *real*), `PodChaos` is three different layers of "the pod died," and the daemon enters the target with `setns(2)`. Reading *why `chaos-daemon` needs each capability* is a better privilege lesson than any policy exercise. `KernelChaos` is a [verify-first stretch goal](../strands/chaos.md#verify-first), not required.
@@ -155,6 +164,7 @@ The layer that makes eviction legible. Detailed as ecosystem in [§6](#6-ecosyst
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries with runtimes under [Node](../strands/talks.md#node).
@@ -165,16 +175,18 @@ Full entries with runtimes under [Node](../strands/talks.md#node).
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 **Prometheus + Grafana + node-exporter, and OpenTelemetry** — observability lands here because eviction is only legible with a time series in front of you.
 
-- **Hands-on:** [module 6.6](#module-66--observability-3-days) — stand up `kube-prometheus-stack` and read a real eviction as a time series, the `memory.available` slope into the threshold and out.
+- **Hands-on:** [module 6.6](#m6-6) — stand up `kube-prometheus-stack` and read a real eviction as a time series, the `memory.available` slope into the threshold and out.
 - **Internals note (required, not "install and look at the dashboard"):** **node-exporter reads the same `/proc` and `/sys/fs/cgroup` files you read by hand in module 6.4** — the metric *is* the file, scraped on an interval. Prometheus is a pull-based TSDB (it scrapes targets; targets do not push), which is why a dead node's metrics simply stop rather than reporting failure. OpenTelemetry unifies traces/metrics/logs behind one collector — the vendor-neutral wire format, distinct from Prometheus's storage.
 - **Maturity:** Prometheus — CNCF **graduated** (2018), the second project to graduate. **OpenTelemetry — graduated 2026-05-11** ([per #6](https://github.com/k3ii/k8s-academy/issues/6)), now the default instrumentation layer. node-exporter is a first-party Prometheus component. All three are single-big-rock-safe alongside the kubelet work; Cilium/Istio/Falco are not co-resident with this stack ([#8](https://github.com/k3ii/k8s-academy/issues/8)).
 
 ---
 
+<a id="capstone"></a>
 ## 6. Capstone
 
 **Corpus trace #2 — a pod dies and a Service stops sending it traffic — traced end to end**, [the corpus's flagged best mid-curriculum exercise](../strands/source-reading.md#trace-pod-dies) because every hop is directly observable.
@@ -188,6 +200,7 @@ This is deliberate: the trace proves the seam *by observation now*, and P7 comes
 
 ---
 
+<a id="checklist"></a>
 ## 7. Checklist
 
 Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
@@ -214,6 +227,7 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 
 ---
 
+<a id="gate"></a>
 ## 8. Gate
 
 You may advance to [P7](07-networking.md) when:
