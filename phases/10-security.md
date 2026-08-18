@@ -9,7 +9,8 @@
 | **Unlocks** | [P11 Synthesis](11-synthesis.md) and [P12](12-gitops-platform.md). This is the last cert, and the last descent into a Kubernetes subsystem — everything after climbs back up. |
 | **Source** | RBAC / authn / authz — [Area 2 items 36–38](../strands/source-reading.md#area-2-api-machinery), **re-read as CKS material**. The admission-chain items (4–12) return from P3 as the substrate Kyverno sits on. |
 | **Language** | Go for reading ([#9](https://github.com/k3ii/k8s-academy/issues/9)); the artifacts here are **policies, rules and signatures**, not a build-track binary — [build mechanics](../strands/build-mechanics.md#artifact-table) lists no P10 Go artifact. |
-| **Lab** | [`pair`](https://github.com/k3ii/k8s-academy/issues/8), on the **isolated `10.10.10.0/24` bridge** — which is not a convenience here but the *containment boundary* for the capstone (see [§7](#capstone)). |
+| **Lab** | [`pair`](../strands/lab-topologies.md#pair), on the **isolated `10.10.10.0/24` bridge** — which is not a convenience here but the *containment boundary* for the capstone (see [§7](#capstone)). |
+| **Labs** | [`labs/10/`](../labs/10/README.md) — 26 exercises, in order. Six need no cluster (the supply-chain tools run entirely on `hopper`), and the index gives the point each resident tool arrives and the capstone that destroys the topology. |
 | **Cert** | [**CKS**](../strands/certs.md#cks), sat at the end of the [drill block](#cks-block). CKS-last is optimal — the CARE programme reinstates an expired CKA. |
 | **Strands** | [certs (CKS)](../strands/certs.md#cks) · [chaos (CVE loop)](../strands/chaos.md#install) · [talks](../strands/talks.md#security) · [source archaeology](../strands/source-archaeology.md#drills) |
 
@@ -52,11 +53,7 @@ The two smallest interfaces in the apiserver decide who you are and what you may
 | Item 38 — KEP-1205 Bound Service Account Tokens | Audience-and-time-bound projected tokens vs the old forever-Secret. **Why is a bound token a smaller blast radius when a pod is compromised?** |
 | Item 37 — KEP-3331 / KEP-3221 (structured authn/authz config) | The current file-based config (multiple JWT issuers; ordered authorizer chains with CEL) that supersedes the flag-soup most material still teaches. What can an ordered authorizer chain express that a flag list cannot? |
 
-**Do** — write a least-privilege Role + RoleBinding for a real ServiceAccount, then attempt an action just outside it and read the authz denial. Disable the `default` SA's automount on a namespace (CKS *Cluster Hardening*).
-
-**Break it** — chaos drill [10.C1](#chaos): grant a wildcard `*` in one Role and find the escalation path it opened; then close it and prove the path is gone.
-
-**Write down** — the `graph.go` edge that confines a kubelet to its own node's Secrets, cited `file:line` — the fact the capstone's blast-radius reasoning rests on.
+**Labs** — [A Role that grants one verb on one resource](../labs/10/01-one-verb-one-resource.md) · [The node that cannot read its neighbour](../labs/10/02-the-node-that-cannot-read-its-neighbour.md) · [A token that expires](../labs/10/03-a-token-that-expires.md) · [An authorizer chain a flag list cannot express](../labs/10/04-an-authorizer-chain-a-flag-list-cannot-express.md) · [10.C1 — a wildcard and the path it opens](../labs/10/05-10c1-a-wildcard-and-the-path-it-opens.md)
 
 <a id="m10-2"></a>
 ### Module 10.2 — Pod hardening and policy admission (~1 week)
@@ -67,41 +64,21 @@ The P0 capabilities/seccomp module, now enforced cluster-wide by a policy engine
 
 > **Question to answer from the source:** in `admission/chain.go`, at what point does a Kyverno validating webhook run relative to a mutating one that adds a `securityContext` default? Cite the ordering guarantee.
 
-**Do** — apply `restricted` Pod Security Admission to a namespace; write a Kyverno policy that requires `runAsNonRoot` and drops all capabilities; apply a seccomp `RuntimeDefault` profile and an AppArmor profile to a pod (CKS *System Hardening*). Learn Rego off-cluster with `opa eval` — no Gatekeeper needed (it won't fit; [#6](https://github.com/k3ii/k8s-academy/issues/6)).
-
-**Break it** — chaos drill [10.C2](#chaos): write a Kyverno policy with a gap (matches `Pod` but not the `Deployment` template that creates it) and watch a violating pod slip through the controller that made it — the classic policy-scope mistake.
-
-**Write down** — the Kyverno policy and the admission-ordering point at which it fires, and the seccomp/AppArmor profiles applied.
+**Labs** — [Kyverno on the chain you already read](../labs/10/07-kyverno-on-the-chain-you-already-read.md) · [`restricted` rejects a pod you can name](../labs/10/06-restricted-rejects-a-pod-you-can-name.md) · [seccomp and AppArmor, two blocked operations](../labs/10/08-seccomp-and-apparmor-a-blocked-syscall.md) · [Rego that decides off-cluster](../labs/10/09-rego-that-decides-off-cluster.md) · [10.C2 — a policy that matches the wrong kind](../labs/10/10-10c2-a-policy-that-matches-the-wrong-kind.md)
 
 <a id="m10-3"></a>
 ### Module 10.3 — Cluster and node hardening (~1 week)
 
 Turn the cluster you built in P1–P3 into one that passes an auditor.
 
-**Do**
-- Run **kube-bench** (CIS benchmark) against etcd, kubelet and the apiserver; fix the top findings and re-run (CKS *Cluster Setup*).
-- Write an `EncryptionConfiguration` so Secrets are encrypted at rest, restart the apiserver, create a Secret, and **read the raw etcd bytes** (the [P2](02-etcd.md) `etcdctl get` skill) to prove they are no longer plaintext.
-- Enable an **audit policy** at `Metadata`+ level for exec/attach, and confirm a `kubectl exec` appears in the audit log — the same event the Falco rule will catch at runtime.
-- Protect node metadata: block pod access to the cloud/link-local metadata endpoint with a NetworkPolicy ([P7](07-networking.md)).
-
-**Break it** — chaos drill [10.C3](#chaos): mis-order the `EncryptionConfiguration` providers (`identity` first) and prove new Secrets are written in plaintext despite encryption being "on" — the config that lies.
-
-**Write down** — the before/after etcd on-disk bytes for one Secret, and the audit-log line for one exec.
+**Labs** — [kube-bench, a finding you can fix](../labs/10/11-kube-bench-a-finding-you-can-fix.md) · [A Secret no longer plaintext on disk](../labs/10/12-a-secret-that-is-no-longer-plaintext-on-disk.md) · [An exec that writes an audit line](../labs/10/13-an-exec-that-writes-a-line-to-the-audit-log.md) · [A NetworkPolicy that blocks the metadata IP](../labs/10/14-a-netpol-that-blocks-the-metadata-ip.md) · [10.C3 — encryption that lies](../labs/10/15-10c3-encryption-that-lies.md)
 
 <a id="m10-4"></a>
 ### Module 10.4 — Supply chain, zero-cluster-cost (~1 week)
 
 The whole module runs **CLI-side on `hopper`** — it costs the cluster nothing, which is what makes this phase affordable next to Falco ([#8](https://github.com/k3ii/k8s-academy/issues/8)). CKS *Supply Chain Security*, 20% of the exam.
 
-**Do**
-- Generate an **SBOM** for an image (`syft`) and diff it against the image's actual layers — minimize the base image and watch the SBOM shrink.
-- **Scan** with `trivy`/`grype`; run static analysis with `kubesec`/`kube-linter` on your own manifests.
-- **Sign keyless with `cosign`** (Sigstore/Fulcio OIDC) and verify — **`hopper` holds no long-lived private key**; identity comes from the OIDC token, so there is no key to leak. Record the transparency-log (Rekor) entry.
-- Enforce it at admission: a Kyverno `verifyImages` rule that **rejects an unsigned or unverifiable image** and permits only your signed one from a permitted registry.
-
-**Break it** — chaos drill [10.C4](#chaos): push an unsigned image and confirm admission rejects it; then tamper with a signed image's digest and confirm verification fails — signature bound to content, not to a name.
-
-**Write down** — the `cosign verify` output with the Rekor entry, and the admission rejection of the unsigned image.
+**Labs** — [An SBOM that shrinks](../labs/10/16-an-sbom-that-shrinks.md) · [A scan that names a CVE](../labs/10/17-a-scan-that-names-a-cve.md) · [A manifest a linter refuses](../labs/10/18-a-manifest-a-linter-refuses.md) · [A signature with no private key](../labs/10/19-a-signature-with-no-private-key.md) · [verifyImages rejects the unsigned](../labs/10/20-verifyimages-rejects-the-unsigned.md) · [10.C4 — a digest that no longer matches](../labs/10/21-10c4-a-digest-that-no-longer-matches.md)
 
 <a id="m10-5"></a>
 ### Module 10.5 — Runtime detection with Falco (~4 days)
@@ -112,11 +89,7 @@ The behavioral half — the detection the capstone's gate demands. Falco reads s
 
 > **Question to answer from the source (a rule):** in a Falco rule, which field identifies *the process's container/context* rather than its argv? That field is the difference between a rule a variant evades and one it does not.
 
-**Do** — write a Falco rule that fires on an unexpected `exec` inside the `chaos-daemon` context (the capstone's detector). Test it against a benign exec you expect *not* to fire.
-
-**Break it** — chaos drill [10.C5](#chaos): write the rule as a string match on one command, then run the same technique with a different command and watch it miss — the exact failure the capstone's unseen-variant gate exists to prevent.
-
-**Write down** — the behavioral Falco rule with the context field it keys on, and the missed-detection from the string-match version.
+**Labs** — [Falco reads the syscall](../labs/10/22-falco-reads-the-syscall.md) · [10.C5 — a string rule a variant evades](../labs/10/23-10c5-a-string-rule-a-variant-evades.md) · [A Falco rule that names the container](../labs/10/24-a-falco-rule-that-names-the-container.md)
 
 ---
 
@@ -125,13 +98,13 @@ The behavioral half — the detection the capstone's gate demands. Falco reads s
 
 The phase's chaos **is** its capstone — the CVE incident ([§7](#capstone)). The drills below are its rehearsals: each builds one skill the live incident needs, so that when the incident runs, no single mechanism is new. Anchored in the [CVE loop](../strands/chaos.md#install).
 
-| # | Drill | Mechanism | What you must produce afterwards |
-|---|---|---|---|
-| 10.C1 | **RBAC escalation** | by hand (a `*` verb) | The escalation path a wildcard opened, and proof it's closed after |
-| 10.C2 | **Policy scope gap** | by hand (Kyverno matches Pod not Deployment) | The violating pod that slipped through, mapped to the missing match |
-| 10.C3 | **Encryption that lies** | by hand (`identity` provider first) | Plaintext Secret bytes in etcd despite "encryption on" |
-| 10.C4 | **Unsigned image admitted** | by hand (push unsigned / tamper digest) | The admission rejection, and the digest-tamper verify failure |
-| 10.C5 | **Detection a variant evades** | by hand (string rule vs new command) | The missed detection that forces a behavioral rule |
+| # | Drill | What you must produce afterwards |
+|---|---|---|
+| 10.C1 | [**RBAC escalation**](../labs/10/05-10c1-a-wildcard-and-the-path-it-opens.md) | The escalation path a wildcard opened, and proof it's closed after |
+| 10.C2 | [**Policy scope gap**](../labs/10/10-10c2-a-policy-that-matches-the-wrong-kind.md) | The violating pod that slipped through, mapped to the missing match |
+| 10.C3 | [**Encryption that lies**](../labs/10/15-10c3-encryption-that-lies.md) | Plaintext Secret bytes in etcd despite "encryption on" |
+| 10.C4 | [**Unsigned image admitted**](../labs/10/21-10c4-a-digest-that-no-longer-matches.md) | The admission rejection, and the digest-tamper verify failure |
+| 10.C5 | [**Detection a variant evades**](../labs/10/23-10c5-a-string-rule-a-variant-evades.md) | The missed detection that forces a behavioral rule |
 
 Every drill is by-hand: reading the exact rule, edge, or byte that failed is the lesson, and each one is a component of the incident in [§7](#capstone).
 
@@ -213,6 +186,8 @@ The incident's claims must cite checkable evidence, per the [P2 archaeology stan
 3. **The detection:** the line of your Falco rule that keys on context, and the audit-log entry for the exec.
 
 A reader checks the manifest field, the source edge, and the rule line — all re-derivable.
+
+**Lab** — [The CVE incident](../labs/10/26-the-cve-incident.md), which runs the whole loop end to end and is where the phase's topology is destroyed. [The CKS drill block](../labs/10/25-cks-drill-block.md) provisions its own fresh `pair` afterward.
 
 ---
 
