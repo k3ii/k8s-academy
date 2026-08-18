@@ -43,14 +43,9 @@ This is where the curriculum stops trusting citations. Every later phase inherit
 
 **Read** — [the method](../strands/source-archaeology.md#method) (five techniques) and [the seven known moves](../strands/source-archaeology.md#stale-paths). **Two of those seven are yours this phase:** etcd `mvcc/` → `server/storage/mvcc/`, and the Raft library extracted out of `etcd-io/etcd` into its own `etcd-io/raft` repo.
 
-**Do**
-1. **Blobless clones on [`forge`](../strands/source-archaeology.md#clone), both repos:** `git clone --filter=blob:none https://github.com/etcd-io/etcd` and the same for `etcd-io/raft`. `--depth 1` is the wrong shortcut — techniques 2–4 need history. Two clones, because Raft is two repos now.
-2. **Verify the entry point.** Confirm `server/storage/mvcc/key_index.go` resolves in the live tree, then `git log --follow` it back through the `mvcc/` move. Answer: which release first shipped the `server/storage/` path?
-3. **Prove the extraction.** Establish, with a commit or a `go.mod` line, that `etcd-io/raft` is genuinely separate and when it split — so that any article expecting to read Raft and the store in one clone is dated on sight.
+**Labs** — [Two clones, and an entry point that resolves](../labs/02/01-two-blobless-clones.md) · [The release that moved `mvcc/` under `server/`](../labs/02/02-date-the-mvcc-move.md) · [Raft is a second repository](../labs/02/03-prove-the-raft-extraction.md) · [Break one published citation, on purpose](../labs/02/04-refute-a-published-path.md)
 
-**Break it** — take a paragraph from any pre-2023 etcd storage blog, pick a path or symbol it cites, and **break its claim**: show with `git log -S` or blame where that symbol actually lives now, or that it is gone. A wrong method fails loudly here, which is the point.
-
-**Write down** — for each of your two moves, the `Was → Is` row and the sha or release that made it. This is the archaeology receipt the checklist asks for.
+**No cluster of its own.** All four run on [`forge`](../strands/lab-topologies.md#build-guest) against two blobless clones, which is why this module can occupy the first week while [2.1](#m2-1) is bringing a cluster up.
 
 > **Standard, inherited by every later phase:** a drill is passed when its answer is a `file:line` or a commit sha a hostile reader could check and find wrong — [the build track's tier-2 bar](../strands/source-archaeology.md#drills).
 
@@ -68,11 +63,9 @@ The entry point, and the module that makes `resourceVersion` stop being magic.
 | `data_model` + `api_guarantees` docs (items 1, 3) | From `api_guarantees`: what is a client **forbidden** from inferring from a revision number? This is the upstream root of the `resourceVersion` opacity rule you met in [P1](01-operate-shallow.md). |
 | `index.go` (item 9) | The in-memory B-tree over keyIndexes — what does a read consult *before* it ever touches bbolt? |
 
-**Do** — single member, `etcdctl`. Write one key ten times; `get --rev` at each historical revision; `compact` in the middle; watch the older `--rev` reads flip to `ErrCompacted`. Dump the db with `tools/etcd-dump-db` and find your key's revisions as raw bytes.
+**Labs** — [Three members, wired together by hand](../labs/02/05-three-members-by-hand.md) · [Predict which historical reads survive a compaction](../labs/02/06-ten-writes-and-a-compaction.md) · [One raw bbolt key, decoded](../labs/02/07-decode-a-bbolt-key.md) · [The transaction that puts two revisions inside one](../labs/02/08-what-sub-is-for.md) · [The index is in memory, and it is not free](../labs/02/09-what-a-read-consults-first.md) · [A stale read you caused on purpose](../labs/02/10-linearizable-versus-serializable.md)
 
-**Break it** — `compact` to a revision, then request one below it. The error you get **is** objective 1, and its name reappears in module 2.3 as the watcher failure and in [P3](03-api-machinery.md) as the apiserver relist trigger.
-
-**Write down** — the generations of your ten-write key before and after compaction, and the one-sentence `resourceVersion = etcd revision` mapping with the guarantee it does *not* carry.
+`ErrCompacted` is met here for the first time, as a failed historical read. Its name reappears in [module 2.3](#m2-3) as the *watcher* failure and in [P3](03-api-machinery.md) as the apiserver relist trigger — three surfaces, one error value.
 
 <a id="m2-2"></a>
 ### Module 2.2 — Raft, the library versus the server (~1 week)
@@ -88,11 +81,7 @@ Consensus, read as the two-layer thing it actually is: an algorithm (the paper) 
 | `etcdserver/raft.go` (item 18) | The server side of that contract: where in `raftNode.start()` does the **WAL `fsync`** happen relative to sending messages and applying committed entries? |
 | `write_workflow_leader.png` (item 24) | The one-picture check on your mental model of the above. |
 
-**Do** — three members. `etcdctl endpoint status` to find the leader; `move-leader`; watch a follower's log index track the leader's. Kill the leader, watch an election, read the term change.
-
-**Break it** — chaos drill [2.C2](#chaos): partition one member off the peer port (2380) and watch a *minority* member go unavailable for writes while the majority carries on — the safety rule from Figure 2 made operational.
-
-**Write down** — the leader write path as a sequence, with the `fsync` placed correctly, citing the function in `etcdserver/raft.go` where it happens.
+**Labs** — [One leader, three logs, and a handover you asked for](../labs/02/11-find-the-leader-and-move-it.md) · [An election you did not ask for](../labs/02/12-kill-the-leader-read-the-term.md) · [What the library obliges its caller to do, in order](../labs/02/13-the-ready-advance-contract.md) · [The leader write path, with the `fsync` in the right place](../labs/02/14-where-the-fsync-sits.md) · [2.C5 — cut one member off the peer port](../labs/02/15-partition-one-member.md)
 
 <a id="m2-3"></a>
 ### Module 2.3 — Watch (~4–5 days)
@@ -107,11 +96,9 @@ The mechanism the entire Kubernetes control plane is a client of. This is the mo
 | `watchable_store.go` (item 11, ⭐ of this module) | Follow `syncWatchers` and the **victim list**: what happens to a watcher too slow to keep up, and what error does it ultimately receive? |
 | `api` doc (item 2) | The `Watch` gRPC surface with `WithRev` — how does a client *resume* a watch, and what does it pass? |
 
-**Do** — open a watch from an old revision with `etcdctl watch --rev=<old>`; then `compact` past it in another terminal and watch the stream terminate.
+**Labs** — [A watch that starts in the past](../labs/02/16-resume-a-watch-from-a-revision.md) · [Three sets a watcher can be in](../labs/02/17-synced-unsynced-victim.md) · [Delete the history a watcher is still standing in](../labs/02/18-compact-under-a-live-watcher.md) · [One compaction, four layers, and the relist at the top](../labs/02/19-the-chain-four-layers-up.md)
 
-**Break it** — force the failure deliberately: start a watch, compact aggressively, and capture the exact error. **Name it `ErrCompacted`, then name what a Kubernetes client sees when this reaches it: `"too old resource version"` → a full relist.** This single causal chain — etcd compaction → watcher eviction → apiserver 410 → client-go relist — is the spine of module 2.3 and a load-bearing fact for [P4](04-controllers.md).
-
-**Write down** — the slow-watcher path (synced → unsynced → victim → `ErrCompacted`) with the `watchable_store.go` function names, and its Kubernetes-facing translation.
+The single causal chain — etcd compaction → watcher eviction → apiserver 410 → client-go relist — is the spine of this module, a load-bearing fact for [P4](04-controllers.md), and [gate condition 1](#gate). The last of the four labs is the only exercise in the curriculum graded on recall.
 
 <a id="m2-4"></a>
 ### Module 2.4 — Compaction, defrag, and bbolt (~4–5 days)
@@ -126,11 +113,9 @@ The two space problems operators conflate, separated for good.
 | `backend.go` + `batch_tx.go` (item 16) | The bbolt layer — batch transactions and commit intervals. Where does `Defrag()` actually run, and why must it **block**? |
 | `maintenance` doc (item 13) | Auto-compaction modes, the space quota, and the `NOSPACE` alarm. What state is the cluster in once the alarm fires? |
 
-**Do** — fill a member with churn (write-delete loops) to inflate the db; `compact`; measure `db size` — unchanged. Then `defrag`; measure again — now it drops. This before/after pair is the capstone's core.
+**Labs** — [Compaction moves one number and not the other](../labs/02/20-compaction-frees-no-disk.md) · [Defrag returns the disk and stops the member](../labs/02/21-defrag-frees-disk-and-blocks.md) · [History that disappears while you are not looking](../labs/02/22-auto-compaction-runs-without-you.md) · [2.C4 — drive it into `NOSPACE` and get it back](../labs/02/23-fill-the-quota.md)
 
-**Break it** — chaos drill [2.C4](#chaos): drive the db past its `--quota-backend-bytes` and meet the `NOSPACE` alarm and the read-only cluster it produces; recover with compact + defrag + `alarm disarm`, in that order.
-
-**Write down** — the two measurements (post-compact size, post-defrag size) and one sentence each on *why* compaction did not move the first number and defrag did. **Read the shape, not the magnitude** — absolute bytes on this disk mean nothing.
+The before/after pair from the first two is [the capstone's](#capstone) core measurement. **Read the shape, not the magnitude** — absolute bytes on this disk mean nothing, and claiming them is the stated failure.
 
 <a id="m2-5"></a>
 ### Module 2.5 — Failure, corruption, and recovery (~1 week)
@@ -145,11 +130,9 @@ Where the phase's chaos lives. On-disk reality first, then break it and put it b
 | `performance` + `hardware` docs (item 15) | `fsync` latency and the `--heartbeat-interval`/`--election-timeout` derivation from RTT. **`factory` is a 35 W i5 with contended disk** — predict which of these etcd will violate, and be able to explain the resulting log lines. |
 | v3.5 data-inconsistency postmortem (item 19) + `corrupt.go` (item 20) | A real correctness bug root-caused in public, and the corruption detector it produced. What signal does `corrupt.go` compare across members, and what would a `dd` to one member's `db` do to it? |
 
-**Do** — the three recovery drills below (2.C1, 2.C2, 2.C3), by hand, in order.
+**Labs** — [Three kinds of file, and which one you cannot lose](../labs/02/24-the-on-disk-trio.md) · [Predict which timing this hardware breaks](../labs/02/25-what-this-disk-violates.md) · [2.C1 — write garbage into one page](../labs/02/26-corrupt-a-member.md) · [2.C2 — stop two of three](../labs/02/27-lose-quorum.md) · [2.C3 — put the cluster back, and count what you lost](../labs/02/28-restore-from-snapshot.md)
 
-**Break it** — every drill in this module *is* a Break-it; that is the shape of the phase's chaos, which is why it stays [manual](../strands/chaos.md#manual-drills). The snapshot save/restore procedure here is **banked toward CKA** (etcd backup/restore is a CKA cluster-maintenance competency) — you are producing the exam skill as a by-product of doing it for real, not drilling it separately.
-
-**Write down** — the ordered restore procedure (snapshot → fresh `--data-dir` → new `--initial-cluster-token` → fix the static-pod manifest → verify), and the corruption signal `corrupt.go` uses.
+Every drill in this module *is* a Break-it; that is the shape of the phase's chaos, which is why it stays [manual](../strands/chaos.md#manual-drills). **The snapshot procedure is not CKA preparation** — *Implement etcd backup and restore* was [removed from the CKA curriculum in v1.32](../strands/certs.md#cka-changes), which the strand calls the single biggest trap in that revision. It is here at full length as operational skill and as [the capstone's](#capstone) first artifact, billed as internals rather than as exam prep.
 
 ---
 
@@ -160,12 +143,15 @@ Where the phase's chaos lives. On-disk reality first, then break it and put it b
 
 | # | Drill | By hand | What you must produce afterwards |
 |---|---|---|---|
-| 2.C1 | **Corrupt a member and recover** | `dd` a page of `member/snap/db`, meet `etcdctl check` / consistency-index mismatch, recover | The bbolt-page-level account of what "corrupt" means to a Raft log, and the signal `corrupt.go` caught it with |
-| 2.C2 | **Lose quorum (2 of 3) → read-only** | stop two members (VM stop, not `PodKill`); observe writes blocked, reads served-or-not; recover with `--force-new-cluster` | Why the minority cannot serve writes — Figure 2's safety rule, operational |
-| 2.C3 | **Restore from snapshot** | `etcdctl snapshot save`; restore to a fresh `--data-dir`; fix the manifest; watch it return | The ordered procedure — **and the sinking realisation of what a stale snapshot means for everything created since** |
-| 2.C4 | **Fill the quota, then defrag** | churn past `--quota-backend-bytes`; `NOSPACE`; compact + defrag + disarm | The before/after size curve with its **shape** defended, not its magnitude |
+| 2.C1 | **[Corrupt a member and recover](../labs/02/26-corrupt-a-member.md)** | `dd` a page of `member/snap/db`, meet the cross-member hash mismatch, recover | The bbolt-page-level account of what "corrupt" means to a Raft log, and the signal `corrupt.go` caught it with |
+| 2.C2 | **[Lose quorum (2 of 3) → read-only](../labs/02/27-lose-quorum.md)** | stop two members (VM stop, not `PodKill`); observe writes blocked, reads served-or-not; recover with `--force-new-cluster` | Why the minority cannot serve writes — Figure 2's safety rule, operational |
+| 2.C3 | **[Restore from snapshot](../labs/02/28-restore-from-snapshot.md)** | `etcdctl snapshot save`; restore to a fresh `--data-dir`; fix the manifest; watch it return | The ordered procedure — **and the sinking realisation of what a stale snapshot means for everything created since** |
+| 2.C4 | **[Fill the quota, then defrag](../labs/02/23-fill-the-quota.md)** | churn past `--quota-backend-bytes`; `NOSPACE`; compact + defrag + disarm | The before/after size curve with its **shape** defended, not its magnitude |
+| 2.C5 | **[Partition one member off the peer port](../labs/02/15-partition-one-member.md)** | `iptables -j DROP` on 2380 both directions; the isolated member serves stale serializable reads and nothing else | The same safety rule one member short of 2.C2 — and a failure whose only broken segment is the one nobody suspects |
 
 2.C3 is the capstone's restore step; 2.C4 is its defrag measurement.
+
+**2.C5 is new, and it is a correction.** [Module 2.2](#m2-2) originally cited the single-member partition as *2.C2*, which is a different drill from the two-member quorum loss this table has always numbered 2.C2 — one leaves the cluster fully available, the other leaves it unable to decide anything. Both are wanted, so the partition was given its own number rather than renumbering a drill the [capstone](#capstone) refers to by name.
 
 ---
 
@@ -188,7 +174,7 @@ Full entries with runtimes under [etcd](../strands/talks.md#etcd) — the denses
 **etcd itself**, treated for its internals rather than re-installed.
 
 - **Hands-on:** the whole phase — you run the real thing, standalone, and break it.
-- **Internals note:** the storage engine underneath is **bbolt** (a fork of `boltdb`), a single-file B+tree with **one writer at a time**. That single-writer constraint is *why* defrag must block and *why* `fsync` latency dominates etcd's performance — the object of module 2.4 is really bbolt wearing etcd's clothes. Dump a `db` file with `tools/etcd-dump-db` and read the buckets directly.
+- **Internals note:** the storage engine underneath is **bbolt** (a fork of `boltdb`), a single-file B+tree with **one writer at a time**. That single-writer constraint is *why* defrag must block and *why* `fsync` latency dominates etcd's performance — the object of module 2.4 is really bbolt wearing etcd's clothes. What the buckets actually contain is [the labs'](../labs/02/07-decode-a-bbolt-key.md) to answer.
 - **Maturity:** CNCF **graduated**, and the **only** supported Kubernetes datastore — there is no second implementation to hedge against, which is exactly why a month spent here pays off across every phase below.
 
 ---
@@ -202,6 +188,8 @@ Three artifacts, one write-up:
 
 1. **The quorum-loss recovery** (drill 2.C2 + 2.C3): stop two of three members, demonstrate the cluster is read-only/unavailable for writes, restore from a snapshot to a fresh data dir, and bring it back — with the **ordered** procedure written so another person could follow it.
 2. **The defrag curve** (drill 2.C4): the churn → compact (no disk freed) → defrag (disk freed) sequence, plotted or tabulated, with the shape explained from mechanism.
+
+**Lab** — [the capstone, in one sitting](../labs/02/29-the-capstone-writeup.md), with the rule that makes it a capstone rather than a repetition: notes are allowed, the exercise files are not.
 3. **The write-up must cite `file:line`** a hostile reader could check — at minimum:
    - the batched-delete loop in `server/storage/mvcc/kvstore_compaction.go` that frees revisions without freeing disk;
    - where `Defrag()` runs in the `server/storage/backend/` bbolt layer and why it blocks;
