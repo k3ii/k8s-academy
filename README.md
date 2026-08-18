@@ -88,6 +88,7 @@ now all on `main`.
 | Path | Contents |
 |------|----------|
 | `phases/NN-name.md` | One file per phase, `00`–`12`. Ten fixed sections: objectives, modules, build artifact, chaos drills, talks, ecosystem, cert drill block, capstone, checklist, gate — absent sections omitted, not padded |
+| `labs/NN/` | One directory per phase, one numbered file per exercise, in the order the phase intends them. Each states a claim to test or an artifact to produce, the exact commands, the observable outcome, its [topology](strands/lab-topologies.md#topologies) and its teardown |
 | `strands/` | The cross-cutting material each phase links into rather than restates: source corpus, chaos catalogue, talk index, cert curricula, build mechanics, source archaeology, lab topologies. The **living** form — corrected as paths move and tools release. See [`strands/README.md`](strands/README.md) |
 | `research/` | Findings from `wayfinder:research` tickets. The **dated record** of what was verified, against which tree, on which date — including what could not be verified. Not edited to stay current; a stale research doc is still an accurate record |
 | `journal/NN-name.md` | The learner's own notes, traces and lab writeups |
