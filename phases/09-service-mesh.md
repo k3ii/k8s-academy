@@ -14,6 +14,7 @@
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — an artifact, a timed production, or a claim a hostile reader could check against a live cluster or a config dump. *understand* and *know* appear nowhere.
@@ -30,10 +31,12 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 There is no reading list from the corpus here — the "source" is a running sidecar and Envoy's own docs. The rule is still archaeology-grade: **every claim resolves to a line of a config dump or an `iptables` rule a hostile reader could re-derive**, never "the mesh handles it."
 
+<a id="m9-1"></a>
 ### Module 9.1 — Envoy's object model, before any mesh (~3 days)
 
 You cannot read a config dump without the object model, so it comes first, from Envoy's docs and the Klein talk — no Istio yet.
@@ -44,6 +47,7 @@ You cannot read a config dump without the object model, so it comes first, from 
 
 **Write down** — the four-object path as a diagram, annotated with which thread handles each (the threading model is why a mesh scales *and* why it costs a core per busy sidecar).
 
+<a id="m9-2"></a>
 ### Module 9.2 — Sidecar interception: the `iptables` rules (~4 days)
 
 **The entire internals payload.** Install Istio in **sidecar mode** — the only mode with a pod whose interception you can read directly.
@@ -52,10 +56,11 @@ You cannot read a config dump without the object model, so it comes first, from 
 
 > **Question to answer from the source (the live pod):** which chain redirects **inbound** vs **outbound**, and which ports/UIDs are *excluded* from redirection so that Envoy's own traffic doesn't loop? Cite the rule.
 
-**Break it** — chaos drill [9.C1](#4-chaos-drills): exclude an app port from redirection (or add it to the exclude list) and watch that traffic bypass the mesh entirely — no mTLS, no telemetry, no policy. The rule that was missing is the proof the mesh is *only* those rules.
+**Break it** — chaos drill [9.C1](#chaos): exclude an app port from redirection (or add it to the exclude list) and watch that traffic bypass the mesh entirely — no mTLS, no telemetry, no policy. The rule that was missing is the proof the mesh is *only* those rules.
 
 **Write down** — the inbound and outbound `REDIRECT` rules with their port numbers, mapped one-to-one to `istio-init`'s args — the interception, reduced to netfilter.
 
+<a id="m9-3"></a>
 ### Module 9.3 — xDS and the config dump (~4 days)
 
 `istiod` is a controller; xDS is how it pushes state to the data plane. Read the result, not the magic.
@@ -64,10 +69,11 @@ You cannot read a config dump without the object model, so it comes first, from 
 
 > **Question to answer from the source (the dump):** find the `version_info`/`nonce` on one resource type. What does Envoy send back to `istiod` to **ACK** a push, and what happens to the version on a NACK? Cite the field in the dump.
 
-**Break it** — chaos drill [9.C3](#4-chaos-drills): kill `istiod` and re-pull the dump. The config is *unchanged* and traffic keeps flowing — Envoy serves its last-ACKed state. Then create a new Service and watch it **never appear** in the dump. That gap is control-plane/data-plane separation, observed.
+**Break it** — chaos drill [9.C3](#chaos): kill `istiod` and re-pull the dump. The config is *unchanged* and traffic keeps flowing — Envoy serves its last-ACKed state. Then create a new Service and watch it **never appear** in the dump. That gap is control-plane/data-plane separation, observed.
 
 **Write down** — the LDS→RDS→CDS→EDS chain for one Service with the concrete resource names at each hop, and the `version_info` field that carries the ACK.
 
+<a id="m9-4"></a>
 ### Module 9.4 — mTLS and workload identity (~3 days)
 
 The security payload — the part [P10](10-security.md) builds on.
@@ -76,10 +82,11 @@ The security payload — the part [P10](10-security.md) builds on.
 
 > **Question to answer from the source (the cert):** what is the exact SPIFFE URI, and which Kubernetes object (not the IP) does each path segment name? Where did the cert come from, and what rotates it?
 
-**Break it** — chaos drill [9.C2](#4-chaos-drills): break mTLS trust (wrong root, or a plaintext client against `STRICT`) and read the rejection at the Envoy layer, not just "connection refused" — the filter that dropped it and why.
+**Break it** — chaos drill [9.C2](#chaos): break mTLS trust (wrong root, or a plaintext client against `STRICT`) and read the rejection at the Envoy layer, not just "connection refused" — the filter that dropped it and why.
 
 **Write down** — the SPIFFE identity decoded to its ServiceAccount, and the observed plaintext-rejection under `STRICT`.
 
+<a id="m9-5"></a>
 ### Module 9.5 — Ambient mode, and Linkerd by contrast (~3 days)
 
 Ambient second — the sidecar-free architecture, **and the OOM escape hatch** when per-pod Envoys won't fit.
@@ -96,6 +103,7 @@ Ambient second — the sidecar-free architecture, **and the OOM escape hatch** w
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
 Anchored in [`chaos.md#principle`](../strands/chaos.md#principle). The twist this phase: **the data plane is itself a fault injector** — Envoy's fault filter means the mesh injects its own L7 faults (delay, abort) declaratively, so drill 9.C4 needs no external tool. The other three attack the mesh's own guarantees.
@@ -111,6 +119,7 @@ Anchored in [`chaos.md#principle`](../strands/chaos.md#principle). The twist thi
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries under [Service mesh internals](../strands/talks.md#mesh).
@@ -122,16 +131,18 @@ Full entries under [Service mesh internals](../strands/talks.md#mesh).
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 **Istio** is the one big rock — everything else is torn down for it ([#8](https://github.com/k3ii/k8s-academy/issues/8)).
 
-- **Hands-on:** **sidecar first** ([module 9.2](#module-92--sidecar-interception-the-iptables-rules-4-days)) because it is the only mode whose interception you can read in one pod; **ambient second** ([9.5](#module-95--ambient-mode-and-linkerd-by-contrast-3-days)), which is also the escape hatch when per-pod Envoys exhaust the host.
+- **Hands-on:** **sidecar first** ([module 9.2](#m9-2)) because it is the only mode whose interception you can read in one pod; **ambient second** ([9.5](#m9-5)), which is also the escape hatch when per-pod Envoys exhaust the host.
 - **Internals note (required):** the mesh adds **nothing** to the Kubernetes control plane — `istiod` is an ordinary controller watching the API, and the data plane is Envoy processes reached by `iptables` rules. Every capability (mTLS, retries, canaries, telemetry) is an Envoy **filter** configured over xDS. This is why the phase is cuttable: it is a self-contained L7 layer, not a piece of Kubernetes.
 - **Maturity:** Istio is **CNCF graduated** (2023); ambient mode reached GA in 2024. **Linkerd** (also graduated) is read-and-contrast only — a Rust micro-proxy that trades Envoy's generality for footprint, and it **cannot coexist** with Istio on `pair` ([#6](https://github.com/k3ii/k8s-academy/issues/6)), so it is never installed.
 
 ---
 
+<a id="capstone"></a>
 ## 6. Capstone
 
 **Pull a config dump from a live sidecar and walk one request through listener → filter chain → cluster → endpoint, then show the `iptables` rules that got the packet into Envoy in the first place.**
@@ -145,6 +156,7 @@ One request, end to end, both halves:
 
 ---
 
+<a id="checklist"></a>
 ## 7. Checklist
 
 Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
@@ -170,6 +182,7 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 
 ---
 
+<a id="gate"></a>
 ## 8. Gate
 
 You may advance to [P10](10-security.md) when:

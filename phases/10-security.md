@@ -9,12 +9,13 @@
 | **Unlocks** | [P11 Synthesis](11-synthesis.md) and [P12](12-gitops-platform.md). This is the last cert, and the last descent into a Kubernetes subsystem — everything after climbs back up. |
 | **Source** | RBAC / authn / authz — [Area 2 items 36–38](../strands/source-reading.md#area-2-api-machinery), **re-read as CKS material**. The admission-chain items (4–12) return from P3 as the substrate Kyverno sits on. |
 | **Language** | Go for reading ([#9](https://github.com/k3ii/k8s-academy/issues/9)); the artifacts here are **policies, rules and signatures**, not a build-track binary — [build mechanics](../strands/build-mechanics.md#artifact-table) lists no P10 Go artifact. |
-| **Lab** | [`pair`](https://github.com/k3ii/k8s-academy/issues/8), on the **isolated `10.10.10.0/24` bridge** — which is not a convenience here but the *containment boundary* for the capstone (see [§7](#7-capstone--the-cve-incident)). |
-| **Cert** | [**CKS**](../strands/certs.md#cks), sat at the end of the [drill block](#6--cks-drill-block--12-weeks). CKS-last is optimal — the CARE programme reinstates an expired CKA. |
+| **Lab** | [`pair`](https://github.com/k3ii/k8s-academy/issues/8), on the **isolated `10.10.10.0/24` bridge** — which is not a convenience here but the *containment boundary* for the capstone (see [§7](#capstone)). |
+| **Cert** | [**CKS**](../strands/certs.md#cks), sat at the end of the [drill block](#cks-block). CKS-last is optimal — the CARE programme reinstates an expired CKA. |
 | **Strands** | [certs (CKS)](../strands/certs.md#cks) · [chaos (CVE loop)](../strands/chaos.md#install) · [talks](../strands/talks.md#security) · [source archaeology](../strands/source-archaeology.md#drills) |
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — an artifact, a timed production, or a claim a hostile reader could check against source or a running cluster. *understand* and *know* appear nowhere.
@@ -32,10 +33,12 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 Reading is [Area 2 items 36–38](../strands/source-reading.md#area-2-api-machinery) plus the P3 admission items returning as attack surface. Every cited item carries a question to answer — no bare links.
 
+<a id="m10-1"></a>
 ### Module 10.1 — Identity and authorization, as attack surface (~1 week)
 
 The two smallest interfaces in the apiserver decide who you are and what you may touch. Re-read them asking *how does an attacker escalate*, not *how does a request flow*.
@@ -51,10 +54,11 @@ The two smallest interfaces in the apiserver decide who you are and what you may
 
 **Do** — write a least-privilege Role + RoleBinding for a real ServiceAccount, then attempt an action just outside it and read the authz denial. Disable the `default` SA's automount on a namespace (CKS *Cluster Hardening*).
 
-**Break it** — chaos drill [10.C1](#4-chaos-drills): grant a wildcard `*` in one Role and find the escalation path it opened; then close it and prove the path is gone.
+**Break it** — chaos drill [10.C1](#chaos): grant a wildcard `*` in one Role and find the escalation path it opened; then close it and prove the path is gone.
 
 **Write down** — the `graph.go` edge that confines a kubelet to its own node's Secrets, cited `file:line` — the fact the capstone's blast-radius reasoning rests on.
 
+<a id="m10-2"></a>
 ### Module 10.2 — Pod hardening and policy admission (~1 week)
 
 The P0 capabilities/seccomp module, now enforced cluster-wide by a policy engine sitting on the P3 admission chain.
@@ -65,10 +69,11 @@ The P0 capabilities/seccomp module, now enforced cluster-wide by a policy engine
 
 **Do** — apply `restricted` Pod Security Admission to a namespace; write a Kyverno policy that requires `runAsNonRoot` and drops all capabilities; apply a seccomp `RuntimeDefault` profile and an AppArmor profile to a pod (CKS *System Hardening*). Learn Rego off-cluster with `opa eval` — no Gatekeeper needed (it won't fit; [#6](https://github.com/k3ii/k8s-academy/issues/6)).
 
-**Break it** — chaos drill [10.C2](#4-chaos-drills): write a Kyverno policy with a gap (matches `Pod` but not the `Deployment` template that creates it) and watch a violating pod slip through the controller that made it — the classic policy-scope mistake.
+**Break it** — chaos drill [10.C2](#chaos): write a Kyverno policy with a gap (matches `Pod` but not the `Deployment` template that creates it) and watch a violating pod slip through the controller that made it — the classic policy-scope mistake.
 
 **Write down** — the Kyverno policy and the admission-ordering point at which it fires, and the seccomp/AppArmor profiles applied.
 
+<a id="m10-3"></a>
 ### Module 10.3 — Cluster and node hardening (~1 week)
 
 Turn the cluster you built in P1–P3 into one that passes an auditor.
@@ -79,10 +84,11 @@ Turn the cluster you built in P1–P3 into one that passes an auditor.
 - Enable an **audit policy** at `Metadata`+ level for exec/attach, and confirm a `kubectl exec` appears in the audit log — the same event the Falco rule will catch at runtime.
 - Protect node metadata: block pod access to the cloud/link-local metadata endpoint with a NetworkPolicy ([P7](07-networking.md)).
 
-**Break it** — chaos drill [10.C3](#4-chaos-drills): mis-order the `EncryptionConfiguration` providers (`identity` first) and prove new Secrets are written in plaintext despite encryption being "on" — the config that lies.
+**Break it** — chaos drill [10.C3](#chaos): mis-order the `EncryptionConfiguration` providers (`identity` first) and prove new Secrets are written in plaintext despite encryption being "on" — the config that lies.
 
 **Write down** — the before/after etcd on-disk bytes for one Secret, and the audit-log line for one exec.
 
+<a id="m10-4"></a>
 ### Module 10.4 — Supply chain, zero-cluster-cost (~1 week)
 
 The whole module runs **CLI-side on `hopper`** — it costs the cluster nothing, which is what makes this phase affordable next to Falco ([#8](https://github.com/k3ii/k8s-academy/issues/8)). CKS *Supply Chain Security*, 20% of the exam.
@@ -93,10 +99,11 @@ The whole module runs **CLI-side on `hopper`** — it costs the cluster nothing,
 - **Sign keyless with `cosign`** (Sigstore/Fulcio OIDC) and verify — **`hopper` holds no long-lived private key**; identity comes from the OIDC token, so there is no key to leak. Record the transparency-log (Rekor) entry.
 - Enforce it at admission: a Kyverno `verifyImages` rule that **rejects an unsigned or unverifiable image** and permits only your signed one from a permitted registry.
 
-**Break it** — chaos drill [10.C4](#4-chaos-drills): push an unsigned image and confirm admission rejects it; then tamper with a signed image's digest and confirm verification fails — signature bound to content, not to a name.
+**Break it** — chaos drill [10.C4](#chaos): push an unsigned image and confirm admission rejects it; then tamper with a signed image's digest and confirm verification fails — signature bound to content, not to a name.
 
 **Write down** — the `cosign verify` output with the Rekor entry, and the admission rejection of the unsigned image.
 
+<a id="m10-5"></a>
 ### Module 10.5 — Runtime detection with Falco (~4 days)
 
 The behavioral half — the detection the capstone's gate demands. Falco reads syscalls (its eBPF driver is [P7](07-networking.md)'s eBPF, now in a security tool) and matches them against rules.
@@ -107,15 +114,16 @@ The behavioral half — the detection the capstone's gate demands. Falco reads s
 
 **Do** — write a Falco rule that fires on an unexpected `exec` inside the `chaos-daemon` context (the capstone's detector). Test it against a benign exec you expect *not* to fire.
 
-**Break it** — chaos drill [10.C5](#4-chaos-drills): write the rule as a string match on one command, then run the same technique with a different command and watch it miss — the exact failure the capstone's unseen-variant gate exists to prevent.
+**Break it** — chaos drill [10.C5](#chaos): write the rule as a string match on one command, then run the same technique with a different command and watch it miss — the exact failure the capstone's unseen-variant gate exists to prevent.
 
 **Write down** — the behavioral Falco rule with the context field it keys on, and the missed-detection from the string-match version.
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
-The phase's chaos **is** its capstone — the CVE incident ([§7](#7-capstone--the-cve-incident)). The drills below are its rehearsals: each builds one skill the live incident needs, so that when the incident runs, no single mechanism is new. Anchored in the [CVE loop](../strands/chaos.md#install).
+The phase's chaos **is** its capstone — the CVE incident ([§7](#capstone)). The drills below are its rehearsals: each builds one skill the live incident needs, so that when the incident runs, no single mechanism is new. Anchored in the [CVE loop](../strands/chaos.md#install).
 
 | # | Drill | Mechanism | What you must produce afterwards |
 |---|---|---|---|
@@ -125,20 +133,22 @@ The phase's chaos **is** its capstone — the CVE incident ([§7](#7-capstone--t
 | 10.C4 | **Unsigned image admitted** | by hand (push unsigned / tamper digest) | The admission rejection, and the digest-tamper verify failure |
 | 10.C5 | **Detection a variant evades** | by hand (string rule vs new command) | The missed detection that forces a behavioral rule |
 
-Every drill is by-hand: reading the exact rule, edge, or byte that failed is the lesson, and each one is a component of the incident in [§7](#7-capstone--the-cve-incident).
+Every drill is by-hand: reading the exact rule, edge, or byte that failed is the lesson, and each one is a component of the incident in [§7](#capstone).
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries under [Security](../strands/talks.md#security).
 
 - **★ Crafty Requests: Deep Dive into CVE-2018-1002105** (Coldwater, EU 2019) — **returns from [P3](03-api-machinery.md), now read as an attack.** The aggregation-layer proxy-upgrade bug that skipped authorization, explained protocol-up. In P3 it was apiserver mechanism; here it is the model CVE walkthrough — *a proxy path that bypasses authz* is the evergreen class, and reading it primes the capstone's own "unauthenticated request → privileged execution" shape.
-- **Container Forensics: What to Do When Your Cluster is a Cluster** (Kaczorowski & Wallace, EU 2019) — incident response on ephemeral workloads: what evidence to collect before a pod vanishes, which is exactly the problem the capstone's audit log + Falco rule solve. Watch before [module 10.5](#module-105--runtime-detection-with-falco-4-days).
+- **Container Forensics: What to Do When Your Cluster is a Cluster** (Kaczorowski & Wallace, EU 2019) — incident response on ephemeral workloads: what evidence to collect before a pod vanishes, which is exactly the problem the capstone's audit log + Falco rule solve. Watch before [module 10.5](#m10-5).
 - **The Path Less Traveled: Abusing Kubernetes Defaults** (Cooley & Coldwater) and **Attack and Defense: Inception-Style** (Beale) — paired attack/defence demos; use them to pressure-test your hardening, not just to admire the escapes.
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 Multiple tools this phase, because security *is* the integration of them — but each earns its footprint.
@@ -146,14 +156,15 @@ Multiple tools this phase, because security *is* the integration of them — but
 - **Kyverno** (~320Mi) — the policy engine, chosen because **Gatekeeper's ~2Gi is un-runnable here** ([#6](https://github.com/k3ii/k8s-academy/issues/6)). **Internals note (required):** Kyverno is a pair of admission webhooks on the P3 chain — it adds *no* new apiserver machinery; every policy is a `ValidatingWebhookConfiguration` or `MutatingWebhookConfiguration` you already read the dispatch code for. That is why it slots in without new theory.
 - **Falco** — runtime detection, syscall-level, its driver the same eBPF you loaded in [P7](07-networking.md). Maturity: CNCF **graduated**.
 - **cert-manager** — issues and rotates the TLS the CIS benchmark and Ingress-with-TLS demand; the P4 webhook-cert work, now automated.
-- **Sigstore / `cosign` + `syft`** — supply chain, **zero cluster cost** ([module 10.4](#module-104--supply-chain-zero-cluster-cost-1-week)): CLI on `hopper`, keyless signing so nothing secret is stored. Sigstore is CNCF **graduated**; Kyverno graduated 2025.
+- **Sigstore / `cosign` + `syft`** — supply chain, **zero cluster cost** ([module 10.4](#m10-4)): CLI on `hopper`, keyless signing so nothing secret is stored. Sigstore is CNCF **graduated**; Kyverno graduated 2025.
 - One thing this phase does **not** install: **Gatekeeper** (won't fit) — Rego is learned off-cluster with `opa eval` instead, so the concept survives without the 2Gi.
 
 ---
 
+<a id="cks-block"></a>
 ## 6. ⏱ CKS drill block — 1–2 weeks
 
-> **This section is a different activity from everything above.** Everything above optimises for depth — reading the rule, citing the byte. This optimises for **speed and correctness under a clock**. Do not blend them. Do not read source during this block. It runs **last** — after the capstone incident in [§7](#7-capstone--the-cve-incident) — and when it ends, it ends.
+> **This section is a different activity from everything above.** Everything above optimises for depth — reading the rule, citing the byte. This optimises for **speed and correctness under a clock**. Do not blend them. Do not read source during this block. It runs **last** — after the capstone incident in [§7](#capstone) — and when it ends, it ends.
 
 Domains, weights and the recent-changes list live in [`certs.md#cks`](../strands/certs.md#cks) — not restated here. Three drill-block rules specific to CKS:
 
@@ -165,6 +176,7 @@ Drill on killer.sh (two included sessions) and Killercoda. Sit the exam at the e
 
 ---
 
+<a id="capstone"></a>
 ## 7. Capstone — the CVE incident
 
 **Enable the pinned-vulnerable `chaos-dashboard` on the isolated cluster → exploit `CVE-2025-59359` with a self-contained PoC, egress dropped → detect with a Falco rule you wrote that must survive an unseen variant → remediate to v2.7.3 / dashboard-off (the standing [`chaos.md#install`](../strands/chaos.md#install) config) → postmortem, defanged, committed alongside the rule; working payload destroyed with the cluster.**
@@ -197,13 +209,14 @@ The rule must fire not only on the payload you exploited with but on an **unseen
 
 The incident's claims must cite checkable evidence, per the [P2 archaeology standard](../strands/source-archaeology.md#drills):
 1. **Why it is a full-cluster compromise:** the `chaos-daemon` DaemonSet manifest fields (`securityContext.privileged`, `hostPID`, the host mounts) — cite the manifest line.
-2. **Why a compromised node does not automatically own its neighbours:** the `graph.go` edge from [module 10.1](#module-101--identity-and-authorization-as-attack-surface-1-week) — the boundary that *did* hold, cited `file:line`.
+2. **Why a compromised node does not automatically own its neighbours:** the `graph.go` edge from [module 10.1](#m10-1) — the boundary that *did* hold, cited `file:line`.
 3. **The detection:** the line of your Falco rule that keys on context, and the audit-log entry for the exec.
 
 A reader checks the manifest field, the source edge, and the rule line — all re-derivable.
 
 ---
 
+<a id="checklist"></a>
 ## 8. Checklist
 
 Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
@@ -229,10 +242,11 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 - [ ] Why a behavioral Falco rule survives the variant and a string rule doesn't.
 
 **Certification:**
-- [ ] **CKS passed** (after the [drill block](#6--cks-drill-block--12-weeks), not before).
+- [ ] **CKS passed** (after the [drill block](#cks-block), not before).
 
 ---
 
+<a id="gate"></a>
 ## 9. Gate
 
 You may advance to [P11](11-synthesis.md) when:

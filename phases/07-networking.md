@@ -14,6 +14,7 @@
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — an artifact, a timed production, or a claim a hostile reader could check against source or a running cluster. *understand* and *know* appear nowhere.
@@ -31,10 +32,12 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 Reading is [Area 5](../strands/source-reading.md#area-5-networking), and its rule is the corpus's clearest: **specs and API types before the `proxier.go` machines, the small backend-agnostic proxy files before any big backend.** Each cited item carries a question to answer — no bare links.
 
+<a id="m7-1"></a>
 ### Module 7.1 — Networking from first principles, and EndpointSlice (~1 week)
 
 The Linux primitives first, by hand — then the data structure the whole service dataplane consumes.
@@ -53,6 +56,7 @@ The Linux primitives first, by hand — then the data structure the whole servic
 
 **Write down** — the by-hand netns wiring, annotated with which step the CNI plugin (module 7.2) will automate.
 
+<a id="m7-2"></a>
 ### Module 7.2 — Build artifact 1: the CNI plugin (~1 week)
 
 CNI demystified: a spec for an executable that receives JSON on stdin and wires a netns. Module 7.1 done by hand; now automate it.
@@ -63,6 +67,7 @@ CNI demystified: a spec for an executable that receives JSON on stdin and wires 
 
 **Write down** — the `ADD` handler's veth+IPAM+route steps mapped one-to-one to module 7.1's by-hand commands.
 
+<a id="m7-3"></a>
 ### Module 7.3 — The Service dataplane: kube-proxy (~1 week)
 
 Where P6's trace debt is repaid in source. Read the small model files first — the routinely-skipped correct on-ramp.
@@ -78,10 +83,11 @@ Where P6's trace debt is repaid in source. Read the small model files first — 
 
 **Do** — trace one Service packet: dump `iptables-save` (then switch kube-proxy to nftables and dump `nft list ruleset`), find the `KUBE-SVC`/verdict-map entry that DNATs your ClusterIP to a pod, and confirm it against the endpoint in `discovery/v1`. Announce a MetalLB L2 LoadBalancer IP and watch the ARP reply that claims it.
 
-**Break it** — chaos drill [7.C3](#3-chaos-drills): corrupt a `KUBE-SEP-*` rule by hand and watch the Service half-break (some endpoints unreachable); map the symptom to the missing rule.
+**Break it** — chaos drill [7.C3](#chaos): corrupt a `KUBE-SEP-*` rule by hand and watch the Service half-break (some endpoints unreachable); map the symptom to the missing rule.
 
 **Write down** — the ClusterIP→endpoint DNAT path with the `syncProxyRules` `file:line` in *both* backends — **the P6 trace's far end, now cited.**
 
+<a id="m7-4"></a>
 ### Module 7.4 — NetworkPolicy and DNS (~4 days)
 
 The semantics live in the type comments; enforcement lives in the CNI, not in Kubernetes.
@@ -96,10 +102,11 @@ The semantics live in the type comments; enforcement lives in the CNI, not in Ku
 
 **Do** — apply a default-deny NetworkPolicy, then a targeted allow; confirm the AND-vs-OR selector behaviour empirically (make the classic mistake on purpose and watch it over-allow).
 
-**Break it** — chaos drills [7.C2](#3-chaos-drills) and [7.C4](#3-chaos-drills): break DNS (watch every name-based connection fail while IPs still work), and write a NetworkPolicy that *reads* correct but doesn't do what it says (the AND/OR trap), then diagnose it.
+**Break it** — chaos drills [7.C2](#chaos) and [7.C4](#chaos): break DNS (watch every name-based connection fail while IPs still work), and write a NetworkPolicy that *reads* correct but doesn't do what it says (the AND/OR trap), then diagnose it.
 
 **Write down** — the AND-vs-OR rule stated correctly, and the DNS diagnostic checklist in order.
 
+<a id="m7-5"></a>
 ### Module 7.5 — eBPF, and build artifact 2 (~1 week)
 
 The datapath's future, loaded into a real kernel — so Cilium's "it uses eBPF" becomes personal in module 7.6.
@@ -119,9 +126,10 @@ The datapath's future, loaded into a real kernel — so Cilium's "it uses eBPF" 
 
 **Write down** — the load→attach→read-map→detach sequence with the `uname -r` check that gated it.
 
+<a id="m7-6"></a>
 ### Module 7.6 — Cilium (~4 days)
 
-Entered **after** the eBPF artifact exists — detailed as ecosystem in [§5](#5-ecosystem), this is its hands-on.
+Entered **after** the eBPF artifact exists — detailed as ecosystem in [§5](#ecosystem), this is its hands-on.
 
 **Do** — install Cilium on `pair` in kube-proxy-replacement mode. Read its *Life of a Packet* against the program you loaded in 7.5, and find where it enforces NetworkPolicy in eBPF — the same DNAT you read in `syncProxyRules`, now a map lookup.
 
@@ -131,6 +139,7 @@ Entered **after** the eBPF artifact exists — detailed as ecosystem in [§5](#5
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
 **Chaos Mesh is now installed** (since [P6](06-kubelet-node.md)); network faults are exactly where its [one-Linux-primitive-per-fault](../strands/chaos.md#mechanisms) design pays off — `NetworkChaos` is `netem` on a qdisc, `DNSChaos` is CoreDNS running the `k8s_dns_chaos` plugin. The two by-hand drills stay by-hand because reading the broken rule is the lesson.
@@ -146,6 +155,7 @@ Entered **after** the eBPF artifact exists — detailed as ecosystem in [§5](#5
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries under [Networking](../strands/talks.md#networking) and [eBPF](../strands/talks.md#ebpf).
@@ -158,16 +168,18 @@ Full entries under [Networking](../strands/talks.md#networking) and [eBPF](../st
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 **Cilium** — entered *after* the eBPF artifact exists, so "Cilium uses eBPF" is a statement about something you have personally loaded into a kernel, not a slogan.
 
-- **Hands-on:** [module 7.6](#module-76--cilium-4-days) — install it in kube-proxy-replacement mode and read its *Life of a Packet* against your own program.
+- **Hands-on:** [module 7.6](#m7-6) — install it in kube-proxy-replacement mode and read its *Life of a Packet* against your own program.
 - **Internals note (required):** k8s ships **no NetworkPolicy enforcer** — Cilium is one, in eBPF. It replaces kube-proxy's iptables/nftables `syncProxyRules` with **eBPF map lookups**: the ClusterIP→endpoint DNAT you traced in module 7.3 becomes a map entry, and policy enforcement is a program at the tc hook rather than a chain. This is the same job you read in source, done at a different layer — which is the only way to judge the claim that it's faster.
 - **Maturity:** CNCF **graduated** (2023) — the first CNI to graduate, and the project that drove eBPF into mainstream Kubernetes networking. DaemonSet-shaped and **not co-resident** with Istio/Falco/Prometheus on this host ([#8](https://github.com/k3ii/k8s-academy/issues/8)); its L7 and mesh capabilities are where [P9](09-service-mesh.md) picks up.
 
 ---
 
+<a id="capstone"></a>
 ## 6. Capstone
 
 **Your CNI plugin giving pods a `ping`-able network, plus a NetworkPolicy enforcement proof read at the iptables/eBPF layer — the rule or map entry that drops the packet, not just that the connection failed.**
@@ -182,6 +194,7 @@ Two parts, plus the debt repaid:
 
 ---
 
+<a id="checklist"></a>
 ## 7. Checklist
 
 Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
@@ -212,6 +225,7 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 
 ---
 
+<a id="gate"></a>
 ## 8. Gate
 
 You may advance to [P8](08-storage.md) when:

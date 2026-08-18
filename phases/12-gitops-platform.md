@@ -9,13 +9,14 @@
 | **Unlocks** | **Nothing — this is the summit.** There is no P13. The curriculum ends by *using* the mastery it spent eleven phases building, which is a better close than demonstrating it once more. |
 | **Source** | **No new `k/k` area** — the machinery is all [Area 4](../strands/source-reading.md#area-4-controllers) (controllers) and [Area 2](../strands/source-reading.md#area-2-api-machinery) (apiserver), already read. What is new is reading the **platform tools' own** Go at pinned tags — `helm-controller`'s drift mode, Crossplane's composition `mode` enum, the vcluster syncer — and re-reading your own [P4](04-controllers.md) operator as the thing every one of them is a variation of. |
 | **Build track** | **None** ([artifact table](../strands/build-mechanics.md#artifact-table) lists no P12 artifact) — but the platform you assemble is CRD-plus-controller, and [`build-mechanics#sizing`](../strands/build-mechanics.md#sizing) applies to **your own output**: Crossplane's function pods ship `resources: {}`, so a `DeploymentRuntimeConfig` override is mandatory, not a footnote. The platform you build has a pod-sizing problem of its own. |
-| **Ecosystem** | **The heaviest phase — and it does not all fit at once.** Flux · Helm · SOPS · sealed-secrets · Flagger · KRO · Crossplane · 2×vcluster, plus Istio and Prometheus reused from earlier. Run as [**two lab groups with a teardown between**](#5-ecosystem) ([#14](https://github.com/k3ii/k8s-academy/issues/14)), because both co-resident is unmeasured and unwise. |
+| **Ecosystem** | **The heaviest phase — and it does not all fit at once.** Flux · Helm · SOPS · sealed-secrets · Flagger · KRO · Crossplane · 2×vcluster, plus Istio and Prometheus reused from earlier. Run as [**two lab groups with a teardown between**](#ecosystem) ([#14](https://github.com/k3ii/k8s-academy/issues/14)), because both co-resident is unmeasured and unwise. |
 | **Cert** | **None.** Nothing in CKAD/CKA/CKS covers this. The last exam was CKS at [P10](10-security.md). |
 | **Lab** | [**`platform`**](../strands/lab-topologies.md#platform) — a topology added *for this phase* ([#14](https://github.com/k3ii/k8s-academy/issues/14), not #8). [#8](https://github.com/k3ii/k8s-academy/issues/8)'s "prefer `pair`" rule is for DaemonSet-heavy phases; **nothing here is a DaemonSet**, so a second node would only pay the OS+kubelet tax twice and fragment 5GB into two buckets. One node, one bucket. **First lab step: `kubectl top pod`.** |
 | **Strands** | [build](../strands/build-mechanics.md#sizing) · [talks](../strands/talks.md#controllers) · [chaos](../strands/chaos.md#principle) |
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — a running platform, a cited line, a timed production, or a critique a hostile reader could hold against the artifact. *understand* and *know* appear nowhere; the whole phase turns on the difference between knowing a tool and knowing what it costs.
@@ -31,12 +32,14 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
-No new corpus reading — the machinery is [Area 4](../strands/source-reading.md#area-4-controllers) and [Area 2](../strands/source-reading.md#area-2-api-machinery), read. The reading here is the **tools' own source at pinned tags**, held to the [archaeology drill standard](../strands/source-archaeology.md#drills): every mechanism claim resolves to a line a hostile reader could open, and platform tooling moves fast, so [live-verify before trusting](../strands/source-archaeology.md#stale-paths). The modules run as **two lab groups with a teardown between them** ([#14](https://github.com/k3ii/k8s-academy/issues/14), [§5](#5-ecosystem)): Group A (delivery) is modules 12.1–12.3, Group B (platform API & tenancy) is 12.4–12.5. The order is a phase-file decision the research left open ([#14](https://github.com/k3ii/k8s-academy/issues/14)); the group boundary settles it.
+No new corpus reading — the machinery is [Area 4](../strands/source-reading.md#area-4-controllers) and [Area 2](../strands/source-reading.md#area-2-api-machinery), read. The reading here is the **tools' own source at pinned tags**, held to the [archaeology drill standard](../strands/source-archaeology.md#drills): every mechanism claim resolves to a line a hostile reader could open, and platform tooling moves fast, so [live-verify before trusting](../strands/source-archaeology.md#stale-paths). The modules run as **two lab groups with a teardown between them** ([#14](https://github.com/k3ii/k8s-academy/issues/14), [§5](#ecosystem)): Group A (delivery) is modules 12.1–12.3, Group B (platform API & tenancy) is 12.4–12.5. The order is a phase-file decision the research left open ([#14](https://github.com/k3ii/k8s-academy/issues/14)); the group boundary settles it.
 
 ### Group A — delivery
 
+<a id="m12-1"></a>
 ### Module 12.1 — GitOps as a delivery model (~1.5 wk)
 
 The [mechanism was P4](04-controllers.md); this is running a delivery model on the reconcile loop already read.
@@ -45,10 +48,11 @@ The [mechanism was P4](04-controllers.md); this is running a delivery model on t
 
 > **Question to answer from the source:** in `helm-controller`, which function returns the drift mode, and what does it return when the field is unset? Cite the line — the default is the whole lab beat. Then: `HelmChart.spec.sourceRef.kind` accepts `GitRepository` in source-controller's enum — cite it, and state why that means **no chart registry is needed** on the isolated bridge (the git revision *is* the chart version).
 
-**Break it** — chaos drill [12.C1](#3-chaos-drills): push a bad commit and watch it reconcile **everywhere at once** — the GitOps blast-radius lesson, the flip side of "git is the source of truth." Then rotate a SOPS-encrypted secret and watch every consumer that cached the old value break.
+**Break it** — chaos drill [12.C1](#chaos): push a bad commit and watch it reconcile **everywhere at once** — the GitOps blast-radius lesson, the flip side of "git is the source of truth." Then rotate a SOPS-encrypted secret and watch every consumer that cached the old value break.
 
 **Write down** — the `commit → Source → Kustomization/HelmRelease → applied` path with the reconcile-interval and drift-mode lines cited; and the three-way secrets table (SOPS / sealed-secrets / ESO) compared on mechanism, not on preference.
 
+<a id="m12-2"></a>
 ### Module 12.2 — Progressive delivery (~0.5 wk)
 
 Flagger against the [P9](09-service-mesh.md) mesh — the same operation as [P1](01-operate-shallow.md)'s rollout, from the other end.
@@ -57,10 +61,11 @@ Flagger against the [P9](09-service-mesh.md) mesh — the same operation as [P1]
 
 > **Question to answer from observation and source:** which metric query gates the promotion, and where does Flagger read it? Contrast the blast radius with [P1](01-operate-shallow.md)'s `maxSurge`/`maxUnavailable`: the same "replace pods gradually," but one is blind to whether the new pods are *healthy by your definition* and one is not. State the exact difference in what each can express.
 
-**Break it** — chaos drill [12.C2](#3-chaos-drills): break the metric source (kill Prometheus mid-canary) and watch Flagger's decision with no data — does it promote, hold, or roll back? The failure mode of a metric-gated system is the metric.
+**Break it** — chaos drill [12.C2](#chaos): break the metric source (kill Prometheus mid-canary) and watch Flagger's decision with no data — does it promote, hold, or roll back? The failure mode of a metric-gated system is the metric.
 
 **Write down** — the canary's metric query and its promotion/rollback thresholds, and a two-line contrast with the P1 rollout naming what Flagger can express that `maxSurge` structurally cannot.
 
+<a id="m12-3"></a>
 ### Module 12.3 — Golden paths, portals, and platform-as-product (~1 wk)
 
 The judgement module. The most valuable content is the **failure mode**, so it is taught through postmortems, not a lab.
@@ -69,16 +74,18 @@ The judgement module. The most valuable content is the **failure mode**, so it i
 
 > **Question to answer (from the tools against each other):** a Backstage scaffolder template and a Flux-reconciled CRD both "create an app from a form." One converges continuously and one runs once. Which failure does each hide from the developer, and which does it expose? Name a concrete case where the difference bites.
 
-**Break it** — chaos drill [12.C5](#3-chaos-drills): hand a teammate (or your past self) the golden path with one leak deliberately left in — a value the abstraction *should* hide but doesn't — and time how long until they hit it. The leak is the lesson; a platform's abstractions fail at the worst moment.
+**Break it** — chaos drill [12.C5](#chaos): hand a teammate (or your past self) the golden path with one leak deliberately left in — a value the abstraction *should* hide but doesn't — and time how long until they hit it. The leak is the lesson; a platform's abstractions fail at the worst moment.
 
 **Write down** — the golden path as it exists (template repo + CRD + Flux), and a one-page catalogue of platform failure modes: platforms nobody asked for, YAML generators that generate worse YAML, abstractions that leak under load.
 
-### — teardown — {#teardown}
+<a id="teardown"></a>
+### — teardown —
 
 Tear the delivery stack down before Group B. Istio + Prometheus alone are ~1.15GB; the platform node does not hold both groups honestly ([#14](https://github.com/k3ii/k8s-academy/issues/14)). The teardown is itself a GitOps test: if the cluster does not come back from git, Group A did not actually make git the source of truth.
 
 ### Group B — platform API & tenancy
 
+<a id="m12-4"></a>
 ### Module 12.4 — Multi-tenancy (~1 wk)
 
 Where a tenancy boundary is, and precisely where it leaks.
@@ -87,10 +94,11 @@ Where a tenancy boundary is, and precisely where it leaks.
 
 > **Question to answer from the source and the cluster:** the vcluster syncer is a `kube-apiserver` + `kube-controller-manager` + kine/SQLite in **one Go process** — which half of a tenant pod is real (the container, on the host, scheduled by the [P5](05-scheduler.md) host scheduler) and which is a shim (the tenant's apiserver view)? Point at the pod in both apiservers. And: what does the 4Gi→1Gi limit convert unbounded growth *into*, and why is that OOMKill the better failure?
 
-**Break it** — chaos drill [12.C3](#3-chaos-drills): break the vcluster syncer and observe which half of the cluster keeps working — the host pods keep running (they are real), the tenant's control-plane view goes dark. Then a tenant that escapes its quota, and where the boundary held or didn't.
+**Break it** — chaos drill [12.C3](#chaos): break the vcluster syncer and observe which half of the cluster keeps working — the host pods keep running (they are real), the tenant's control-plane view goes dark. Then a tenant that escapes its quota, and where the boundary held or didn't.
 
 **Write down** — the same tenant pod shown in both apiservers with the host namespace named; the `top pod` number the module rests on; and the leak inventory for the namespace boundary.
 
+<a id="m12-5"></a>
 ### Module 12.5 — Platform APIs (~1.5 wk)
 
 The module the whole build track prepared for. **KRO first, Crossplane second** — the numbers force the order ([#14](https://github.com/k3ii/k8s-academy/issues/14)).
@@ -101,12 +109,13 @@ The module the whole build track prepared for. **KRO first, Crossplane second** 
 
 > **Second question (Helm vs Composition, mechanism-level):** a chart is client-side templating that produces a manifest; a Composition publishes an API — `kubectl get webapp` *works*, there is a controller, a status, and one RBAC verb behind it. Under Helm, `kubectl get webapp` simply fails, and self-service needs the **union of every permission the chart applies**. State the four consequences (drift, whether a live API object exists, who can self-service, what each can express) — the last being that Helm structurally cannot depend on state that does not exist yet, because it renders once.
 
-**Break it** — chaos drill [12.C4](#3-chaos-drills): leave the `DeploymentRuntimeConfig` off and let the function pod run `resources: {}` on the platform node until something reclaims it — the hazard class that ruled out Argo CD, now on a pod you cannot avoid.
+**Break it** — chaos drill [12.C4](#chaos): leave the `DeploymentRuntimeConfig` off and let the function pod run `resources: {}` on the platform node until something reclaims it — the hazard class that ruled out Argo CD, now on a pod you cannot avoid.
 
 **Write down** — the KRO-vs-Crossplane contrast (what the extra machinery buys and what it costs), the two cited Crossplane lines (the `mode` enum, the empty runtime config), and the Helm-vs-Composition four-consequence table.
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
 Anchored in [`chaos.md#principle`](../strands/chaos.md#principle). GitOps changes what chaos *means*: for the first time the failure can be **committed**, so the blast radius is every cluster watching the repo. Every drill here is by hand — the fault is a commit, a rotation, a broken syncer — because recognising your own change's consequence from the system's behaviour is the skill.
@@ -123,6 +132,7 @@ Anchored in [`chaos.md#principle`](../strands/chaos.md#principle). GitOps change
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 The controller talks from [Area 4](../strands/talks.md#controllers) are the mechanism under every tool here; the failure-mode content of module 12.3 leans on the [debugging postmortems](../strands/talks.md#debugging).
@@ -133,6 +143,7 @@ The controller talks from [Area 4](../strands/talks.md#controllers) are the mech
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 **The ecosystem-heaviest phase — and the one that states its tooling's immaturity out loud.** Everything is minimised and split into two groups with a teardown between, because the [`platform`](https://github.com/k3ii/k8s-academy/issues/8) node holds either group but not both honestly ([#14](https://github.com/k3ii/k8s-academy/issues/14)).
@@ -149,6 +160,7 @@ The controller talks from [Area 4](../strands/talks.md#controllers) are the mech
 
 ---
 
+<a id="capstone"></a>
 ## 6. Capstone
 
 **A working internal platform, plus the critique of it — and the critique is the actual deliverable.**
@@ -168,6 +180,7 @@ Reassemble a **lean** co-resident set (Flux + KRO/Crossplane + one vcluster tena
 
 ---
 
+<a id="checklist"></a>
 ## 7. Checklist
 
 Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
@@ -196,6 +209,7 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 
 ---
 
+<a id="gate"></a>
 ## 8. Gate
 
 The curriculum ends when:

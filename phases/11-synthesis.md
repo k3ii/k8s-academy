@@ -15,6 +15,7 @@
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — a cited trace, a timed production, or a claim a hostile reader could check against source or a running cluster. *understand* and *know* appear nowhere; a trace you cannot cite is not a trace.
@@ -30,10 +31,12 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 The corpus offers no new reading here — every file below was opened in an earlier phase. The rule is unchanged and now at its strictest: **every hop resolves to a `file:line` a hostile reader could open**, and the deliverable *is* those citations. The [archaeology drill standard](../strands/source-archaeology.md#drills) applies with no slack: a seam you can describe but not cite is a seam you did not actually cross. Live-verify every path before trusting it — the tree moves ([stale paths](../strands/source-archaeology.md#stale-paths)).
 
+<a id="m11-1"></a>
 ### Module 11.1 — The trace on paper, before the cluster (~3 days)
 
 You assemble the map from eight phases of notes *before* instrumenting anything, so the live trace confirms a prediction rather than discovers a path.
@@ -42,10 +45,11 @@ You assemble the map from eight phases of notes *before* instrumenting anything,
 
 > **Question to answer from the source:** the trace crosses five areas. At each of the four *internal* seams, which single function hands the object to the next area — the last frame in area N and the first frame in area N+1? Name both.
 
-**Break it** — chaos drill [11.C4](#3-chaos-drills): predict, then check, what the trace does when one component is down mid-flight (apiserver up, scheduler down → the pod sits `Pending` at a nameable line; scheduler up, kubelet down → `Scheduled` but not `Running`). The gap tells you which frame owns which transition.
+**Break it** — chaos drill [11.C4](#chaos): predict, then check, what the trace does when one component is down mid-flight (apiserver up, scheduler down → the pod sits `Pending` at a nameable line; scheduler up, kubelet down → `Scheduled` but not `Running`). The gap tells you which frame owns which transition.
 
 **Write down** — the predicted map with a file per seam, kept beside you, corrected in red as the live modules below prove or disprove each guess.
 
+<a id="m11-2"></a>
 ### Module 11.2 — Seam A: client → apiserver → etcd (~4 days)
 
 Areas [2](../strands/source-reading.md#area-2-api-machinery) (P3) and [1](../strands/source-reading.md#area-1-etcd) (P2), read as one continuous handoff.
@@ -54,10 +58,11 @@ Areas [2](../strands/source-reading.md#area-2-api-machinery) (P3) and [1](../str
 
 > **Question to answer from the source:** `handlers/create.go` runs admission *before* the object reaches `registry/generic/registry/store.go`. Cite the line where admission is invoked, and the line in `storage/etcd3/store.go` where the object becomes an etcd `Txn` — and state what guarantees the object is validated *before* it is durable, not after.
 
-**Break it** — chaos drill [11.C1](#3-chaos-drills): corrupt the `caBundle` on a `failurePolicy: Fail` webhook (the P3/[P10](10-security.md) admission chain) and watch the create wedge *at the admission line you just cited* — diagnosed from apiserver logs alone. The outage names the frame.
+**Break it** — chaos drill [11.C1](#chaos): corrupt the `caBundle` on a `failurePolicy: Fail` webhook (the P3/[P10](10-security.md) admission chain) and watch the create wedge *at the admission line you just cited* — diagnosed from apiserver logs alone. The outage names the frame.
 
 **Write down** — the `kubectl → filters → create.go → admission → store.go → etcd3/store.go → Txn` sub-path with a cited line at each arrow, and the raw etcd key the object landed under.
 
+<a id="m11-3"></a>
 ### Module 11.3 — Seam B: watch cache → scheduler → Binding (~3 days)
 
 Area [3](../strands/source-reading.md#area-3-scheduler) (P5) — how the persisted-but-unscheduled pod becomes a scheduled one.
@@ -66,10 +71,11 @@ Area [3](../strands/source-reading.md#area-3-scheduler) (P5) — how the persist
 
 > **Question to answer from the source:** the scheduler does not mutate the pod's node field directly — it POSTs a `Binding`. Cite the line in `schedule_one.go` that issues the bind, and explain why binding is a separate write and not an in-place update of the pod the scheduler already holds in cache.
 
-**Break it** — chaos drill [11.C4](#3-chaos-drills): cordon every node and create the pod. It persists (Seam A completes) but never binds — `Pending`, `unschedulable`, at the scheduler frame that gives up. Uncordon one and watch the exact line fire.
+**Break it** — chaos drill [11.C4](#chaos): cordon every node and create the pod. It persists (Seam A completes) but never binds — `Pending`, `unschedulable`, at the scheduler frame that gives up. Uncordon one and watch the exact line fire.
 
 **Write down** — the `watch cache → informer → schedule_one.go → Binding` sub-path with the bind line cited, and the before/after of `spec.nodeName`.
 
+<a id="m11-4"></a>
 ### Module 11.4 — Seam C: kubelet → CRI → CNI → the syscalls (~4 days)
 
 Areas [7](../strands/source-reading.md#area-7-kubelet) (P6) and [5](../strands/source-reading.md#area-5-networking) (P7) — the pod becomes a process, and the loop closes on [P0](00-linux-primitives.md).
@@ -78,10 +84,11 @@ Areas [7](../strands/source-reading.md#area-7-kubelet) (P6) and [5](../strands/s
 
 > **Question to answer from the source:** `computePodActions` decides *what* to do; cite the line where it decides a container must be created, and follow it to the CRI call. Then name the CNI ADD result — the veth/netns — and point at the P0 syscall (`clone`/`setns`/`unshare`) it corresponds to. The whole trace ends on a syscall you once made yourself.
 
-**Break it** — chaos drill [11.C4](#3-chaos-drills): break the CNI (rename the plugin binary) and watch the pod stick at `ContainerCreating` — Seam C's last frame failing, the [CRI→CNI seam P6 named](06-kubelet-node.md) as the one it could only watch, now cited.
+**Break it** — chaos drill [11.C4](#chaos): break the CNI (rename the plugin binary) and watch the pod stick at `ContainerCreating` — Seam C's last frame failing, the [CRI→CNI seam P6 named](06-kubelet-node.md) as the one it could only watch, now cited.
 
 **Write down** — the `config/apiserver.go → pod_workers.go → computePodActions → CRI → CNI` sub-path cited to source, ending with the P0 syscall the running container reduces to. The three sub-paths (11.2/11.3/11.4) joined are the capstone.
 
+<a id="m11-5"></a>
 ### Module 11.5 — The postmortems, re-read with the internals known (~3 days)
 
 The debugging corpus watched differently now. The [DNS talk](../strands/talks.md#debugging) was planted in [P1](01-operate-shallow.md) for its *method*; you re-watch it here for its *mechanism*, because you have now read every layer it descends into.
@@ -90,15 +97,16 @@ The debugging corpus watched differently now. The [DNS talk](../strands/talks.md
 
 > **Question to answer (from the talk against your own trace):** the talk's resolution was three lines of code, found four layers below the symptom. For each layer it descended, name the phase that taught you to read it — and name the one layer, if any, this curriculum still leaves you unable to read.
 
-**Break it** — chaos drill [11.C3](#3-chaos-drills): reproduce the *shape* of the DNS incident on your own cluster — a rolling update, `conntrack -L` watched as the table fills — not to exhaust it, but to see the mechanism the talk names begin on hardware you own.
+**Break it** — chaos drill [11.C3](#chaos): reproduce the *shape* of the DNS incident on your own cluster — a rolling update, `conntrack -L` watched as the table fills — not to exhaust it, but to see the mechanism the talk names begin on hardware you own.
 
 **Write down** — the DNS talk's descent as a layer-to-phase table, and a one-line statement of the transferable method it models: **hypothesis → instrument → disconfirm → descend a layer.**
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
-Anchored in [`chaos.md#manual-drills`](../strands/chaos.md#manual-drills). These are the drills the strand marks **permanently manual** — upgrade, botched rollout, drain — because the failure modes are *procedural*, not injected, and each needs the whole picture the earlier phases could not yet supply. They are the rehearsals the [§5](#5-capstone) upgrade-and-scale capstone assembles.
+Anchored in [`chaos.md#manual-drills`](../strands/chaos.md#manual-drills). These are the drills the strand marks **permanently manual** — upgrade, botched rollout, drain — because the failure modes are *procedural*, not injected, and each needs the whole picture the earlier phases could not yet supply. They are the rehearsals the [§5](#capstone) upgrade-and-scale capstone assembles.
 
 | # | Drill | Mechanism | What you must produce afterwards |
 |---|---|---|---|
@@ -111,6 +119,7 @@ Every drill here is **by hand** and stays that way ([manual-drills](../strands/c
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries under [Cluster debugging and postmortems](../strands/talks.md#debugging) — the strand weights these most generously, and this is the phase they were saved for.
@@ -122,6 +131,7 @@ Full entries under [Cluster debugging and postmortems](../strands/talks.md#debug
 
 ---
 
+<a id="capstone"></a>
 ## 5. Capstone
 
 **Two capstones. The first proves you can read the whole machine; the second proves you can operate it without stopping it.**
@@ -145,6 +155,7 @@ The two capstones are one claim from two sides: you can read the machine top to 
 
 ---
 
+<a id="checklist"></a>
 ## 6. Checklist
 
 Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
@@ -171,6 +182,7 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 
 ---
 
+<a id="gate"></a>
 ## 7. Gate
 
 You may advance to [P12](12-gitops-platform.md) when:

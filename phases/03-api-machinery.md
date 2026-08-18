@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| **Prerequisites** | [P2](02-etcd.md) — the store the apiserver encodes *onto*. You have already run a three-member cluster, watched Raft elect, and restored from a snapshot, so `--etcd-servers` and peer certs are consolidation here, not new. Critically, the `ErrCompacted → "too old resource version"` chain you traced in etcd is the *same phrase* the watch cache emits from the other side ([module 3.5](#module-35)). |
+| **Prerequisites** | [P2](02-etcd.md) — the store the apiserver encodes *onto*. You have already run a three-member cluster, watched Raft elect, and restored from a snapshot, so `--etcd-servers` and peer certs are consolidation here, not new. Critically, the `ErrCompacted → "too old resource version"` chain you traced in etcd is the *same phrase* the watch cache emits from the other side ([module 3.5](#m3-5)). |
 | **Unlocks** | [P4](04-controllers.md) — the watch cache you read here is the far end of the informer's watch. [P10](10-security.md) — the aggregation-layer CVE and the webhook/authz surface return there as *security*; here they are *mechanism*, learned first. And every operator, admission policy and CRD in the platform arc rests on this phase. |
 | **Source area** | [Area 2 — API machinery](../strands/source-reading.md#area-2-api-machinery), entry point `endpoints/handlers/create.go` — the whole write path in one readable function. `sample-apiserver` is **read, not built** ([#9](https://github.com/k3ii/k8s-academy/issues/9)). |
 | **Language** | Go — **four build artifacts** ([artifact table](../strands/build-mechanics.md#artifact-table)): validating webhook → mutating webhook → CRD conversion webhook → `kubectl` plugin. The [`file:line` archaeology standard from P2](../strands/source-archaeology.md#drills) is now assumed, not taught. |
@@ -13,6 +13,7 @@
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — an artifact, a timed production, or a claim a hostile reader could check against source or a running cluster. *understand* and *know* appear nowhere.
@@ -30,11 +31,12 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 Reading is [Area 2](../strands/source-reading.md#area-2-api-machinery), the highest essential-to-readable ratio in the corpus, where **sequencing matters more than anywhere else**. The area's 40 items are ordered approachable → hard there; the modules below pick the load-bearing ones and attach a question and a lab to each. `runtime/scheme.go` (item 35) is **deliberately last** — the generics trap, mastery-necessary and disastrous as early reading.
 
-<a id="module-30"></a>
+<a id="m3-0"></a>
 ### Module 3.0 — Kubernetes the Very Hard Way, and why it sits here (~1 week)
 
 Hand-wire every control-plane component from nothing — the placement is deliberate and the argument is the point, not the verdict.
@@ -48,10 +50,11 @@ Hand-wire every control-plane component from nothing — the placement is delibe
 
 > **Question to answer from the source:** for each flag you pass `kube-apiserver`, find where it is consumed in `cmd/kube-apiserver/app/server.go` (item 32) or the config it builds — a flag whose effect you cannot locate in source you do not yet control.
 
-**Break it** — hand-wired PKI is where certs go wrong on purpose later ([module 3.3](#module-33)); here, mis-set one component's client cert and read the refusal. This is banked toward **CKA** (control-plane installation is a CKA competency) — produced as a by-product of doing it for real.
+**Break it** — hand-wired PKI is where certs go wrong on purpose later ([module 3.3](#m3-3)); here, mis-set one component's client cert and read the refusal. This is banked toward **CKA** (control-plane installation is a CKA competency) — produced as a by-product of doing it for real.
 
 **Write down** — the component-and-flag map: every binary, the flags that connect it to its neighbours, and the cert that authenticates each hop.
 
+<a id="m3-1"></a>
 ### Module 3.1 — The handler chain and the write path (~1.5 weeks)
 
 The entry point and the spine. This module reads *down onto* [P2](02-etcd.md)'s store.
@@ -73,6 +76,7 @@ The entry point and the spine. This module reads *down onto* [P2](02-etcd.md)'s 
 
 **Write down** — the ordered handler chain with the file implementing each stage — the skeleton the capstone trace fills in with line numbers.
 
+<a id="m3-2"></a>
 ### Module 3.2 — Admission (~1 week)
 
 The extension point the whole platform arc hangs off, learned as source before it is built as webhooks.
@@ -92,7 +96,7 @@ The extension point the whole platform arc hangs off, learned as source before i
 
 **Write down** — the admission ordering rule with its `chain.go` citation, and one sentence on when CEL-in-process beats a webhook.
 
-<a id="module-33"></a>
+<a id="m3-3"></a>
 ### Module 3.3 — Build: three webhooks and a plugin (~1.5 weeks)
 
 Four artifacts, developed under the [two-stage rule](../strands/build-mechanics.md#two-stages) — stage 1 outside the cluster, stage 2 re-shipped inside. Stage 1 is real, not a simulation: the apiserver cannot tell the difference.
@@ -104,10 +108,11 @@ Four artifacts, developed under the [two-stage rule](../strands/build-mechanics.
 
 **Gate** — the three webhooks fall to the [tier-2 falsifiable-claim bar](../strands/build-mechanics.md#gates) (a `file:line` claim a hostile reader could check); so does the plugin. There is no objective harness for these — name the claim, do not invent a suite.
 
-**Break it** — chaos drill [3.C1](#4-chaos-drills), which **originates here**: corrupt the `caBundle` on the working validating webhook and diagnose it from the apiserver logs alone. With `failurePolicy: Fail` that is a real outage — the honest version, and this is the place wedging one costs nothing.
+**Break it** — chaos drill [3.C1](#chaos), which **originates here**: corrupt the `caBundle` on the working validating webhook and diagnose it from the apiserver logs alone. With `failurePolicy: Fail` that is a real outage — the honest version, and this is the place wedging one costs nothing.
 
 **Write down** — for webhook 1, the SAN-break symptom and the exact apiserver log line; for the plugin, the one sentence on why it has no stage 2.
 
+<a id="m3-4"></a>
 ### Module 3.4 — CRDs and aggregation (~1 week)
 
 How a CRD can behave like a built-in, and how a second apiserver is bolted on.
@@ -123,10 +128,11 @@ How a CRD can behave like a built-in, and how a second apiserver is bolted on.
 
 **Do** — ship the two-version CRD from module 3.3's conversion webhook; store v1, serve v2, and round-trip an object through both.
 
-**Break it** — chaos drill [3.C2](#4-chaos-drills): make the conversion webhook return garbage and watch every read of that CRD's objects fail — a self-inflicted outage scoped to one resource type.
+**Break it** — chaos drill [3.C2](#chaos): make the conversion webhook return garbage and watch every read of that CRD's objects fail — a self-inflicted outage scoped to one resource type.
 
 **Write down** — the storage-version-and-round-trip note, and one sentence on why the aggregation proxy path is a security-sensitive seam.
 
+<a id="m3-5"></a>
 ### Module 3.5 — Watch cache, consistency, and APF (~1 week)
 
 The read-scaling machinery, and the apiserver end of [P2](02-etcd.md)'s watch.
@@ -142,10 +148,11 @@ The read-scaling machinery, and the apiserver end of [P2](02-etcd.md)'s watch.
 
 **Do** — reproduce `"too old resource version"` on a real watch: hammer a resource to overflow the cache window while a slow client watches, and catch the 410 in the client.
 
-**Break it** — chaos drill [3.C3](#4-chaos-drills): saturate one APF priority level with a well-behaved-looking client and watch it starve another — the "cluster-killer bug" (talk below) reproduced deliberately.
+**Break it** — chaos drill [3.C3](#chaos): saturate one APF priority level with a well-behaved-looking client and watch it starve another — the "cluster-killer bug" (talk below) reproduced deliberately.
 
 **Write down** — the ring-buffer origin of `"too old resource version"` with its `watch_cache.go` citation, tied back to P2's `ErrCompacted` — the same failure named at two layers.
 
+<a id="m3-6"></a>
 ### Module 3.6 — The single-binary contrast: k0s (~2–3 days)
 
 The last of three progressively-automated answers to one question.
@@ -158,6 +165,7 @@ The last of three progressively-automated answers to one question.
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
 The **self-inflicted-outage** phase — every fault here is something the operator does to themselves, still **hand-driven** (no chaos tool until [P6](06-kubelet-node.md)). Drill 3.C1 **originates in this phase** and is borrowed by [`chaos.md#borrowed-drills`](../strands/chaos.md#borrowed-drills) — the mechanism lives here, the chaos strand links in.
@@ -174,6 +182,7 @@ The **self-inflicted-outage** phase — every fault here is something the operat
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries with runtimes under [API server](../strands/talks.md#apiserver) and [Security](../strands/talks.md#security).
@@ -185,6 +194,7 @@ Full entries with runtimes under [API server](../strands/talks.md#apiserver) and
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 **k0s** — the single-binary distribution, treated for its internals rather than just installed (module 3.6 is the hands-on contrast).
@@ -195,6 +205,7 @@ Full entries with runtimes under [API server](../strands/talks.md#apiserver) and
 
 ---
 
+<a id="capstone"></a>
 ## 6. Capstone
 
 **The Very Hard Way completed, three webhooks running, and a written trace of one `kubectl apply` through the entire handler chain — citing file and line numbers a hostile reader could check.**
@@ -215,6 +226,7 @@ Every path must first have been verified live per [P2's archaeology standard](..
 
 ---
 
+<a id="checklist"></a>
 ## 7. Checklist
 
 Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
@@ -247,6 +259,7 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 
 ---
 
+<a id="gate"></a>
 ## 8. Gate
 
 You may advance to [P4](04-controllers.md) when:

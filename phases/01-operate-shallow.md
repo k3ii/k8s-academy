@@ -13,6 +13,7 @@
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Mechanism-level where it can be, operational where the phase is deliberately shallow. Each is phrased so failing it is detectable — *understand* appears nowhere.
@@ -30,10 +31,12 @@ Mechanism-level where it can be, operational where the phase is deliberately sha
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 The reading (Area 0 items 7–12) is interleaved into the modules that give it something to point at — the whole reason P0 deferred it here. There is **no build-track artifact** this phase; the Go primer that would normally underpin one is instead the closing module, deliberately after everything that does not need it.
 
+<a id="m1-1"></a>
 ### Module 1.1 — Stand up a control plane by hand, with kubeadm (~4 days)
 
 The tool CKA expects, stood up deliberately so that P3 can *read what it left behind*. Do not use a one-command distro here — the point is the parts.
@@ -54,6 +57,7 @@ The tool CKA expects, stood up deliberately so that P3 can *read what it left be
 
 **Write down** — a one-page map of what `kubeadm` generated and where. This map is a required input to [P3](03-api-machinery.md), which reads these files as *source*.
 
+<a id="m1-2"></a>
 ### Module 1.2 — The object model, as referents (~3 days)
 
 Shallow by design: name the parts, do not open the machinery. Every term here is a hook P2–P4 will hang mechanism on.
@@ -71,6 +75,7 @@ Shallow by design: name the parts, do not open the machinery. Every term here is
 
 **Write down** — the spec/status owner for each of the five objects, and the one-sentence `resourceVersion` rule.
 
+<a id="m1-3"></a>
 ### Module 1.3 — Workloads: the controllers you will later read, operated (~4 days)
 
 CKAD's centre of gravity, and a gallery of the controllers P4 dissects. Here you *drive* them; there you read them.
@@ -82,10 +87,11 @@ CKAD's centre of gravity, and a gallery of the controllers P4 dissects. Here you
 4. `securityContext`: `runAsNonRoot`, `drop: [ALL]` then add back one capability. **This is the P0 capability drop as a manifest field** — confirm with `capsh --decode` inside the container.
 5. The other workloads by shape: DaemonSet, StatefulSet, Job, CronJob — enough to choose the right one, not to read its controller.
 
-**Break it** — chaos drill [1.C1](#4-chaos-drills): `kubectl delete pod` one of a Deployment's pods and watch the ReplicaSet recreate it; then `kubectl scale` to zero and back. Narrate which controller acted and what it compared. This is level-triggered reconciliation you can now *cause on demand*.
+**Break it** — chaos drill [1.C1](#chaos): `kubectl delete pod` one of a Deployment's pods and watch the ReplicaSet recreate it; then `kubectl scale` to zero and back. Narrate which controller acted and what it compared. This is level-triggered reconciliation you can now *cause on demand*.
 
 **Write down** — your rolling-update ReplicaSet predictions with actuals, and the capability you dropped with the `capsh` proof.
 
+<a id="m1-4"></a>
 ### Module 1.4 — Services, Ingress, and access (~3 days)
 
 CKAD Services & Networking (20%), operated shallowly. P7 owns the datapath; here you own the *abstractions*.
@@ -96,10 +102,11 @@ CKAD Services & Networking (20%), operated shallowly. P7 owns the datapath; here
 3. An Ingress with an ingress controller (ingress-nginx), path- and host-based rules. **CKAD uses Ingress, not Gateway API** — Gateway API is a CKA topic ([Recent changes](../strands/certs.md#cka-changes)).
 4. CoreDNS: resolve a Service by name from a pod, read `/etc/resolv.conf`, and connect `ndots`/search-domains back to the [P0](00-linux-primitives.md) DNS path.
 
-**Break it** — chaos drill [1.C2](#4-chaos-drills): delete the EndpointSlice for a Service by hand and watch the endpoint controller rebuild it; then point a Service's selector at a label no pod has and diagnose the empty slice from `kubectl describe` alone.
+**Break it** — chaos drill [1.C2](#chaos): delete the EndpointSlice for a Service by hand and watch the endpoint controller rebuild it; then point a Service's selector at a label no pod has and diagnose the empty slice from `kubectl describe` alone.
 
 **Write down** — the four exposure types with the component each needs, and one paragraph on how a readiness probe reaches all the way to a Service's endpoint list.
 
+<a id="m1-5"></a>
 ### Module 1.5 — Helm and kustomize (~3 days)
 
 Package management, required by the brief and an explicit CKAD competency (Application Deployment, 20%).
@@ -113,6 +120,7 @@ Package management, required by the brief and an explicit CKAD competency (Appli
 
 **Write down** — where Helm stored the release (a Secret of type `helm.sh/release.v1`, per namespace) and what `helm upgrade` diffs (old manifest, new manifest, live state).
 
+<a id="m1-6"></a>
 ### Module 1.6 — The Go primer (~ a few days, last)
 
 Deliberately last, deliberately short. The learner can already read Go; this is the floor for reading `k/k` and, later, writing it. Sized in days ([#9](https://github.com/k3ii/k8s-academy/issues/9)), not the multi-week course it is not.
@@ -129,6 +137,7 @@ Cover, each with a tiny program that proves it:
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
 **Hand-driven, every one** — no chaos tool until [P6](06-kubelet-node.md), per [the standing principle](../strands/chaos.md#principle). This phase's drills are all *reconciliation made visible*: the payoff of P0's `controllers.md` reading, now something you can trigger with `kubectl`.
@@ -144,6 +153,7 @@ Cover, each with a tiny program that proves it:
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries, with runtimes, under [debugging](../strands/talks.md#debugging) in the talk index.
@@ -153,6 +163,7 @@ Full entries, with runtimes, under [debugging](../strands/talks.md#debugging) in
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 **Helm** — the package manager, treated for its internals rather than re-taught (module 1.5 is the hands-on).
@@ -163,6 +174,7 @@ Full entries, with runtimes, under [debugging](../strands/talks.md#debugging) in
 
 ---
 
+<a id="ckad-block"></a>
 ## 6. ⏱ CKAD drill block — 1–2 weeks
 
 > **This section is a different activity from everything above.** Everything above optimises for referents and fluency; this optimises for **speed and correctness under a clock**. Do not blend them. Do not read source during this block. When it ends, it ends.
@@ -182,6 +194,7 @@ Domain weights, exam mechanics, the practice-resource verdicts and the speed tac
 
 ---
 
+<a id="capstone"></a>
 ## 7. Capstone
 
 **A nontrivial Helm-deployed application, plus a written incident note from a rollout you deliberately broke.**
@@ -195,6 +208,7 @@ Two artifacts, because this phase installs the habit every later capstone leans 
 
 ---
 
+<a id="checklist"></a>
 ## 8. Checklist
 
 Concrete demonstrable outputs. No item says *understand* or *know*; each is an artifact, a timed production, or a falsifiable claim.
@@ -221,6 +235,7 @@ Concrete demonstrable outputs. No item says *understand* or *know*; each is an a
 
 ---
 
+<a id="gate"></a>
 ## 9. Gate
 
 You may advance to [P2](02-etcd.md) when:

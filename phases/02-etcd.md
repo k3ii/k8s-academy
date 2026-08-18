@@ -8,11 +8,12 @@
 | **Prerequisites** | [P1](01-operate-shallow.md) — you watched `resourceVersion` move on an object and were told *why* was deferred to here. This is here. The [Go primer](01-operate-shallow.md) shipped in P1's last module because **this is the first phase that opens Go source in anger.** |
 | **Unlocks** | [P3](03-api-machinery.md) reads the apiserver's storage layer *down onto* this — the encode/decode, the `cacher`, the storage `Interface`. [P4](04-controllers.md)'s informer is the other end of the watch you trace here. And the `"too old resource version"` every operator eventually hits gets its true name — `ErrCompacted` — in module 2.3. |
 | **Source area** | [Area 1 — etcd](../strands/source-reading.md#area-1-etcd), entry point `server/storage/mvcc/key_index.go`. Two repos now, not one — the Raft library was [extracted to `etcd-io/raft`](../strands/source-archaeology.md#stale-paths). |
-| **Language** | Go, read not written. **The source-archaeology method lands here** ([module 2.0](#module-20)) because this is the first real source phase — verifying a cited path against the live tree becomes a taught, graded skill from now on. |
+| **Language** | Go, read not written. **The source-archaeology method lands here** ([module 2.0](#m2-0)) because this is the first real source phase — verifying a cited path against the live tree becomes a taught, graded skill from now on. |
 | **Strands** | [source reading](../strands/source-reading.md#area-1-etcd) · [source archaeology](../strands/source-archaeology.md#method) · [talks](../strands/talks.md#etcd) · [chaos](../strands/chaos.md#cannot-express) |
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — an artifact, a timed production, or a claim a hostile reader could check against source or a running cluster. *understand* and *know* appear nowhere.
@@ -30,11 +31,12 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 Reading is [Area 1](../strands/source-reading.md#area-1-etcd), sequenced approachable → hard and interleaved with labs that give each file something to point at. **No fact from the strand is restated here** — each item below carries only a *question to answer from the source*, which is the phase-specific part.
 
-<a id="module-20"></a>
+<a id="m2-0"></a>
 ### Module 2.0 — Source archaeology, the method (~first week, runs alongside 2.1)
 
 This is where the curriculum stops trusting citations. Every later phase inherits the standard set here: a path is not real until you have seen it in the tree you are actually reading.
@@ -52,6 +54,7 @@ This is where the curriculum stops trusting citations. Every later phase inherit
 
 > **Standard, inherited by every later phase:** a drill is passed when its answer is a `file:line` or a commit sha a hostile reader could check and find wrong — [the build track's tier-2 bar](../strands/source-archaeology.md#drills).
 
+<a id="m2-1"></a>
 ### Module 2.1 — MVCC and revisions (~1 week)
 
 The entry point, and the module that makes `resourceVersion` stop being magic.
@@ -71,6 +74,7 @@ The entry point, and the module that makes `resourceVersion` stop being magic.
 
 **Write down** — the generations of your ten-write key before and after compaction, and the one-sentence `resourceVersion = etcd revision` mapping with the guarantee it does *not* carry.
 
+<a id="m2-2"></a>
 ### Module 2.2 — Raft, the library versus the server (~1 week)
 
 Consensus, read as the two-layer thing it actually is: an algorithm (the paper) and a *state machine with no disk, network, or clock* (the library).
@@ -86,10 +90,11 @@ Consensus, read as the two-layer thing it actually is: an algorithm (the paper) 
 
 **Do** — three members. `etcdctl endpoint status` to find the leader; `move-leader`; watch a follower's log index track the leader's. Kill the leader, watch an election, read the term change.
 
-**Break it** — chaos drill [2.C2](#4-chaos-drills): partition one member off the peer port (2380) and watch a *minority* member go unavailable for writes while the majority carries on — the safety rule from Figure 2 made operational.
+**Break it** — chaos drill [2.C2](#chaos): partition one member off the peer port (2380) and watch a *minority* member go unavailable for writes while the majority carries on — the safety rule from Figure 2 made operational.
 
 **Write down** — the leader write path as a sequence, with the `fsync` placed correctly, citing the function in `etcdserver/raft.go` where it happens.
 
+<a id="m2-3"></a>
 ### Module 2.3 — Watch (~4–5 days)
 
 The mechanism the entire Kubernetes control plane is a client of. This is the module [P4](04-controllers.md) picks up from the other side.
@@ -108,6 +113,7 @@ The mechanism the entire Kubernetes control plane is a client of. This is the mo
 
 **Write down** — the slow-watcher path (synced → unsynced → victim → `ErrCompacted`) with the `watchable_store.go` function names, and its Kubernetes-facing translation.
 
+<a id="m2-4"></a>
 ### Module 2.4 — Compaction, defrag, and bbolt (~4–5 days)
 
 The two space problems operators conflate, separated for good.
@@ -122,10 +128,11 @@ The two space problems operators conflate, separated for good.
 
 **Do** — fill a member with churn (write-delete loops) to inflate the db; `compact`; measure `db size` — unchanged. Then `defrag`; measure again — now it drops. This before/after pair is the capstone's core.
 
-**Break it** — chaos drill [2.C4](#4-chaos-drills): drive the db past its `--quota-backend-bytes` and meet the `NOSPACE` alarm and the read-only cluster it produces; recover with compact + defrag + `alarm disarm`, in that order.
+**Break it** — chaos drill [2.C4](#chaos): drive the db past its `--quota-backend-bytes` and meet the `NOSPACE` alarm and the read-only cluster it produces; recover with compact + defrag + `alarm disarm`, in that order.
 
 **Write down** — the two measurements (post-compact size, post-defrag size) and one sentence each on *why* compaction did not move the first number and defrag did. **Read the shape, not the magnitude** — absolute bytes on this disk mean nothing.
 
+<a id="m2-5"></a>
 ### Module 2.5 — Failure, corruption, and recovery (~1 week)
 
 Where the phase's chaos lives. On-disk reality first, then break it and put it back.
@@ -146,6 +153,7 @@ Where the phase's chaos lives. On-disk reality first, then break it and put it b
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
 **Every one manual, and not because tooling is missing but because it would hide the mechanism** — [neither chaos tool has an etcd-aware fault](../strands/chaos.md#cannot-express), and control-plane quorum loss [cannot be scripted honestly](../strands/chaos.md#cannot-express) (a `PodKill` on a static etcd pod is undone by the kubelet — a lesson about static pods, not quorum). These are [the manual etcd drills](../strands/chaos.md#manual-drills), 1–3, plus the defrag measurement.
@@ -161,6 +169,7 @@ Where the phase's chaos lives. On-disk reality first, then break it and put it b
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries with runtimes under [etcd](../strands/talks.md#etcd) — the densest area in the talk index. Watch in this order:
@@ -173,6 +182,7 @@ Full entries with runtimes under [etcd](../strands/talks.md#etcd) — the denses
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 **etcd itself**, treated for its internals rather than re-installed.
@@ -183,6 +193,7 @@ Full entries with runtimes under [etcd](../strands/talks.md#etcd) — the denses
 
 ---
 
+<a id="capstone"></a>
 ## 6. Capstone
 
 **Induce quorum loss on a three-member cluster, restore to a known revision, and produce a before/after defrag measurement — with the shape of the curve read correctly rather than the magnitude.** Reading the shape *is* the assessed skill; absolute numbers on a 35 W i5 with contended disk are meaningless and claiming them would be the failure.
@@ -196,12 +207,13 @@ Three artifacts, one write-up:
    - where `Defrag()` runs in the `server/storage/backend/` bbolt layer and why it blocks;
    - the `ErrCompacted` site in `server/storage/mvcc/watchable_store.go`;
    - the `revision{main, sub}` encoding in `server/storage/mvcc/revision.go`.
-   Every path stated here is one you must first have verified live in [module 2.0](#module-20) — a citation you have not confirmed against the tree does not count.
+   Every path stated here is one you must first have verified live in [module 2.0](#m2-0) — a citation you have not confirmed against the tree does not count.
 
 This is the phase where the citation standard becomes real: the write-up is graded as much on whether its `file:line` references survive checking as on whether the cluster came back.
 
 ---
 
+<a id="checklist"></a>
 ## 7. Checklist
 
 Concrete, demonstrable, and grouped by evidence type. No item says *understand* or *know*.
@@ -230,6 +242,7 @@ Concrete, demonstrable, and grouped by evidence type. No item says *understand* 
 
 ---
 
+<a id="gate"></a>
 ## 8. Gate
 
 You may advance to [P3](03-api-machinery.md) when:

@@ -13,6 +13,7 @@
 
 ---
 
+<a id="objectives"></a>
 ## 1. Objectives
 
 Every one is falsifiable — an artifact, a timed production, or a claim a hostile reader could check against source or a running cluster. *understand* and *know* appear nowhere.
@@ -30,10 +31,12 @@ By the end you can:
 
 ---
 
+<a id="modules"></a>
 ## 2. Modules
 
 Reading is [Area 4](../strands/source-reading.md#area-4-controllers), and the sequencing rule is load-bearing: **the picture and `sample-controller` first, `tools/cache` in earnest only after.** Each cited item carries a question to answer — no bare links.
 
+<a id="m4-1"></a>
 ### Module 4.1 — The reconcile principle, and the picture first (~4 days)
 
 Before any `client-go` source, install the one idea everything else serves.
@@ -48,10 +51,11 @@ Before any `client-go` source, install the one idea everything else serves.
 
 **Do** — run `sample-controller` against the [`pair`](https://github.com/k3ii/k8s-academy/issues/8) cluster, watch it reconcile its CRD, and add a log line at each of the five moving parts named in the diagram.
 
-**Break it** — chaos drill [4.C1](#3-chaos-drills) in miniature: `kubectl edit` the managed object's status to a wrong value and watch the controller stomp it back on the next resync. That stomp is level-triggered reconciliation, and it is the same one you saw in [P1](01-operate-shallow.md) — now you can point at the loop that does it.
+**Break it** — chaos drill [4.C1](#chaos) in miniature: `kubectl edit` the managed object's status to a wrong value and watch the controller stomp it back on the next resync. That stomp is level-triggered reconciliation, and it is the same one you saw in [P1](01-operate-shallow.md) — now you can point at the loop that does it.
 
 **Write down** — the reflector→DeltaFIFO→indexer→workqueue diagram, drawn from memory, with the file per stage.
 
+<a id="m4-2"></a>
 ### Module 4.2 — The machinery, in reading order (~1 week)
 
 Now `tools/cache`, in the order the area prescribes — small and elegant first, the 55 KB files last and only in part.
@@ -72,6 +76,7 @@ Now `tools/cache`, in the order the area prescribes — small and elegant first,
 
 **Write down** — the `410`-to-relist path with its `reflector.go` citation, tied explicitly back to P2's `ErrCompacted`.
 
+<a id="m4-3"></a>
 ### Module 4.3 — Build artifact 1: the hand-wired operator (~1 week)
 
 The phase's centre. Everything above becomes something you wire yourself, modelled on `sample-controller`.
@@ -80,10 +85,11 @@ The phase's centre. Everything above becomes something you wire yourself, modell
 
 **Gate** — [`envtest`](../strands/build-mechanics.md#gates): a real `kube-apiserver` and `etcd` out-of-cluster, so the reconciler meets genuine optimistic concurrency, watch delivery, defaulting and validation — not a fake client that agrees with whatever you wrote. **This is the objective gate a hand-wired controller otherwise lacks**, and the reason module 4.6's diff is a comparison rather than a story.
 
-**Break it** — chaos drill [4.C1](#3-chaos-drills) for real: kill the operator mid-`syncHandler` and confirm it converges on restart with no lost work. If it loses work, the bug is that you trusted the event or did not requeue on error — fix it, because this *is* the capstone.
+**Break it** — chaos drill [4.C1](#chaos) for real: kill the operator mid-`syncHandler` and confirm it converges on restart with no lost work. If it loses work, the bug is that you trusted the event or did not requeue on error — fix it, because this *is* the capstone.
 
 **Write down** — the five hand-wired parts mapped to their `sample-controller` equivalents, and the one line in your worker loop that requeues a key on error (the no-lost-work guarantee).
 
+<a id="m4-4"></a>
 ### Module 4.4 — Exemplars, owner refs, GC and finalizers (~1 week)
 
 The in-tree controllers, read for the patterns your operator glossed — and the source behind the two nastiest real-world failures.
@@ -99,10 +105,11 @@ The in-tree controllers, read for the patterns your operator glossed — and the
 
 **Do** — create an owner-reference chain (a CRD owning ConfigMaps), delete with each propagation policy, and watch children orphan, background-delete, or foreground-delete.
 
-**Break it** — chaos drill [4.C2](#3-chaos-drills): add a finalizer to your CRD, then make its cleanup fail, and wedge the object (and a namespace) in `Terminating`. Diagnose it from the object's `metadata.finalizers` and the GC controller's behaviour, then clear it correctly — not by force-removing the finalizer, but by fixing the cleanup.
+**Break it** — chaos drill [4.C2](#chaos): add a finalizer to your CRD, then make its cleanup fail, and wedge the object (and a namespace) in `Terminating`. Diagnose it from the object's `metadata.finalizers` and the GC controller's behaviour, then clear it correctly — not by force-removing the finalizer, but by fixing the cleanup.
 
 **Write down** — the `Terminating` diagnosis: which finalizer, why it blocked, and the propagation policy that produced the child behaviour you saw.
 
+<a id="m4-5"></a>
 ### Module 4.5 — Leader election (~3 days)
 
 Self-contained, well-commented, and directly demonstrable — the answer to "what happens when you run two replicas".
@@ -116,10 +123,11 @@ Self-contained, well-commented, and directly demonstrable — the answer to "wha
 
 **Do** — add leader election to your hand-wired operator and run two replicas; watch one lead, kill it, watch the standby acquire the lease after the renew deadline lapses.
 
-**Break it** — chaos drill [4.C3](#3-chaos-drills): run the two replicas **without** leader election and watch them fight — double-creating, stomping each other's status. Then add it back. The fight is the argument for the lease.
+**Break it** — chaos drill [4.C3](#chaos): run the two replicas **without** leader election and watch them fight — double-creating, stomping each other's status. Then add it back. The fight is the argument for the lease.
 
 **Write down** — the observed failover timing (lease duration, renew deadline, actual takeover gap) with the `leaderelection.go` citation.
 
+<a id="m4-6"></a>
 ### Module 4.6 — Build artifact 2: kubebuilder, and the diff (~4 days)
 
 The scaffold, met *after* the hand-wiring, so `controller-gen`, `Reconcile(ctx, req)`, `envtest` and `zz_generated.deepcopy.go` land as **recognition, not magic** ([#9](https://github.com/k3ii/k8s-academy/issues/9) — order fixed, do not swap).
@@ -132,6 +140,7 @@ The scaffold, met *after* the hand-wiring, so `controller-gen`, `Reconcile(ctx, 
 
 ---
 
+<a id="chaos"></a>
 ## 3. Chaos drills
 
 **Hand-driven, every one** — [Chaos Mesh is not introduced until P6](06-kubelet-node.md), deliberately after several phases of manual failure so the tool reads as a scripted wrapper over primitives already met. These drills are all *convergence under interruption* — the level-triggered guarantee tested, not asserted.
@@ -147,6 +156,7 @@ The scaffold, met *after* the hand-wiring, so `controller-gen`, `Reconcile(ctx, 
 
 ---
 
+<a id="talks"></a>
 ## 4. Talks
 
 Full entries with runtimes under [Controllers](../strands/talks.md#controllers).
@@ -157,6 +167,7 @@ Full entries with runtimes under [Controllers](../strands/talks.md#controllers).
 
 ---
 
+<a id="ecosystem"></a>
 ## 5. Ecosystem
 
 **Flux** — the reconcile loop you just hand-wrote, running in production ([#6](https://github.com/k3ii/k8s-academy/issues/6) settled Flux over Argo).
@@ -167,6 +178,7 @@ Full entries with runtimes under [Controllers](../strands/talks.md#controllers).
 
 ---
 
+<a id="capstone"></a>
 ## 6. Capstone
 
 **The hand-wired operator managing a CRD end to end, surviving a restart mid-reconcile with no lost work — plus a written `git diff` of what `kubebuilder` scaffolded against what you wrote by hand.**
@@ -186,6 +198,7 @@ Every path verified live per [P2's archaeology standard](../strands/source-archa
 
 ---
 
+<a id="checklist"></a>
 ## 7. Checklist
 
 Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
@@ -215,6 +228,7 @@ Concrete, demonstrable, grouped by evidence type. No item says *understand* or *
 
 ---
 
+<a id="gate"></a>
 ## 8. Gate
 
 You may advance to [P5](05-scheduler.md) when:

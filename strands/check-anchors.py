@@ -6,6 +6,8 @@ Checks, across strands/, phases/ and labs/:
   * no two strand docs publish the same id (a cross-file collision is a link hazard)
   * every `foo.md#anchor` link resolves to an id that is actually published
   * every `foo.md` link points at a file that exists
+  * every same-file `](#anchor)` link resolves too — which is what catches a GitHub
+    heading slug written in place of an explicit id
 
 **Id scoping.** Strand ids are global: two strand docs publishing the same id is a
 break, because a phase file writes `](certs.md#cka)` and the reader has to know which
@@ -32,6 +34,17 @@ STRANDS, PHASES, LABS = ROOT / "strands", ROOT / "phases", ROOT / "labs"
 ANCHOR = re.compile(r'<a id="([^"]+)"></a>')
 # ](any/relative/target.md) and ](target.md#anchor); external URLs are not ours to check
 LINK = re.compile(r'\]\((?!https?://)([^)#\s]+\.md)(?:#([^)\s]+))?\)')
+# ](#anchor) — a link into the *same* file. These were invisible until #35: the regex
+# above requires a `.md`, so a GitHub heading slug written same-file was neither
+# resolved nor rejected, and 66 of them had accumulated across the phase files.
+SAMEFILE = re.compile(r'\]\(#([^)\s]+)\)')
+FENCE  = re.compile(r"^```.*?^```", re.S | re.M)
+INLINE = re.compile(r"`[^`\n]*`")
+
+def prose(f):
+    """File text with code removed. A link pattern inside a fence or a backtick span
+    is an *example* of a link, not one — these docs quote the syntax at each other."""
+    return INLINE.sub("", FENCE.sub("", f.read_text()))
 
 def ids_in(f):
     found = ANCHOR.findall(f.read_text())
@@ -63,7 +76,8 @@ sources = strand_files + scoped_files
 UNWRITTEN = re.compile(r"^\d\d-[a-z-]+\.md$")   # a phase file that does not exist yet
 broken, pending = [], set()
 for f in sources:
-    for target, anchor in LINK.findall(f.read_text()):
+    text = prose(f)
+    for target, anchor in LINK.findall(text):
         rel = f.relative_to(ROOT)
         path = f.parent / target
         if not path.exists():
@@ -80,6 +94,10 @@ for f in sources:
                    else str(resolved.relative_to(ROOT)))
             if key in published and anchor not in published[key]:
                 broken.append(f"{rel} -> {target}#{anchor} (no such anchor)")
+    key = (f.name if f.parent == STRANDS else str(f.relative_to(ROOT)))
+    for anchor in SAMEFILE.findall(text):
+        if anchor not in published[key]:
+            broken.append(f"{f.relative_to(ROOT)} -> #{anchor} (no such anchor, same file)")
 
 for i, a, b in collisions:
     print(f"COLLISION: id '{i}' published by both {a} and {b}")
