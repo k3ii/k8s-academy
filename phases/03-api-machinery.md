@@ -1,0 +1,258 @@
+# Phase 3 — API machinery
+
+> **5–6 weeks.** The heaviest phase and the spine's centre of gravity — the apiserver is the one component every other component is a client of, so this is where reading `k/k` pays its highest dividend.
+> The range is planning information. **The gate at the bottom decides when the phase is finished.**
+
+| | |
+|---|---|
+| **Prerequisites** | [P2](02-etcd.md) — the store the apiserver encodes *onto*. You have already run a three-member cluster, watched Raft elect, and restored from a snapshot, so `--etcd-servers` and peer certs are consolidation here, not new. Critically, the `ErrCompacted → "too old resource version"` chain you traced in etcd is the *same phrase* the watch cache emits from the other side ([module 3.5](#module-35)). |
+| **Unlocks** | [P4](04-controllers.md) — the watch cache you read here is the far end of the informer's watch. [P10](10-security.md) — the aggregation-layer CVE and the webhook/authz surface return there as *security*; here they are *mechanism*, learned first. And every operator, admission policy and CRD in the platform arc rests on this phase. |
+| **Source area** | [Area 2 — API machinery](../strands/source-reading.md#area-2-api-machinery), entry point `endpoints/handlers/create.go` — the whole write path in one readable function. `sample-apiserver` is **read, not built** ([#9](https://github.com/k3ii/k8s-academy/issues/9)). |
+| **Language** | Go — **four build artifacts** ([artifact table](../strands/build-mechanics.md#artifact-table)): validating webhook → mutating webhook → CRD conversion webhook → `kubectl` plugin. The [`file:line` archaeology standard from P2](../strands/source-archaeology.md#drills) is now assumed, not taught. |
+| **Strands** | [source reading](../strands/source-reading.md#area-2-api-machinery) · [build](../strands/build-mechanics.md#artifact-table) · [talks](../strands/talks.md#apiserver) · [chaos](../strands/chaos.md#borrowed-drills) |
+
+---
+
+## 1. Objectives
+
+Every one is falsifiable — an artifact, a timed production, or a claim a hostile reader could check against source or a running cluster. *understand* and *know* appear nowhere.
+
+By the end you can:
+
+1. **Trace one `kubectl apply` through the handler chain**, naming each stage *by the file that implements it*: URL → `requestinfo.go` → `authentication.go` → `authorization.go` → mutating admission → schema validation → validating admission → `storage.Create` → an etcd `Txn`. This is the capstone, derived from `create.go`.
+2. **State and cite the admission ordering rule** — *all* mutating plugins run, *then* all validating, never interleaved — pointing at `admission/chain.go` where it is enforced, and explain from `reinvocationcontext.go` why one mutating webhook may be invoked more than once.
+3. **Hand-start `kube-apiserver` from flags** (the Very Hard Way) and name what `--etcd-servers`, `--client-ca-file`, `--service-account-issuer` and the aggregation flags each wire up — while reading the very handler the binary is serving.
+4. **Build a validating webhook hand-certed end to end**, then change one SAN and recognise `x509: certificate signed by unknown authority` from the apiserver log alone.
+5. **Locate the origin of `"too old resource version"` in the apiserver**, in `watch_cache.go`'s ring buffer (`startIndex`/`endIndex`), and connect it by name to the etcd `ErrCompacted` from [P2](02-etcd.md) — the same failure, two layers.
+6. **Serve a two-version CRD through a conversion webhook**, name the storage version, and show a round-trip that would break if conversion were not lossless (KEP-598).
+7. **Wedge the cluster with a `failurePolicy: Fail` webhook that blocks the write that would fix it**, then recover — and name the escape hatch before you need it.
+8. **Contrast three control planes you have run** — hand-wired (Very Hard Way), kubeadm-generated ([P1](01-operate-shallow.md)), and k0s single-binary — naming precisely what k0s collapses into one process.
+
+---
+
+## 2. Modules
+
+Reading is [Area 2](../strands/source-reading.md#area-2-api-machinery), the highest essential-to-readable ratio in the corpus, where **sequencing matters more than anywhere else**. The area's 40 items are ordered approachable → hard there; the modules below pick the load-bearing ones and attach a question and a lab to each. `runtime/scheme.go` (item 35) is **deliberately last** — the generics trap, mastery-necessary and disastrous as early reading.
+
+<a id="module-30"></a>
+### Module 3.0 — Kubernetes the Very Hard Way, and why it sits here (~1 week)
+
+Hand-wire every control-plane component from nothing — the placement is deliberate and the argument is the point, not the verdict.
+
+**The argument** ([#10](https://github.com/k3ii/k8s-academy/issues/10)): the module's difficulty concentrates in exactly two places — PKI/TLS plumbing between components, and etcd configuration and peer setup.
+- *Before any Kubernetes:* both hard parts are pure yak-shaving — certs for components you cannot yet name. Rejected.
+- *Straight after kubeadm:* better, but you would wire etcd with no idea what a revision or a quorum is. The etcd half stays opaque.
+- **Here, after the etcd month — chosen.** The etcd half is now *consolidation*, and the apiserver half is at maximum leverage: you hand-start `kube-apiserver` with its flags **while reading `endpoints/handlers/create.go`** — the binary you are configuring is the source you are reading, the same week.
+
+**Do** — the iximiuz "Kubernetes the Very Hard Way" module. It is **browser-hosted, so it costs zero homelab RAM** — which is what makes it affordable in a phase that also needs a running `pair`. Read Area 0 item 12, `hack/local-up-cluster.sh`, alongside: the most honest inventory of what a control plane is — the flags it passes each binary.
+
+> **Question to answer from the source:** for each flag you pass `kube-apiserver`, find where it is consumed in `cmd/kube-apiserver/app/server.go` (item 32) or the config it builds — a flag whose effect you cannot locate in source you do not yet control.
+
+**Break it** — hand-wired PKI is where certs go wrong on purpose later ([module 3.3](#module-33)); here, mis-set one component's client cert and read the refusal. This is banked toward **CKA** (control-plane installation is a CKA competency) — produced as a by-product of doing it for real.
+
+**Write down** — the component-and-flag map: every binary, the flags that connect it to its neighbours, and the cert that authenticates each hop.
+
+### Module 3.1 — The handler chain and the write path (~1.5 weeks)
+
+The entry point and the spine. This module reads *down onto* [P2](02-etcd.md)'s store.
+
+**Read** — each item with a question to answer:
+
+| Item | Answer from it |
+|---|---|
+| `endpoints/handlers/create.go` (item 2, ⭐) | In one function: where exactly does mutating admission run relative to `Validate` and `storage.Create`? Name the calls in order. |
+| `endpoints/filters/` — `requestinfo.go`, `authentication.go`, `authorization.go` (item 4) | How does a URL become `{verb, group, version, resource, namespace, name}`, and at which filter is a request first rejected for *who* you are versus *what* you may do? |
+| `registry/rest/{create,update}.go` + `pkg/registry/core/pod/strategy.go` (items 13–14) | What does a `RESTCreateStrategy` decide that the generic path cannot — defaulting, status-subresource rules? |
+| `registry/generic/registry/store.go` (item 15) | Read `Create`/`Update`/`Delete`: where is optimistic concurrency enforced, and how does a `resourceVersion` precondition become an etcd `Txn`? |
+| `storage/etcd3/{store.go, watcher.go}` (item 23) | The bottom of the stack — where Kubernetes finally speaks etcd gRPC. How does a Kubernetes key map to an etcd key, and how is a watch translated? This is [P2](02-etcd.md) from above. |
+| authn/authz interfaces + `rbac.go` + node `graph.go` (item 36) | Why may a kubelet read only *its own* node's secrets? Trace it through the Node authorizer graph. |
+
+**Do** — with the [Go primer's](01-operate-shallow.md) delve tooling, set a breakpoint or add a log line in a locally-built apiserver at each named call and drive one `kubectl create` through it. The Very Hard Way cluster from 3.0 is the one to instrument.
+
+**Break it** — send a request with a valid token but no RBAC binding; watch it die at `authorization.go`, not admission. Then bind it and watch it reach admission. The rejection *point* is the lesson.
+
+**Write down** — the ordered handler chain with the file implementing each stage — the skeleton the capstone trace fills in with line numbers.
+
+### Module 3.2 — Admission (~1 week)
+
+The extension point the whole platform arc hangs off, learned as source before it is built as webhooks.
+
+**Read**
+
+| Item | Answer from it |
+|---|---|
+| `admission/interfaces.go` + `chain.go` (item 5) | `chain.go` is 2 KB and states the whole ordering model. Cite the line that guarantees all mutating run before any validating. |
+| `plugin/pkg/admission/` — `limitranger/`, `serviceaccount/` (item 7) | Best proof admission is "just a function". What does each do to an incoming Pod, and where would a webhook sit relative to it? |
+| KEP-492 (item 6) + `webhook/mutating/reinvocationcontext.go` (item 8) | The normative webhook semantics — `failurePolicy`, `reinvocationPolicy`, timeouts. Why can a mutating webhook be called *more than once*, and what bookkeeping makes that safe? |
+| KEP-3716 match conditions + KEP-3488 CEL admission (items 10–11) | The modern way to narrow webhook blast radius, and the in-process, webhook-free alternative (`ValidatingAdmissionPolicy`). When is a webhook now the *wrong* tool? |
+
+**Do** — enable and disable a built-in plugin (`--enable-admission-plugins`) on the Very Hard Way apiserver and watch object defaults appear and vanish.
+
+**Break it** — write a `ValidatingAdmissionPolicy` (CEL, no webhook) that rejects a field, then a webhook that does the same, and compare the failure latency and the failure-mode surface. The contrast is objective 2's payoff.
+
+**Write down** — the admission ordering rule with its `chain.go` citation, and one sentence on when CEL-in-process beats a webhook.
+
+<a id="module-33"></a>
+### Module 3.3 — Build: three webhooks and a plugin (~1.5 weeks)
+
+Four artifacts, developed under the [two-stage rule](../strands/build-mechanics.md#two-stages) — stage 1 outside the cluster, stage 2 re-shipped inside. Stage 1 is real, not a simulation: the apiserver cannot tell the difference.
+
+1. **Validating webhook — hand-certed end to end.** Stage 1 points `clientConfig.url` at a `go run` process on [`forge`](../strands/build-mechanics.md#forge) (only possible because forge sits on the lab bridge). Generate a CA, sign a serving cert with the right SANs, base64 the CA into `caBundle` by hand — [`openssl` first](../strands/build-mechanics.md#webhook-tls). Stage 2 switches to `clientConfig.service` and pays the cost of the swap: Service, Endpoints, in-cluster DNS, a cert with the right SANs.
+2. **Mutating webhook — `cert-manager` second.** A `Certificate` plus the `ca-injector` annotation writes `caBundle` for you — now readable as *automation of a shape you already hand-built*, not magic.
+3. **CRD conversion webhook** — takes whichever cert path fits; the interesting part is the round-trip (module 3.4).
+4. **`kubectl` plugin.** **The odd one out, and this file says so** rather than letting you notice: it is a client binary, so it has [**no stage 2**](../strands/build-mechanics.md#artifact-table) — it never practises deployment mechanics, and that is correct, not an omission.
+
+**Gate** — the three webhooks fall to the [tier-2 falsifiable-claim bar](../strands/build-mechanics.md#gates) (a `file:line` claim a hostile reader could check); so does the plugin. There is no objective harness for these — name the claim, do not invent a suite.
+
+**Break it** — chaos drill [3.C1](#4-chaos-drills), which **originates here**: corrupt the `caBundle` on the working validating webhook and diagnose it from the apiserver logs alone. With `failurePolicy: Fail` that is a real outage — the honest version, and this is the place wedging one costs nothing.
+
+**Write down** — for webhook 1, the SAN-break symptom and the exact apiserver log line; for the plugin, the one sentence on why it has no stage 2.
+
+### Module 3.4 — CRDs and aggregation (~1 week)
+
+How a CRD can behave like a built-in, and how a second apiserver is bolted on.
+
+**Read**
+
+| Item | Answer from it |
+|---|---|
+| KEP-95 CRD GA + KEP-598 conversion + KEP-2876 CEL validation (items 27–29) | Structural schemas, the storage version, and `x-kubernetes-validations`. What must be true of a conversion for multi-version storage to be safe? |
+| `apiextensions-apiserver/.../customresource_handler.go` (item 30) | Read `ServeHTTP` and `getOrCreateServingInfoFor`: how is per-CRD `RESTStorage` built *dynamically* and torn down when the CRD changes? This answers "how can a CRD behave like a built-in?" |
+| `kube-aggregator/.../handler_proxy.go` (item 31) | A small, readable reverse proxy. How does an `APIService` route to an external apiserver — and why is this the exact surface of CVE-2018-1002105 (talk below)? |
+| `cmd/kube-apiserver/app/{server.go, aggregator.go}` (item 32) | The payoff: how `kube-apiserver` → `apiextensions-apiserver` → `kube-aggregator` are chained with delegation. `sample-apiserver` is **read, not built** — read it here as the minimal aggregated server. |
+
+**Do** — ship the two-version CRD from module 3.3's conversion webhook; store v1, serve v2, and round-trip an object through both.
+
+**Break it** — chaos drill [3.C2](#4-chaos-drills): make the conversion webhook return garbage and watch every read of that CRD's objects fail — a self-inflicted outage scoped to one resource type.
+
+**Write down** — the storage-version-and-round-trip note, and one sentence on why the aggregation proxy path is a security-sensitive seam.
+
+### Module 3.5 — Watch cache, consistency, and APF (~1 week)
+
+The read-scaling machinery, and the apiserver end of [P2](02-etcd.md)'s watch.
+
+**Read**
+
+| Item | Answer from it |
+|---|---|
+| `storage/cacher/watch_cache.go` (item 21) | The ring buffer behind every watch — `startIndex`/`endIndex`, capacity. **This is the exact origin of `"too old resource version"`**: what makes an event fall off the ring? (Note the [cacher split](../strands/source-archaeology.md#stale-paths) — it is a *package* now, not one file; older walkthroughs cite dead line numbers.) |
+| KEP-2340 consistent reads + `cacher/delegator.go` (items 20, 22) | The best KEP for the apiserver/etcd consistency contract: how can a *quorum-consistent* read be served from cache using etcd progress notifications? |
+| KEP-1040 APF + `util/flowcontrol/apf_filter.go` (items 25–26) | FlowSchemas, PriorityLevelConfigurations, shuffle sharding — the correct mental model for apiserver overload. What does APF protect, and what does it *not*? |
+| KEP-555 server-side apply (item 34) | `managedFields` and apply-vs-update conflict detection — the model that replaced strategic-merge-patch. |
+
+**Do** — reproduce `"too old resource version"` on a real watch: hammer a resource to overflow the cache window while a slow client watches, and catch the 410 in the client.
+
+**Break it** — chaos drill [3.C3](#4-chaos-drills): saturate one APF priority level with a well-behaved-looking client and watch it starve another — the "cluster-killer bug" (talk below) reproduced deliberately.
+
+**Write down** — the ring-buffer origin of `"too old resource version"` with its `watch_cache.go` citation, tied back to P2's `ErrCompacted` — the same failure named at two layers.
+
+### Module 3.6 — The single-binary contrast: k0s (~2–3 days)
+
+The last of three progressively-automated answers to one question.
+
+**Do** — stand up **k0s** on the `k0s-light` topology. It is deliberately separated from kubeadm so the contrast lands against experience, giving the phase three control planes *in sequence*: **hand-wire every component** (Very Hard Way) → **read what kubeadm generated for you** ([P1](01-operate-shallow.md)'s cluster, revisited with knowledge) → **watch a single binary collapse the whole control plane into one process** (k0s). The full-vs-lightweight trade-off is felt hardest here, because only now do you know precisely what k0s is hiding.
+
+**Break it** — kill the single k0s process and watch the entire control plane go at once; contrast with the Very Hard Way cluster, where you can kill exactly one component and name what stops.
+
+**Write down** — the three-control-planes comparison (objective 8): for each, what is one process versus many, where etcd lives, and what you had to configure by hand.
+
+---
+
+## 3. Chaos drills
+
+The **self-inflicted-outage** phase — every fault here is something the operator does to themselves, still **hand-driven** (no chaos tool until [P6](06-kubelet-node.md)). Drill 3.C1 **originates in this phase** and is borrowed by [`chaos.md#borrowed-drills`](../strands/chaos.md#borrowed-drills) — the mechanism lives here, the chaos strand links in.
+
+| # | Drill | By hand | What you must produce afterwards |
+|---|---|---|---|
+| 3.C1 | **Corrupt a webhook `caBundle`** | flip a byte in `caBundle` on the `failurePolicy: Fail` validating webhook | The apiserver log line that names it, and the reason a broken admission webhook can wedge *every* write — including the one that fixes it |
+| 3.C2 | **Garbage-returning conversion webhook** | make the CRD conversion webhook emit malformed objects | Why every read of that CRD's objects now fails, and how the blast radius is scoped to one resource type |
+| 3.C3 | **Starve an APF priority level** | flood one FlowSchema's level from one client | Which requests get queued/rejected and which sail through — APF's protection boundary, made visible |
+| 3.C4 | **Apiserver down, controllers up** | stop `kube-apiserver` while controllers keep running | What a controller does when its watch drops and its writes fail — the level-triggered payoff, previewing [P4](04-controllers.md) |
+| 3.C5 | **Expired component certificate** | let (or force) a client cert to expire | `x509` from the *inside*, and the recovery order — banked toward CKA cert-rotation |
+
+**The escape hatch is part of the drill, not a footnote:** for 3.C1, know before you start that `failurePolicy: Fail` on a webhook selecting its own namespace is how clusters actually die — and that the fix is namespace/label exclusion or deleting the webhook config out-of-band.
+
+---
+
+## 4. Talks
+
+Full entries with runtimes under [API server](../strands/talks.md#apiserver) and [Security](../strands/talks.md#security).
+
+- **The Life (or Death) of a Kubernetes API Request, 2025 Edition** (Kashem & Schimanski) — **watch first.** The single best entry to the whole control plane: one request end to end, authn → authz → APF → admission → storage → etcd → watch fan-out, with the modern APF/CEL stages in place. This is the spine every module above hangs off.
+- **The Cluster Killer Bug: Learning API Priority and Fairness the Hard Way** (Zaneski) — APF through a real outage, the mechanism behind drill 3.C3.
+- **Webhook Fatigue? …Introducing the CEL Expression Language** (Betz) — why webhook admission costs you (latency in the request path, availability coupling) and why CEL-in-apiserver was the answer — the argument behind module 3.2's webhook-vs-VAP contrast.
+- **Crafty Requests: Deep Dive Into Kubernetes CVE-2018-1002105** (Coldwater) — the model CVE walkthrough: the aggregation-layer proxy upgrade bug that skipped authorization. Watched here as **mechanism** (it is the `handler_proxy.go` seam from module 3.4); it **returns in [P10](10-security.md) as security**.
+
+---
+
+## 5. Ecosystem
+
+**k0s** — the single-binary distribution, treated for its internals rather than just installed (module 3.6 is the hands-on contrast).
+
+- **Hands-on:** module 3.6 on `k0s-light` — stand it up, kill the one process, watch everything stop.
+- **Internals note:** k0s ships the entire control plane as **one supervised Go binary** — apiserver, controller-manager, scheduler and an **embedded etcd** (or a `kine`-backed SQL store) started and health-managed as child processes by a single supervisor. That is exactly the collapse module 3.6 makes you feel: the component boundaries you hand-wired in 3.0 still exist inside the binary, but you no longer configure the seams between them. Read how it supervises — the seams are hidden, not gone.
+- **Maturity:** a CNCF-landscape distribution (Mirantis), CNCF-conformant. Contrast with kubeadm (an upstream SIG-Cluster-Lifecycle tool, not a distro) — the two answer *different* questions, which is why this phase runs both.
+
+---
+
+## 6. Capstone
+
+**The Very Hard Way completed, three webhooks running, and a written trace of one `kubectl apply` through the entire handler chain — citing file and line numbers a hostile reader could check.**
+
+Three artifacts, one trace:
+
+1. **A hand-wired cluster** (module 3.0) that comes up and serves — every component started by you, every cert signed by you.
+2. **Three webhooks running** on it: the hand-certed validating webhook, the `cert-manager` mutating webhook, and the CRD conversion webhook serving a two-version resource. (The `kubectl` plugin is the fourth build artifact but not a webhook — it stands alone.)
+3. **The trace** — one `kubectl apply`, followed from the client through the full chain, each stage cited to `file:line` in the live tree:
+   - `kubectl` building the request (`kubectl/pkg/cmd/apply/apply.go`, item 40);
+   - `requestinfo.go` → `authentication.go` → `authorization.go` in `endpoints/filters/`;
+   - the mutating-then-validating ordering, cited to `admission/chain.go`;
+   - the entry-point orchestration in `endpoints/handlers/create.go`;
+   - `RESTCreateStrategy` and the generic `store.go` `Create`;
+   - the etcd `Txn` in `storage/etcd3/store.go`.
+
+Every path must first have been verified live per [P2's archaeology standard](../strands/source-archaeology.md#drills) — a citation you have not confirmed against the tree does not count, and the `cacher` split is the trap waiting for a copied line number. **The trace is graded as much on whether its `file:line` references survive checking as on whether the cluster serves.**
+
+---
+
+## 7. Checklist
+
+Concrete, demonstrable, grouped by evidence type. No item says *understand* or *know*.
+
+**Timed / live against a running apiserver:**
+- [ ] Reject one `kubectl create` at `authorization.go` (no binding), then admit it (bound) — naming the rejection point each time.
+- [ ] Reproduce `"too old resource version"` on a watch by overflowing the cache window.
+- [ ] Break a webhook SAN and recognise the `x509` apiserver log line within 2 minutes.
+
+**Build artifacts (tier-2 `file:line` gate):**
+- [ ] Validating webhook, hand-certed, stage 1 (`url`) then stage 2 (`service`).
+- [ ] Mutating webhook via `cert-manager`.
+- [ ] CRD conversion webhook serving a two-version resource with a proven round-trip.
+- [ ] `kubectl` plugin (client binary, no stage 2 — say why).
+
+**Written artifacts (each is a module's Write-down):**
+- [ ] The component-and-flag map from the Very Hard Way (3.0).
+- [ ] The ordered handler chain with the file per stage (3.1).
+- [ ] The admission ordering rule with its `chain.go` citation (3.2).
+- [ ] The `caBundle`-corruption symptom and log line (3.3).
+- [ ] The storage-version round-trip note (3.4).
+- [ ] The ring-buffer origin of `"too old resource version"`, tied to P2's `ErrCompacted` (3.5).
+- [ ] The three-control-planes comparison (3.6).
+- [ ] The capstone trace with surviving `file:line` citations.
+
+**Falsifiable claims — write, then verify against source:**
+- [ ] Why a mutating webhook may be invoked more than once (cite `reinvocationcontext.go`).
+- [ ] Why a kubelet may read only its own node's secrets (Node authorizer graph).
+- [ ] What APF protects and what it does not.
+
+---
+
+## 8. Gate
+
+You may advance to [P4](04-controllers.md) when:
+
+1. **The handler-chain trace is complete and its `file:line` citations survive checking.** A cluster that serves but a trace whose paths do not resolve in the live tree is a *fail* — this is the phase where the citation standard is the deliverable, not a garnish.
+2. **You can name the admission ordering rule and the reinvocation reason without notes** — mutating-then-validating, and why a mutating webhook re-runs. [P4](04-controllers.md)'s reconcilers and every later admission policy assume this cold.
+3. **The `"too old resource version"` chain is reflexive across both layers:** etcd `ErrCompacted` ([P2](02-etcd.md)) *and* the apiserver watch-cache ring buffer, and why a client's answer to either is a relist. If you cannot draw it end to end, **stay here** — [P4](04-controllers.md)'s informer is the client that has to survive it.
+
+This is the heaviest phase because everything below is a client of what it serves. When [P4](04-controllers.md) wires an informer, the watch it consumes, the cache it reads, and the admission it passes through are all machinery you have now started by hand, read in source, and broken on purpose.
