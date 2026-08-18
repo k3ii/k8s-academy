@@ -37,6 +37,15 @@ exist. **Same-file `](#id)` links are checked too.** They were not until
 of them had accumulated across the phase files — working on GitHub that day, and
 silently dead the first time a section was renumbered.
 
+It also enforces **coverage**, which is this section's standard one level up: link
+integrity says every link resolves, and says nothing about a module that quietly got
+no exercise. So every `### Module N.N` in a phase file must carry a `**Labs**` line
+into its `labs/NN/`, or declare itself reading-only with a line-start bolded
+`**No lab`; every exercise file must be linked from its phase or its index; and
+`labs/NN/README.md` must list the whole directory. A phase whose `labs/NN/` does not
+exist yet is reported as *pending*, not broken — the same word this script already
+uses for a phase file that is linked but unwritten.
+
 Heading slugs were rejected because GitHub's slugger is not the obvious function.
 `## Area 6 — Storage` slugs to `area-6--storage`, not `area-6-storage` — the em dash
 is deleted and leaves the two surrounding spaces to become two hyphens. The first
