@@ -41,8 +41,9 @@ It also enforces **coverage**, which is this section's standard one level up: li
 integrity says every link resolves, and says nothing about a module that quietly got
 no exercise. So every `### Module N.N` in a phase file must carry a `**Labs**` line
 into its `labs/NN/`, or declare itself reading-only with a line-start bolded
-`**No lab`; every exercise file must be linked from its phase or its index; and
-`labs/NN/README.md` must list the whole directory. A phase whose `labs/NN/` does not
+`**No lab`; every exercise file must be linked from its phase **and** listed in
+`labs/NN/README.md`. Both, not either — the phase link is what routes a learner to the
+exercise, the index is what makes the directory readable on its own. A phase whose `labs/NN/` does not
 exist yet is reported as *pending*, not broken — the same word this script already
 uses for a phase file that is linked but unwritten.
 

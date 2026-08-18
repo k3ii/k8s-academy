@@ -31,8 +31,12 @@ file no phase links to. So, for each `phases/NN-*.md` that has a `labs/NN/`:
 
   * *forward* — every `### Module N.N` block carries a `**Labs**` line pointing into
     `../labs/NN/`, **or** an explicit `**No lab` marker;
-  * *backward* — every exercise file is linked from the phase file or from the index;
-  * *index* — `labs/NN/README.md` links every exercise file in its directory.
+  * *backward* — every exercise file is linked **from the phase file**, and listed in
+    `labs/NN/README.md`. Both, not either: the phase link is what routes a learner to
+    the exercise, the index is what makes the directory readable on its own. #36
+    proposed *phase or index*; both prototypes already satisfied the stronger form for
+    all 42 exercises, and under *or* the phase check would almost never fire, since an
+    exercise missing from the index fails the index rule first.
 
 A module that is genuinely reading-only declares itself with a **line-start bolded
 `**No lab`** — P8's module 8.1, P0's 0.6 and P1's 1.6 already do, in three wordings
@@ -175,9 +179,9 @@ for pf in sorted(PHASES.glob("*.md")):
             continue
         n_exercises += 1
         rel = str(ex.relative_to(ROOT))
-        if rel not in from_phase and rel not in from_index:
-            uncovered.append(f"{rel} is linked from neither phases/{pf.name} nor labs/{nn}/README.md")
-        elif rel not in from_index:
+        if rel not in from_phase:
+            uncovered.append(f"{rel} is not linked from phases/{pf.name}")
+        if rel not in from_index:
             uncovered.append(f"labs/{nn}/README.md does not list {ex.name}")
 
 for i, a, b in collisions:
