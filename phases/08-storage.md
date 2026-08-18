@@ -60,13 +60,9 @@ Then Area 6 items 8 and 9 — `pv_controller_base.go` (the skeleton: informers, 
 
 **Goal** — bind PVCs to PVs by reasoning rather than by trial, and be right before you apply.
 
-**Topology** — `pair` (control plane 3072MB / 2c / 25G at `10.10.10.130`; worker 2048MB / 2c / 20G at `10.10.10.131`). 5.0GB, 45G disk. Everything from Phase 7 torn down first — this is a hard precondition, not hygiene.
+**Topology** — [`pair`](../strands/lab-topologies.md#pair). Everything from Phase 7 is [torn down first](../strands/lab-topologies.md#teardown) — a hard precondition, not hygiene.
 
-**Provision**
-```
-cd tofu/labs && tofu apply -var 'topology=pair'
-ssh -J factory debian@10.10.10.130
-```
+**Provision** — [the five steps](../strands/lab-topologies.md#provision).
 
 **Do**
 1. Create six `hostPath` PVs that differ deliberately: two at 5Gi and two at 10Gi; one `ReadWriteOnce` and one `ReadWriteMany` at each size; one with a `storageClassName` and one without; one with a label.
@@ -104,7 +100,7 @@ Then item 13's `assume_cache.go` — how the scheduler acts on binds that are no
 
 **Goal** — see delayed binding actually delay something, and see the failure it prevents.
 
-**Topology** — `pair`, continued from 8.2.
+**Topology** — [`pair`](../strands/lab-topologies.md#pair), continued from 8.2.
 
 **Do**
 1. Create two StorageClasses over `local-path`: one `volumeBindingMode: Immediate`, one `WaitForFirstConsumer`.

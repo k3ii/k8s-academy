@@ -71,8 +71,10 @@ node, Debian 13 guests provisioned by OpenTofu and configured by Ansible, on an 
 `10.10.10.0/24` bridge reachable only through the `factory` bastion.
 
 The binding constraint on the whole curriculum: **~9.9GB available RAM and 6 cores**
-(i5-8400T). Labs are designed for that ceiling — one cluster at a time, aggressive teardown,
-and deliberate use of topics that need no cluster at all. Resource pressure, OOMKills and
+(i5-8400T) — of which [**~9.5GB is spendable on a lab
+topology**](strands/lab-topologies.md#ceiling) once the guests that must stay up and the
+page-cache holdback come out. Labs are designed for that ceiling — one cluster at a time,
+aggressive teardown, and deliberate use of topics that need no cluster at all. Resource pressure, OOMKills and
 eviction cascades are on the syllabus anyway, so a cramped lab produces them for real.
 
 ## Layout
@@ -86,7 +88,7 @@ now all on `main`.
 | Path | Contents |
 |------|----------|
 | `phases/NN-name.md` | One file per phase, `00`–`12`. Ten fixed sections: objectives, modules, build artifact, chaos drills, talks, ecosystem, cert drill block, capstone, checklist, gate — absent sections omitted, not padded |
-| `strands/` | The cross-cutting material each phase links into rather than restates: source corpus, chaos catalogue, talk index, cert curricula, build mechanics, source archaeology. The **living** form — corrected as paths move and tools release. See [`strands/README.md`](strands/README.md) |
+| `strands/` | The cross-cutting material each phase links into rather than restates: source corpus, chaos catalogue, talk index, cert curricula, build mechanics, source archaeology, lab topologies. The **living** form — corrected as paths move and tools release. See [`strands/README.md`](strands/README.md) |
 | `research/` | Findings from `wayfinder:research` tickets. The **dated record** of what was verified, against which tree, on which date — including what could not be verified. Not edited to stay current; a stale research doc is still an accurate record |
 | `journal/NN-name.md` | The learner's own notes, traces and lab writeups |
 | `build/NN-artifact/` | The learner's Go modules — eleven of them, real and buildable, so the hand-wired-versus-scaffolded comparisons are a `git diff` |
