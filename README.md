@@ -17,25 +17,52 @@ users is the point of doing it in that order.
 
 ## Status
 
-The curriculum is being **charted**, not yet written. Planning happens as a
-[wayfinder map](../../issues/1) in this repo's issues:
+**The curriculum is written.** All thirteen phase files (P0–P12) are on `main` in
+[`phases/`](phases/), every [strand doc](strands/) exists, and
+`python3 strands/check-anchors.py` is green with no dangling links in either direction.
+What remains is to *walk* it — the labs, source traces and writeups are the learner's to run.
+
+### Phases
+
+Two directions: **descend** (P0–P10), remove abstraction to the syscalls; **synthesise** (P11),
+trace one request all the way down; **rebuild** (P12), put abstraction back deliberately.
+
+| # | Phase | Weeks | Cert |
+|---|-------|-------|------|
+| P0 | [Linux & container primitives](phases/00-linux-primitives.md) | 3–4 | |
+| P1 | [Operate a cluster (deliberately shallow)](phases/01-operate-shallow.md) | 2–3 | **CKAD** |
+| P2 | [etcd internals](phases/02-etcd.md) | 4–5 | |
+| P3 | [API machinery](phases/03-api-machinery.md) | 5–6 | |
+| P4 | [Controllers & reconciliation](phases/04-controllers.md) | 4 | |
+| P5 | [Scheduler](phases/05-scheduler.md) | 4 | |
+| P6 | [kubelet, the node, and observability](phases/06-kubelet-node.md) | 3–4 | |
+| P7 | [Networking, L3/L4 datapath](phases/07-networking.md) | 4–5 | |
+| P8 | [Storage](phases/08-storage.md) | 3–4 | **CKA** |
+| P9 | [Service mesh & L7](phases/09-service-mesh.md) | 2–3 | |
+| P10 | [Security & supply chain](phases/10-security.md) | 4–5 | **CKS** |
+| P11 | [Synthesis](phases/11-synthesis.md) | 2–3 | |
+| P12 | [GitOps & platform engineering](phases/12-gitops-platform.md) | 5–6 | |
+
+[`phases/08-storage.md`](phases/08-storage.md) is the worked example the other twelve were
+copied from — the phase drafted first, against real source, to settle the format.
+
+### How it was planned
+
+Planning ran as a [wayfinder map](../../issues/1) in this repo's issues, now complete — every
+ticket closed, the frontier empty. The record is worth reading before the phases, because it
+carries the *why*:
 
 - The **map** ([#1](../../issues/1), label `wayfinder:map`) holds the destination, the fixed
-  inputs, the decisions made so far, and the fog not yet sharp enough to ticket.
-- Each **ticket** is a child issue of the map resolving exactly one decision or question.
-  Types: `wayfinder:research` (agent-driven), `wayfinder:grilling` (worked with a human),
-  `wayfinder:prototype`, `wayfinder:task`.
-- Blocking uses GitHub's native issue dependencies, so the **frontier** — what's takeable
-  right now — is visible in the issue list without opening the map.
-
-Read the map first. It carries the learner profile and lab constraints that every ticket
-assumes.
-
-The **phase spine** ([#10](../../issues/10)) is settled — thirteen phases, their order, durations,
-capstones and strand attachment, plus the recorded argument for where "Kubernetes the Very Hard
-Way" sits and why kubeadm and k0s are deliberately separated. It is the resolution to read
-before any other. Everything in this repo is written in Go
-([#9](../../issues/9)).
+  inputs, and every decision made along the way — including the learner profile and lab
+  constraints that every phase assumes. **Read it first.**
+- Each **ticket** was a child issue resolving exactly one decision or question
+  (`wayfinder:research` agent-driven, `wayfinder:grilling` worked with a human,
+  `wayfinder:prototype`, `wayfinder:task`), chained by GitHub's native issue dependencies so
+  only the frontier was ever takeable.
+- The **phase spine** ([#10](../../issues/10)) is the single resolution to read before any phase
+  file — thirteen phases, their order, durations, capstones and strand attachment, plus the
+  recorded argument for where "Kubernetes the Very Hard Way" sits and why kubeadm and k0s are
+  deliberately separated. Everything in this repo is written in Go ([#9](../../issues/9)).
 
 ## Lab environment
 
@@ -51,10 +78,10 @@ eviction cascades are on the syllabus anyway, so a cramped lab produces them for
 ## Layout
 
 The document format is settled ([#11](../../issues/11)) — chosen by drafting one full phase
-against real source material rather than in the abstract. The prototype,
-[`phases/08-storage.md`](phases/08-storage.md), is now on `main`: the six
-[strand docs](strands/) it links into exist ([#16](../../issues/16)), so it is the worked
-example to copy from.
+against real source material rather than in the abstract. That prototype,
+[`phases/08-storage.md`](phases/08-storage.md), and the six [strand docs](strands/) it links
+into ([#16](../../issues/16)) came first; the other twelve phases were copied from it and are
+now all on `main`.
 
 | Path | Contents |
 |------|----------|
