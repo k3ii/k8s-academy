@@ -174,20 +174,32 @@ just tofu labs destroy       # never `just destroy-vms` — that one is hardcode
 `tofu/vms`, the persistent fleet. Keeping labs in [their own state
 key](#provision) is what makes the two impossible to confuse.
 
-**Teardown is ruled per *phase*, not per exercise**
-([#8](https://github.com/k3ii/k8s-academy/issues/8)):
+**Teardown has two layers, ruled at different scopes**
+([#8](https://github.com/k3ii/k8s-academy/issues/8),
+[#35](https://github.com/k3ii/k8s-academy/issues/35)). The *guest* layer is the one #8
+settled, and it is coarse:
 
 > Every phase starts from a clean provision — no long-lived clusters accreting across
 > phases. Because both RAM and disk are one-topology-at-a-time, teardown is not hygiene
 > but a hard precondition for the next phase booting at all.
 
-Three scopes are settled, all coarser than an exercise: per **phase**, per **lab group**
-within a phase (P12 runs two, with a teardown between), and *everything else down* for a
-**big rock** like a service mesh. Consecutive exercises sharing a live cluster is the
-intended pattern, not a shortcut — a provision, gate and baseline is minutes of
-wall-clock before any teaching happens. An exercise's teardown line is therefore usually
-a **continuity marker** (*"leave it up, 8.3 continues on it"*), with a real teardown
-where the exercise ends a phase, ends a group, or installs a big rock.
+Three guest-layer scopes are settled, all coarser than an exercise: per **phase**, per
+**lab group** within a phase (P12 runs two, with a teardown between), and *everything
+else down* for a **big rock** like a service mesh. Consecutive exercises sharing a live
+cluster is the intended pattern, not a shortcut — a provision, gate and baseline is
+minutes of wall-clock before any teaching happens. An exercise's line about the guest is
+therefore usually a **continuity marker** (*"leave it up, 8.3 continues on it"*), with a
+real `just tofu labs destroy` where the exercise ends a phase, ends a group, or installs
+a big rock.
+
+The second layer is finer and always runs: **each exercise deletes what it created** —
+its namespace, its CRs, its `iptables` rules, its loop devices — before the next one
+starts. #8 was read as *no teardown at all between exercises* while the storage phase was
+being drafted, and the reading survived until objects left behind by one exercise started
+answering the next one's question for it. A cluster that has been used for eleven
+exercises is not the cluster the twelfth was written against. So an exercise's teardown
+step does the fine layer unconditionally, then names the coarse one: **stays**, or
+**goes**.
 
 **Disk needs evicting too, and that is a build-track fact**: `go clean -modcache` and
 `docker system prune` belong in the same runbook — see

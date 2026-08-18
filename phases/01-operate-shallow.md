@@ -48,14 +48,9 @@ The tool CKA expects, stood up deliberately so that P3 can *read what it left be
 | `staging.md` (item 11) | Why does `staging/src/k8s.io/*` exist, and how does `client-go` get published from inside the monorepo? Two pages that stop months of repo-layout confusion. |
 | `local-up-cluster.sh` (item 12) | Not prose — the most honest inventory of what a control plane *is*. **List the flags it passes to each of `kube-apiserver`, `kube-controller-manager`, `kube-scheduler`.** You will meet a third of them again in P3. |
 
-**Do**
-1. `kubeadm init` on the control-plane node, `kubeadm join` on the worker. Install a CNI (Cilium or Flannel — thin, since P7 owns networking).
-2. **Locate everything it generated:** `/etc/kubernetes/manifests/*.yaml` (the control plane runs as static pods — connect to [P0](00-linux-primitives.md): the kubelet watches a *directory*, not the API), `/etc/kubernetes/pki/` (the CA and every serving/client cert), `/etc/kubernetes/*.conf` (the kubeconfigs).
-3. Read one static-pod manifest and match its flags to your `local-up-cluster.sh` list.
+The control plane it leaves behind runs as **static pods** — the kubelet watches a *directory*, not the API — which is a [P0](00-linux-primitives.md) mechanism rather than a new one, and the most clarifying single fact about how Kubernetes runs itself. The map of what it generated is a required input to [P3](03-api-machinery.md), which reads these files as *source*.
 
-**Break it** — `mv /etc/kubernetes/manifests/kube-apiserver.yaml` aside for sixty seconds, watch the kubelet stop the apiserver, then move it back and watch it return. The control plane is *reconciled by a kubelet watching a directory* — that is the single most clarifying thing about how Kubernetes runs itself, and it is a P0 mechanism (a kubelet, static pods) not a new one.
-
-**Write down** — a one-page map of what `kubeadm` generated and where. This map is a required input to [P3](03-api-machinery.md), which reads these files as *source*.
+**Labs** — [A two-node cluster, stood up by hand](../labs/01/01-provision-and-kubeadm-init.md) · [The map of what kubeadm left on disk](../labs/01/02-what-kubeadm-generated.md) · [Two control planes, one flag list](../labs/01/03-static-pod-flags-vs-local-up.md) · [1.C4 — move the apiserver's manifest out of the directory](../labs/01/04-static-pod-blip.md)
 
 <a id="m1-2"></a>
 ### Module 1.2 — The object model, as referents (~3 days)
@@ -66,59 +61,36 @@ Shallow by design: name the parts, do not open the machinery. Every term here is
 
 > **Question to answer from the source:** the conventions say `resourceVersion` is *opaque* and must not be interpreted by clients. What are you allowed to do with it, and what does the doc explicitly forbid? You will see *why* in [P2](02-etcd.md), where it turns out to be an etcd revision.
 
-**Do**
-1. For five different objects (Pod, Deployment, Service, ConfigMap, Node), print `spec` and `status` separately and identify who writes each half.
-2. Watch `resourceVersion` change on an object as you edit it (`kubectl get -w -o yaml`). Do not yet ask how — just see that it moves.
-3. Explore `kubectl api-resources` and `kubectl explain --recursive`: GVK, namespaced-vs-cluster-scoped, subresources (`/status`, `/scale`).
+Hand-editing a `status` and watching a controller stomp it back is the reconcile loop made visible, and it is objective 8 from [P0](00-linux-primitives.md) arriving as an object rather than as a shell script: re-read desired state, correct drift, forget nothing because you remembered nothing.
 
-**Break it** — `kubectl edit` an object's `status` directly and watch a controller stomp it back within seconds. That stomp is the reconcile loop, and it is objective 8 from [P0](00-linux-primitives.md) — you re-read desired state and correct drift.
-
-**Write down** — the spec/status owner for each of the five objects, and the one-sentence `resourceVersion` rule.
+**Labs** — [Who writes each half of an object](../labs/01/05-spec-status-ownership.md) · [What `resourceVersion` does and does not promise](../labs/01/06-resourceversion-moves.md) · [Write a lie into status and time the correction](../labs/01/07-stomp-the-status.md)
 
 <a id="m1-3"></a>
 ### Module 1.3 — Workloads: the controllers you will later read, operated (~4 days)
 
 CKAD's centre of gravity, and a gallery of the controllers P4 dissects. Here you *drive* them; there you read them.
 
-**Do**
-1. Deployment with a rolling update: set `maxSurge`/`maxUnavailable`, roll a new image, `kubectl rollout status`, then `kubectl rollout undo`. **Predict the ReplicaSet count at each step before running it.**
-2. Probes: liveness vs readiness vs startup. Wire a readiness probe to a togglable endpoint.
-3. Config: ConfigMaps and Secrets as env and as mounted volumes; note the Secret volume is a `tmpfs` — a P0 mount, not disk.
-4. `securityContext`: `runAsNonRoot`, `drop: [ALL]` then add back one capability. **This is the P0 capability drop as a manifest field** — confirm with `capsh --decode` inside the container.
-5. The other workloads by shape: DaemonSet, StatefulSet, Job, CronJob — enough to choose the right one, not to read its controller.
+Two of these are P0 mechanisms wearing manifest fields — one mount type, one capability set — and the labs treat them that way rather than as new material, which is why [objective 8](#objectives) asks you to read a field back to its primitive rather than forward from the docs. The workload gallery is sized to *choose* the right shape, not to read its controller — that is [P4](04-controllers.md).
 
-**Break it** — chaos drill [1.C1](#chaos): `kubectl delete pod` one of a Deployment's pods and watch the ReplicaSet recreate it; then `kubectl scale` to zero and back. Narrate which controller acted and what it compared. This is level-triggered reconciliation you can now *cause on demand*.
-
-**Write down** — your rolling-update ReplicaSet predictions with actuals, and the capability you dropped with the `capsh` proof.
+**Labs** — [Predict the ReplicaSet counts at every step](../labs/01/08-rolling-update-predictions.md) · [Three probes, three different consequences](../labs/01/09-probes-three-kinds.md) · [The same ConfigMap, two ways in](../labs/01/10-config-as-env-and-volume.md) · [The P0 capability drop, as a manifest field](../labs/01/11-drop-a-capability-in-a-manifest.md) · [Five workload kinds, chosen by the forcing property](../labs/01/12-choose-the-workload-shape.md) · [1.C1 — delete a pod that something is watching](../labs/01/13-delete-a-managed-pod.md)
 
 <a id="m1-4"></a>
 ### Module 1.4 — Services, Ingress, and access (~3 days)
 
 CKAD Services & Networking (20%), operated shallowly. P7 owns the datapath; here you own the *abstractions*.
 
-**Do**
-1. Expose one Deployment as ClusterIP, then NodePort, then LoadBalancer via **MetalLB** (L2, the `.200`–`.250` pool from the [capacity plan](https://github.com/k3ii/k8s-academy/issues/8)) — the standard UI-access path for every later phase.
-2. `kubectl get endpointslices -w` while scaling the Deployment — watch endpoints appear and drain. Connect to module 1.3's readiness probe: unready pods leave the slice.
-3. An Ingress with an ingress controller (ingress-nginx), path- and host-based rules. **CKAD uses Ingress, not Gateway API** — Gateway API is a CKA topic ([Recent changes](../strands/certs.md#cka-changes)).
-4. CoreDNS: resolve a Service by name from a pod, read `/etc/resolv.conf`, and connect `ndots`/search-domains back to the [P0](00-linux-primitives.md) DNS path.
+This is the module that installs **MetalLB**, which becomes [the standard UI-access path](../strands/lab-topologies.md#access) for every later phase. **CKAD uses Ingress, not Gateway API** — Gateway API is a CKA topic ([Recent changes](../strands/certs.md#cka-changes)) and drilling it here is wasted time.
 
-**Break it** — chaos drill [1.C2](#chaos): delete the EndpointSlice for a Service by hand and watch the endpoint controller rebuild it; then point a Service's selector at a label no pod has and diagnose the empty slice from `kubectl describe` alone.
-
-**Write down** — the four exposure types with the component each needs, and one paragraph on how a readiness probe reaches all the way to a Service's endpoint list.
+**Labs** — [One Deployment, four exposures](../labs/01/14-four-ways-to-expose.md) · [A readiness probe, followed to an endpoint list](../labs/01/15-endpointslice-drains.md) · [Why a one-label name resolves and a two-label name does not](../labs/01/16-dns-from-a-pod.md) · [1.C2 — an empty endpoint list, from `describe` alone](../labs/01/17-break-the-endpoints.md)
 
 <a id="m1-5"></a>
 ### Module 1.5 — Helm and kustomize (~3 days)
 
 Package management, required by the brief and an explicit CKAD competency (Application Deployment, 20%).
 
-**Do**
-1. `kustomize`: a base plus two overlays (dev/prod) differing by replicas and image. Note it is built into `kubectl apply -k`.
-2. **Author a nontrivial Helm chart** — this is the capstone input, so build it here: multiple templates, a `values.yaml` with real conditionals, a helper `_helpers.tpl`, and one **subchart dependency**. Deploy a multi-service app with it.
-3. `helm upgrade` with changed values; `helm rollback`; `helm diff` if the plugin is available. Watch what changes and what does not.
+The chart authored here is [the capstone's](#capstone) input, not a demo — build it once, properly, and grow it. And the module's most useful half-hour is the one that fails: Helm is a client-side templating-and-release tool with **no controller**, so a resource deleted behind its back stays deleted. That gap is exactly the one [Flux](04-controllers.md) closes in P4, and the contrast is the lesson.
 
-**Break it** — `kubectl delete` a resource Helm created, then `helm upgrade` and observe Helm *not* recreate it (three-way merge, not reconciliation). That gap — Helm is a client-side templating-and-release tool with no controller — is exactly the gap [Flux](04-controllers.md) closes in P4, and the contrast is the lesson.
-
-**Write down** — where Helm stored the release (a Secret of type `helm.sh/release.v1`, per namespace) and what `helm upgrade` diffs (old manifest, new manifest, live state).
+**Labs** — [Two overlays over one base](../labs/01/18-kustomize-base-and-overlays.md) · [A chart with a subchart, a helper and a real conditional](../labs/01/19-author-a-helm-chart.md) · [Find the release on the cluster and read it](../labs/01/20-helm-upgrade-and-release-state.md) · [Delete something Helm created and watch nothing happen](../labs/01/21-helm-does-not-reconcile.md)
 
 <a id="m1-6"></a>
 ### Module 1.6 — The Go primer (~ a few days, last)
@@ -133,7 +105,9 @@ Cover, each with a tiny program that proves it:
 - Generics — enough to read them, since `client-go` now uses them.
 - `go mod`, and **table-driven tests** — the universal `k/k` test shape, and the one you will write against `envtest` in P4.
 
-**No lab of its own.** The proof is objective 7 and the checklist item: a single small program using all six. It exists to remove the language as a variable before P2.
+**No cluster of its own** — the proof is one program, and it is written on [`forge`](../strands/lab-topologies.md#build-guest) after this phase's cluster is gone. It exists to remove the language as a variable before P2.
+
+**Labs** — [One program that exercises every primer construct](../labs/01/25-the-go-primer-program.md)
 
 ---
 
@@ -144,10 +118,10 @@ Cover, each with a tiny program that proves it:
 
 | # | Drill | By hand | What you must be able to say afterwards |
 |---|---|---|---|
-| 1.C1 | **Delete a managed pod** | `kubectl delete pod` under a Deployment | Which controller recreated it, what it compared (desired vs actual replica count), and why deleting the *pod* is futile against a *Deployment* |
-| 1.C2 | **Break a Service's endpoints** | delete the EndpointSlice; then a selector typo | That endpoints are reconciled from pod readiness, not configured — diagnosed from `describe` alone |
-| 1.C3 | **Botch a rollout, then roll back** | roll a broken image, `rollout undo` | The Deployment→ReplicaSet history mechanism, and why the old ReplicaSet was kept around |
-| 1.C4 | **Static-pod control-plane blip** | `mv` a manifest out of `/etc/kubernetes/manifests` and back (module 1.1) | That the control plane is itself reconciled by a kubelet watching a directory |
+| 1.C1 | [**Delete a managed pod**](../labs/01/13-delete-a-managed-pod.md) | `kubectl delete pod` under a Deployment | Which controller recreated it, what it compared (desired vs actual replica count), and why deleting the *pod* is futile against a *Deployment* |
+| 1.C2 | [**Break a Service's endpoints**](../labs/01/17-break-the-endpoints.md) | delete the EndpointSlice; then a selector typo | That endpoints are reconciled from pod readiness, not configured — diagnosed from `describe` alone |
+| 1.C3 | [**Botch a rollout, then roll back**](../labs/01/22-botch-a-rollout-and-roll-back.md) | roll a broken image, `rollout undo` | The Deployment→ReplicaSet history mechanism, and why the old ReplicaSet was kept around |
+| 1.C4 | [**Static-pod control-plane blip**](../labs/01/04-static-pod-blip.md) | `mv` a manifest out of `/etc/kubernetes/manifests` and back ([module 1.1](#m1-1)) | That the control plane is itself reconciled by a kubelet watching a directory |
 
 **1.C3 is the capstone's rehearsal** — the incident note you write there is this drill, documented properly.
 
@@ -169,7 +143,7 @@ Full entries, with runtimes, under [debugging](../strands/talks.md#debugging) in
 **Helm** — the package manager, treated for its internals rather than re-taught (module 1.5 is the hands-on).
 
 - **Hands-on:** module 1.5 — a chart with a subchart, upgrade, rollback.
-- **Internals note:** Helm is **entirely client-side**. There is no operator, no CRD, no reconcile loop. A "release" is a **Secret** (`helm.sh/release.v1`, gzipped manifest + values) in the release namespace; `helm upgrade` computes a **three-way merge** (old manifest, new manifest, live cluster state) and PATCHes the diff. Read one release Secret's decoded contents. This is the deliberate foil for [Flux](04-controllers.md) in P4, which *does* reconcile — the whole GitOps argument is visible in the gap module 1.5's Break-it opened.
+- **Internals note:** Helm is **entirely client-side**. There is no operator, no CRD, no reconcile loop — the release is an object on the cluster and nothing watches it. That makes it the deliberate foil for [Flux](04-controllers.md) in P4, which *does* reconcile, and the whole GitOps argument is visible in the gap module 1.5 opens. Where the release lives and what an upgrade diffs are [the labs'](../labs/01/20-helm-upgrade-and-release-state.md) to answer, and [the checklist](#checklist) asks you for both.
 - **Maturity:** CNCF **graduated**. The default packaging tool for the ecosystem; `kustomize` (also here, built into `kubectl`) is the templating-free alternative, not a competitor for the same job.
 
 ---
@@ -190,6 +164,8 @@ Domain weights, exam mechanics, the practice-resource verdicts and the speed tac
 - **The `k` alias and completion are pre-provisioned in the exam** — do not spend practice time building muscle memory for setup that is already done for you.
 - **Nothing about etcd, the scheduler internals, or RBAC administration** — those are CKA/CKS scope. Weights and the drill list: [Speed tactics](../strands/certs.md#speed-tactics), [Practice resources](../strands/certs.md#practice).
 
+**The harness** — the clock, the rules and the task list are [the drill block](../labs/01/26-ckad-drill-block.md), which runs on a **fresh** cluster it did not build.
+
 **Exit:** CKAD passed. If not, that is a drill-block problem, not a phase problem — the gate below is independent of it, [by standing rule](../strands/certs.md#rules).
 
 ---
@@ -201,8 +177,8 @@ Domain weights, exam mechanics, the practice-resource verdicts and the speed tac
 
 Two artifacts, because this phase installs the habit every later capstone leans on: *trace it, then write it down*.
 
-1. **The chart** (from module 1.5): a multi-service app — at least a frontend, a backend, and a datastore — deployed by one `helm install`, with a subchart dependency, real `values.yaml` conditionals, probes, resource requests/limits, and a ServiceAccount per workload. Exposed via MetalLB and reachable in a browser.
-2. **The incident note** (from drill 1.C3): roll out a deliberately broken image (bad probe, or a missing ConfigMap key), observe the rollout wedge, diagnose it *from `kubectl` output alone*, and roll back. Then **write the incident up** — symptom, the objects you inspected in order, the mechanism (Deployment kept the old ReplicaSet, `maxUnavailable` capped the blast radius), and the fix. One page. This is the format [P6](06-kubelet-node.md), [P8](08-storage.md) and [P11](11-synthesis.md) capstones escalate.
+1. **[The chart](../labs/01/23-the-multi-service-app.md)** — grown from module 1.5's, not started fresh. A multi-service app deployed by one `helm install`, exposed via MetalLB, reachable in a browser.
+2. **[The incident note](../labs/01/24-the-incident-note.md)** — drill 1.C3, documented properly. One page: symptom, the objects you inspected in order, the mechanism, the fix. This is the format [P6](06-kubelet-node.md), [P8](08-storage.md) and [P11](11-synthesis.md) capstones escalate.
 
 **No `file:line` citations required here** — this phase is deliberately above the source. The trace is in terms of *objects and controllers*, not code. That standard returns in P2.
 
