@@ -45,11 +45,9 @@ exercise 20's is written into the artifact itself.
 | 21 | [Every container flag, mapped to its primitive](21-docker-flags-to-primitives.md) | The second gate condition, and it finds the one flag with no kernel primitive at all. |
 | 22 | [Find your script inside the OCI runtime spec](22-find-your-container-in-config-json.md) | A runtime is a program that reads that JSON and makes the calls you just made. |
 
-**[Module 0.6](../../phases/00-linux-primitives.md#m0-6) has no exercise, and that is
-deliberate.** It is the foundational reading — Borg, `architecture.md`, `principles.md`,
-`object-lifecycle.md`, `controllers.md` — which runs alongside the hands-on modules and
-produces written answers, not a lab. Its question-and-answer table stays in the phase
-file where the rest of the reading lives.
+**[Module 0.6](../../phases/00-linux-primitives.md#m0-6) has no exercise**, and the phase
+file says so where the rest of the reading lives. It is not an omission and it is not a
+gap in this index.
 
 **Exercise 22 needs no topology at all.** It is a spec and a git clone, so it can be done
 on the Mac, on a train, or while `bare` is already destroyed.
