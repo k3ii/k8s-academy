@@ -9,7 +9,8 @@
 | **Unlocks** | [P6](06-kubelet-node.md) — the scheduler *decides* a pod's node; the kubelet *makes it real*. P6 picks up the pod the instant a `Binding` is POSTed here, and eviction there is the node-side mirror of preemption here (both remove a running pod under pressure — one from above, one from below). |
 | **Source area** | [Area 3 — Scheduler](../strands/source-reading.md#area-3-scheduler), entry point `framework/interface.go`. **Read the three `sig-scheduling/` SIG docs first** — they are a guided tour written for exactly this, and skipping them is the specific waste this area warns about. The queue moved to `backend/queue/`: a live [archaeology](../strands/source-archaeology.md#stale-paths) case, older citations of `internal/queue/` are stale. |
 | **Language** | Go — **two build artifacts**, a ~200-line from-scratch scheduler then an out-of-tree framework plugin, [both listed in the artifact table](../strands/build-mechanics.md#artifact-table). |
-| **Lab** | **The one phase whose lab splits.** Build the two schedulers on [`pair`](https://github.com/k3ii/k8s-academy/issues/8) with `forge` at 2560 MB; **score and preempt on `workhorse`** (3 nodes) with `forge` back at 1536 MB — [`build-mechanics#p5-split`](../strands/build-mechanics.md#p5-split), because *scoring across two nodes teaches almost nothing* and 1536 MB will not link a scheduler. Nothing is compiled while `workhorse` is up. |
+| **Lab** | **The one phase whose lab splits.** Build the two schedulers on [`pair`](../strands/lab-topologies.md#pair) with `forge` at 2560 MB; **score and preempt on `workhorse`** (3 nodes) with `forge` back at 1536 MB — [`build-mechanics#p5-split`](../strands/build-mechanics.md#p5-split), because *scoring across two nodes teaches almost nothing* and 1536 MB will not link a scheduler. Nothing is compiled while `workhorse` is up. |
+| **Labs** | [`labs/05/`](../labs/05/README.md) — 37 exercises, in order. `forge` resizes **up at [exercise 7](../labs/05/07-fifteen-thirty-six-will-not-link-a-scheduler.md) and back down at [exercise 33](../labs/05/33-forge-back-down-and-workhorse-up.md)**; both are steps, not footnotes. |
 | **Strands** | [source reading](../strands/source-reading.md#area-3-scheduler) · [build](../strands/build-mechanics.md#p5-split) · [talks](../strands/talks.md#scheduler) · [chaos](../strands/chaos.md#principle) |
 
 ---
@@ -51,22 +52,14 @@ Reading is [Area 3](../strands/source-reading.md#area-3-scheduler), and its sequ
 | `framework/plugins/registry.go` (item 5) + the three tiny plugins `nodename/`, `nodeunschedulable/`, `tainttoleration/` (item 7) | The default plugin set in one file, and the plugin *shape* at its smallest. What is the minimum a `FilterPlugin` must implement? |
 | KEP-624 Scheduling Framework (item 3) | The scheduling-cycle-vs-binding-cycle split. Why are these two cycles, not one? |
 
-**Do** — draw the extension-point sequence from memory, marking which run in the scheduling cycle and which in the binding cycle.
-
-**Break it** — write a one-line `Filter` plugin that rejects every node; watch every pod go `Unschedulable` and read the event. That event message is the thread you pull in drill [5.C1](#chaos).
-
-**Write down** — the extension-point sequence with, per point, what an error there does.
+**Labs** — [The tour the SIG wrote, read with the source open](../labs/05/01-the-sig-tour-in-call-order.md) · [The extension points, and what an error at each one costs](../labs/05/02-eleven-points-and-what-an-error-does.md) · [Two cycles, one thread](../labs/05/03-two-cycles-not-one.md) · [The default plugin set, mapped onto the points it fills](../labs/05/04-what-actually-runs-by-default.md) · [A `Filter` plugin is two methods and a string](../labs/05/05-the-smallest-plugin-that-exists.md) · [Three ways to make every node refuse](../labs/05/06-three-rejections-three-plugins.md)
 
 <a id="m5-2"></a>
 ### Module 5.2 — Build artifact 1: the from-scratch scheduler (~4 days, `pair`)
 
 Before reading the real scheduling cycle, prove scheduling isn't magic — so the real one has something naive to show up.
 
-**Do** — write a ~200-line scheduler: an informer on unscheduled pods (`spec.nodeName == ""`, your `schedulerName`), pick a node that fits, and `POST` a `Binding` to `/binding`. That is the entire contract with the apiserver. Run it against `pair`.
-
-**Break it** — kill it mid-cycle (a preview of [5.C4](#chaos)); the unbound pod simply waits and is re-picked on restart, because your scheduler is level-triggered exactly like the P4 controller — it reads pending pods from the cache, it does not consume an event.
-
-**Write down** — the `POST /binding` call site in your code, and **the one thing the real scheduler does that yours skips**: `assume`, the optimistic cache write that lets it schedule the next pod before this bind is durable.
+**Labs** — [The OOM you were promised, produced on purpose](../labs/05/07-fifteen-thirty-six-will-not-link-a-scheduler.md) · [Scheduling, minus the scheduler: one POST](../labs/05/08-bind-a-pod-with-one-post.md) · [Build artifact 1: a scheduler with no framework in it](../labs/05/09-two-hundred-lines-that-schedule.md) · [5.C4 — two schedulers, one pod](../labs/05/10-5c4-two-schedulers-one-pod.md) · [The node that fits ten times because the cache has not caught up](../labs/05/11-what-assume-buys.md)
 
 <a id="m5-3"></a>
 ### Module 5.3 — The real scheduling cycle (~1 week, `pair`)
@@ -81,11 +74,7 @@ Now `schedule_one.go`, guided by the SIG doc — where the from-scratch schedule
 | `noderesources/fit.go` (item 6) | `NodeResourcesFit`: requests-vs-allocatable, `PreFilter` state, and the exact insufficient-resource strings you'll see in `FailedScheduling`. Which line formats the message drill 5.C1 reads? |
 | `framework/cycle_state.go` (item 9) | How `PreFilter` hands state to `Filter` without globals. Why can't a plugin just use a package variable? |
 
-**Do** — run the default scheduler with `-v=10` and find, in the log, each stage of one pod's cycle you just read in source.
-
-**Break it** — set `percentageOfNodesToScore` low on a full `workhorse` (preview) and observe placement quality drop; then explain from `findNodesThatFitPod` **why the default is adaptive**, not "score everything." (Objective 5.)
-
-**Write down** — one pod's path through `schedulingCycle`/`bindingCycle` with `file:line`, and why bind is async.
+**Labs** — [One pod, at `-v=10`, mapped onto `schedule_one.go`](../labs/05/12-one-pod-through-schedule-one.md) · [Pod B is scheduled while pod A is still being bound](../labs/05/13-why-the-bind-is-async.md) · [Why a plugin cannot keep state in a package variable](../labs/05/14-state-without-globals.md) · [`Insufficient cpu` — the line that formats it](../labs/05/15-the-line-that-writes-insufficient-cpu.md) · [The knob that cannot move here](../labs/05/16-the-knob-that-cannot-move-here.md) · [Above the floor at last: a hundred nodes that do not exist](../labs/05/17-a-hundred-nodes-that-do-not-exist.md)
 
 <a id="m5-4"></a>
 ### Module 5.4 — The queue (~1 week, `pair`)
@@ -102,11 +91,7 @@ Where mental models of the scheduler break — and a live archaeology case.
 
 `scheduling_queue.go` (item 17, 101 KB) is **reference-only** — reach into it via the SIG doc, never read it front to back.
 
-**Do** — submit an unschedulable pod, then free resources, and watch (`-v=10`) the QueueingHint fire and the pod move `unschedulablePods → activeQ`.
-
-**Break it** — the full drill [5.C1](#chaos): saturate the cluster, submit a pod, and follow it *into* `unschedulablePods` and back out, timing the backoff.
-
-**Write down** — the two ways a pod leaves `unschedulablePods`, citing `scheduler_queues.md` and the current `backend/queue/` path, with a one-line note on why `internal/queue/` citations are stale.
+**Labs** — [The archaeology case: the path that no longer exists](../labs/05/18-find-the-queue-yourself.md) · [The queue state machine, written before any code is opened](../labs/05/19-three-queues-and-two-exits.md) · [A pod moving between queues, timed](../labs/05/20-watch-a-pod-move.md) · [Attempt 1, 3 and 6: the gaps double until they stop](../labs/05/21-the-backoff-you-can-time.md) · [5.C1 — fifty pods that will not schedule](../labs/05/22-5c1-an-unschedulable-backlog.md) · [Ten cluster changes, one retry](../labs/05/23-the-hint-that-decides-a-retry.md) · [`SchedulingGated` — a pod the scheduler declines to look at](../labs/05/24-a-pod-that-is-never-considered.md)
 
 <a id="m5-5"></a>
 ### Module 5.5 — Preemption, and build artifact 2 (~1 week, build on `pair`)
@@ -121,22 +106,14 @@ Read the preemption algorithm, then build the out-of-tree plugin whose scoring y
 | `framework/preemption/preemption.go` + `defaultpreemption/default_preemption.go` (items 11–12) | candidate nodes → simulate removal → `selectVictimsOnNode` → `PostFilter` returns a nominated node. Where is a `PodDisruptionBudget` accounted for, and what happens when it forbids the only viable eviction? |
 | KEP-4832 Async Preemption (item 13) | Why victim *deletion* moved off the scheduling thread. What throughput problem did synchronous deletion cause? |
 
-**Do (build artifact 2)** — write an out-of-tree plugin against `kubernetes-sigs/scheduler-plugins` (a `Score` or `Filter` extension) that measurably changes placement under contention. Build the image on `pair`, **push it to the `forge` registry** — it will be *run*, not compiled, on `workhorse`.
-
-**Break it** — make your plugin return a hard error at `Reserve` for one node; watch the pod fail *after* scoring succeeded, and explain from `interface.go` why a `Reserve` failure is costlier than a `Filter` rejection.
-
-**Write down** — the extension point your plugin implements and the `interface.go` line declaring it, plus the `selectVictimsOnNode` site you'll reference when narrating preemption in the capstone.
+**Labs** — [The preemptor gets a claim, not the node](../labs/05/25-priority-and-the-nominated-node.md) · [A PDB that makes preemption fail, and says so](../labs/05/26-selectvictimsonnode-and-a-pdb-that-forbids.md) · [Why victim deletion left the scheduling thread](../labs/05/27-why-victim-deletion-left-the-thread.md) · [Build artifact 2: a scoring plugin in a scheduler you own](../labs/05/28-the-out-of-tree-plugin.md) · [Failing after the decision costs more than failing before it](../labs/05/29-a-hard-error-at-reserve.md) · [Stage 2, shape one: a Deployment nobody privileged](../labs/05/30-a-second-scheduler-by-schedulername.md) · [Stage 2, shape two: one process, two scheduler names](../labs/05/31-a-profile-not-a-binary.md) · [Both artifacts, two replicas each, one lease](../labs/05/32-the-lease-changes-hands.md)
 
 <a id="m5-6"></a>
 ### Module 5.6 — Scoring and preemption at scale (~4 days, `workhorse`)
 
 The one module that earns the third node. **`forge` drops to 1536 MB; run only pre-built images — nothing compiles here.**
 
-**Do** — deploy your plugin from the `forge` registry as a second scheduler (`schedulerName`, `KubeSchedulerConfiguration`) on `workhorse`. Score real workloads across three nodes and show placement differs measurably from the default profile.
-
-**Break it** — drills [5.C2](#chaos) and [5.C3](#chaos): drive a **real preemption with real victims** (a running pod actually evicted), and make a topology-spread constraint unsatisfiable. Scarcity here is genuine — the lab ceiling *is* the pressure, per [#8's constraint-as-curriculum](https://github.com/k3ii/k8s-academy/issues/8).
-
-**Write down** — the capstone narrative: the queue transitions during one preemption, which victim was chosen and why, and when the preemptor left `unschedulablePods`.
+**Labs** — [The revert: 2560MB back to 1536MB](../labs/05/33-forge-back-down-and-workhorse-up.md) · [The same workload, two profiles, two distributions](../labs/05/34-placement-that-differs-measurably.md) · [5.C2 — which pod died, on which node, and why that one](../labs/05/35-5c2-preemption-with-real-victims.md) · [5.C3 — unschedulable for a reason that is not scarcity](../labs/05/36-5c3-a-spread-nobody-can-satisfy.md) · [The capstone: a measurement and a story](../labs/05/37-the-capstone-narrative.md)
 
 ---
 
@@ -145,12 +122,12 @@ The one module that earns the third node. **`forge` drops to 1536 MB; run only p
 
 **Phase-authored and observed, not injected** — there is no scheduler-aware fault in either tool, and [Chaos Mesh arrives in P6](06-kubelet-node.md) regardless. These drills exploit real scarcity per [`chaos#principle`](../strands/chaos.md#principle): the homelab ceiling produces the pressure, so preemption has real victims rather than simulated ones.
 
-| # | Drill | By hand | What you must produce afterwards |
-|---|---|---|---|
-| 5.C1 | **Unschedulable backlog** | saturate the cluster, submit one more pod | The pod's path into and out of `unschedulablePods`, the `FailedScheduling` message, and **which plugin** rejected it |
-| 5.C2 | **Preemption with real victims** | submit a high-priority pod into a full cluster | Which running pod was evicted and why (`selectVictimsOnNode`), and the nominated-node handoff — the capstone's core |
-| 5.C3 | **Unsatisfiable topology spread** | an anti-affinity / `topologySpreadConstraints` no node can satisfy | The pod stuck `Unschedulable`, **distinguished from resource starvation** by the event message |
-| 5.C4 | **Two schedulers, one pod** | run the from-scratch and default scheduler with the same `schedulerName` | The conflict (double-bind race) or the recovery when yours crashes mid-cycle — the level-triggered guarantee from [P4](04-controllers.md), retested on the scheduler |
+| # | Drill | What you must produce afterwards |
+|---|---|---|
+| [5.C1](../labs/05/22-5c1-an-unschedulable-backlog.md) | **Unschedulable backlog** | The pod's path into and out of `unschedulablePods`, the `FailedScheduling` message, and **which plugin** rejected it |
+| [5.C2](../labs/05/35-5c2-preemption-with-real-victims.md) | **Preemption with real victims** | Which running pod was evicted and why (`selectVictimsOnNode`), and the nominated-node handoff — the capstone's core |
+| [5.C3](../labs/05/36-5c3-a-spread-nobody-can-satisfy.md) | **Unsatisfiable topology spread** | The pod stuck `Unschedulable`, **distinguished from resource starvation** by the event message |
+| [5.C4](../labs/05/10-5c4-two-schedulers-one-pod.md) | **Two schedulers, one pod** | The conflict (double-bind race) or the recovery when yours crashes mid-cycle — the level-triggered guarantee from [P4](04-controllers.md), retested on the scheduler |
 
 5.C2 and 5.C3 run on `workhorse`; 5.C1 and 5.C4 need only `pair`.
 
@@ -193,6 +170,8 @@ Two parts, checked together on `workhorse`:
 - the `assume` and async-bind sites in `schedule_one.go`;
 - `selectVictimsOnNode` in `defaultpreemption/default_preemption.go` for the victim you observed;
 - the `backend/queue/` transition, with the current path found yourself (not the stale `internal/queue/`).
+
+**Lab** — [The capstone: a measurement and a story](../labs/05/37-the-capstone-narrative.md), which runs the two-profile measurement and the preemption on the same `workhorse` and assembles the four citations.
 
 Every path verified live per [P2's archaeology standard](../strands/source-archaeology.md#drills) — and the queue's relocation is the canonical [stale-path](../strands/source-archaeology.md#stale-paths) case, so a citation to `internal/queue/` is an automatic fail.
 
