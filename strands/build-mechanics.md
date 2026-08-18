@@ -60,8 +60,9 @@ omission.
 <a id="forge"></a>
 ## `forge` — the build guest
 
-**A dedicated Debian 13 guest, `forge`, at 1536MB / 2c / 25G, on `10.10.10.0/24`,
-never part of any cluster and never torn down.**
+**A dedicated Debian 13 guest, `forge`, at 1536MB / 2c / 25G, at `10.10.10.125`,
+never part of any cluster and never torn down** — and therefore
+[never a node in a topology](lab-topologies.md#build-guest), only co-resident with one.
 
 | Holds | Why there |
 |---|---|
@@ -76,17 +77,20 @@ competes with the cluster being studied. `forge` is the same OS, same kernel and
 architecture as the nodes, so fidelity survives; only co-tenancy is given up, and
 co-tenancy was the part that cost something.
 
-**Why 1536MB rather than 2048MB.** The capacity plan's spendable figure is ~9.5GB, and
-`ha` at 7.5GB had already spent the margin:
+**Why 1536MB rather than 2048MB.** The
+[spendable figure is ~9.5GB](lab-topologies.md#ceiling), and `ha` at 7.5GB had already
+spent the margin. Totals are quoted from [the topology
+table](lab-topologies.md#topologies), which owns them; the arithmetic is what is being
+argued here:
 
 | Topology | + `forge` 1536MB | Margin in 9.5GB |
 |---|---|---|
-| `ha` 7.5GB | 9.0GB | 0.5GB |
-| `workhorse` 7.0GB | 8.5GB | 1.0GB |
-| `platform` 6.0GB · `nested` 6.0GB | 7.5GB | 2.0GB |
-| `pair` 5.0GB | 6.5GB | 3.0GB |
-| `solo` 4.0GB | 5.5GB | 4.0GB |
-| `etcd-only` 3.0GB · `k0s-light` 2.0GB | 4.5GB · 3.5GB | 5.0GB+ |
+| [`ha`](lab-topologies.md#ha) 7.5GB | 9.0GB | 0.5GB |
+| [`workhorse`](lab-topologies.md#workhorse) 7.0GB | 8.5GB | 1.0GB |
+| [`platform`](lab-topologies.md#platform) 6.0GB · [`nested`](lab-topologies.md#nested) 6.0GB | 7.5GB | 2.0GB |
+| [`pair`](lab-topologies.md#pair) 5.0GB | 6.5GB | 3.0GB |
+| [`solo`](lab-topologies.md#solo) 4.0GB | 5.5GB | 4.0GB |
+| [`etcd-only`](lab-topologies.md#etcd-only) 3.0GB · [`k0s-light`](lab-topologies.md#k0s-light) 2.0GB | 4.5GB · 3.5GB | 5.0GB+ |
 
 At 2048MB, `ha` plus `forge` commits all 9.5GB with nothing spare — and with
 `balloon 0` there is no reclaim, so staying under budget rather than trusting the
@@ -105,7 +109,7 @@ phase that builds them (P3, P4, P7, P8) runs on `pair`, leaving 3.0GB.
 <a id="p5-split"></a>
 ### P5 splits its lab
 
-P5 is assigned `workhorse` (7.0GB) because *"scoring across two nodes teaches almost
+P5 is assigned [`workhorse`](lab-topologies.md#workhorse) (7.0GB) because *"scoring across two nodes teaches almost
 nothing"* — but `workhorse` plus a 2560MB `forge` is the entire budget with zero
 margin. This cannot be dodged by compiling before the cluster is provisioned, because
 **stage 1 *is* `go run`, which links on every iteration**: the peak is needed

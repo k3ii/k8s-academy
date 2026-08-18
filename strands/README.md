@@ -11,6 +11,7 @@ wrong and the phase file is what gets edited.
 | [`chaos.md`](chaos.md) | Which fault to inject, with which tool, by which Linux primitive — and which faults no tool can express. |
 | [`certs.md`](certs.md) | CKAD / CKA / CKS domain weights, exam mechanics, practice-resource verdicts, speed tactics. |
 | [`build-mechanics.md`](build-mechanics.md) | How the eleven build-track artifacts are compiled, shipped, identified, sized and gated. |
+| [`lab-topologies.md`](lab-topologies.md) | The eight named guest layouts at per-node resolution, their addresses, and how one is provisioned, reached and torn down. |
 | [`source-archaeology.md`](source-archaeology.md) | How to date a path that has moved, and the six refactors that make older third-party material wrong. |
 
 <a id="anchors"></a>
