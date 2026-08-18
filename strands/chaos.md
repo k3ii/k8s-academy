@@ -234,6 +234,11 @@ helm install chaos-mesh chaos-mesh/chaos-mesh -n chaos-mesh --create-namespace \
 - **`install.sh` is deprecated as of 2.8.2** — use Helm. The CRD API reference is
   off-site at `chaos-mesh.dev/reference/master/` and is not linked from the docs
   sidebar.
+- **This block is re-run at the start of every phase that needs it**, not once for the
+  curriculum: each phase provisions a fresh topology, so the install goes with the
+  cluster when it is destroyed. It is an exercise exactly once — in
+  [P6](../phases/06-kubelet-node.md), where the [capability-to-mechanism
+  reading](#mechanisms) is done — and one line of setup everywhere after.
 
 <a id="verify-first"></a>
 ### Verify before promising KernelChaos
