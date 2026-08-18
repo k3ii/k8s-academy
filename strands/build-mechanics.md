@@ -97,14 +97,43 @@ At 2048MB, `ha` plus `forge` commits all 9.5GB with nothing spare — and with
 6.1GB of swap is binding. 1536MB keeps "always up" **literally** true for every
 topology in the table, which is what makes the persistent cache worth having.
 
-> **`forge` is 1536MB by default and 2560MB for P5's build modules.** A `qm set` and a
-> reboot, twice in the curriculum. `GOMODCACHE` and `GOCACHE` are on disk and do not
-> notice.
+> **`forge` is 1536MB by default and 2560MB for the two builds that link a Kubernetes
+> binary with its debug information kept: [P3's apiserver](#p3-raise) and [P5's
+> schedulers](#p5-split).** Up at the start of each and back down in its teardown — a
+> `qm set` and a reboot four times in the curriculum, not twice. `GOMODCACHE` and
+> `GOCACHE` are on disk and do not notice.
 
-Because 1536MB is **not** enough to link a scheduler — see
-[the measurements](#measurements). Everything else fits with room to spare: the
-operator and webhook shape, five of the eleven artifacts, peaks at 564 MiB, and every
-phase that builds them (P3, P4, P7, P8) runs on `pair`, leaving 3.0GB.
+Because 1536MB is **not** enough to link `cmd/kube-scheduler` with DWARF kept — see
+[the measurements](#measurements) — and `cmd/kube-apiserver` is the larger binary, so
+**1535 MiB is a floor for it rather than an estimate of it.** That last step is
+inferred: the apiserver link has never been sampled, and the honest form of the claim
+is *at least as large*, which is all the sizing decision needs.
+
+Every artifact in [the table above](#artifact-table) fits with room to spare — the
+operator and webhook shape, five of the eleven, peaks at 564 MiB, and the phases that
+build them (P3, P4, P7, P8) run beside `pair`, leaving 3.0GB. **What does not fit is
+not an artifact at all**: it is the two phases that compile a Kubernetes component in
+order to read it from the inside.
+
+<a id="p3-raise"></a>
+### P3 raises it once, with nothing else up
+
+P3 compiles `cmd/kube-apiserver` with `-gcflags=all="-N -l"` so that it can be stepped
+through under a debugger, which is the same DWARF-heavy link as P5's schedulers and does
+not fit 1536MB either. The resemblance ends there: **P3's first three modules need no
+topology at all**, so the raise is taken while the ceiling is otherwise empty, and the
+guest stays at 2560MB for the rest of the phase.
+
+| P3 modules | Topology | `forge` | Total | Margin |
+|---|---|---|---|---|
+| Hand-start and instrument an apiserver | **none** | **2560MB** | 2.5GB | 7.0GB |
+| From the first provision to the capstone | [`pair`](lab-topologies.md#pair) 5.0GB | **2560MB** | 7.5GB | 2.0GB |
+
+The first row is the argument for deferring that provision rather than a consequence of
+it: the build that wants the largest `forge` in the curriculum is also the one build
+that can have the machine to itself. The capstone's teardown puts the guest back to
+1536MB, so the raise does not follow P3 into P4, whose two operators are the 564 MiB
+shape and have never needed it.
 
 <a id="p5-split"></a>
 ### P5 splits its lab

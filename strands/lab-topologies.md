@@ -42,7 +42,7 @@ RAM and 95G of disk** to spend on a topology.
 | `hopper` | 2048MB | **Must stay up** — the only machine that runs `tofu` and Ansible. |
 | `carthage` | 1024MB | **Must stay up** — holds the OpenTofu state bucket. |
 | `jeremie` | 1024MB | **Reclaimed** ([#8](https://github.com/k3ii/k8s-academy/issues/8)) — destroyed for the duration of the academy. |
-| [`forge`](#build-guest) | 1536MB · 2560MB during P5 | Never torn down, and **not part of any topology**. |
+| [`forge`](#build-guest) | 1536MB · 2560MB during P3 and P5 | Never torn down, and **not part of any topology**. |
 | Host page cache | ~1.0GB | Held back deliberately. |
 | **A topology, plus `forge`** | **~9.5GB** | |
 
@@ -243,8 +243,9 @@ in it. It holds the Go module cache and the registry precisely so that a teardow
 not cost them.
 
 That is the whole of `forge`'s relationship to this document. Its sizing, why 1536MB and
-not 2048MB, the 2560MB resize for P5, the kernel lockstep with the lab nodes, and the
-registry all live in [`build-mechanics#forge`](build-mechanics.md#forge).
+not 2048MB, the 2560MB resize that P3 and P5 each take and give back, the kernel
+lockstep with the lab nodes, and the registry all live in
+[`build-mechanics#forge`](build-mechanics.md#forge).
 
 <a id="unverified"></a>
 ## What is not confirmed
