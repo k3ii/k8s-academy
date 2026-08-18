@@ -10,6 +10,7 @@
 | **Source area** | [Area 4 — Controllers](../strands/source-reading.md#area-4-controllers), entry point `sample-controller/controller.go`. **Read its reflector→DeltaFIFO→indexer→workqueue diagram before any `tools/cache` source** — the other order is the specific failure mode the area warns about (`reflector.go` and `shared_informer.go` are miserable cold, delightful once the pattern is known). |
 | **Language** | Go — **two build artifacts**, hand-wired `client-go` then `kubebuilder`, [both gated by `envtest`](../strands/build-mechanics.md#gates) so the comparison is a `git diff`, not an anecdote. |
 | **Strands** | [source reading](../strands/source-reading.md#area-4-controllers) · [build](../strands/build-mechanics.md#gates) · [talks](../strands/talks.md#controllers) |
+| **Labs** | [`labs/04/`](../labs/04/README.md) — thirty-four exercises, in order |
 
 ---
 
@@ -49,11 +50,7 @@ Before any `client-go` source, install the one idea everything else serves.
 | `sample-controller` README + the `client-go-controller-interaction` diagram (item 2) | The reflector→DeltaFIFO→indexer→workqueue picture with prose. Ten minutes that saves ten hours — draw it from memory afterwards. |
 | `sample-controller/controller.go` (item 3, ⭐) | The Rosetta Stone: one file with informer setup, key-enqueuing handlers, the worker loop, `syncHandler`, owner refs and status update. Which line enqueues a *key* rather than the object, and why? |
 
-**Do** — run `sample-controller` against the [`pair`](https://github.com/k3ii/k8s-academy/issues/8) cluster, watch it reconcile its CRD, and add a log line at each of the five moving parts named in the diagram.
-
-**Break it** — chaos drill [4.C1](#chaos) in miniature: `kubectl edit` the managed object's status to a wrong value and watch the controller stomp it back on the next resync. That stomp is level-triggered reconciliation, and it is the same one you saw in [P1](01-operate-shallow.md) — now you can point at the loop that does it.
-
-**Write down** — the reflector→DeltaFIFO→indexer→workqueue diagram, drawn from memory, with the file per stage.
+**Labs** — [Draw the pipeline before you open any of it](../labs/04/01-draw-it-before-you-read-it.md) · [The line that enqueues a key, and the line that pays for it](../labs/04/02-the-line-that-enqueues-a-key.md) · [The Rosetta Stone, running against a cluster you can break](../labs/04/03-sample-controller-against-a-real-cluster.md) · [One log line per stage, and the order they fire in](../labs/04/04-five-log-lines-five-stages.md) · [Two edits: one gets stomped, one survives](../labs/04/05-stomp-it-back.md)
 
 <a id="m4-2"></a>
 ### Module 4.2 — The machinery, in reading order (~1 week)
@@ -70,24 +67,16 @@ Now `tools/cache`, in the order the area prescribes — small and elegant first,
 | `tools/cache/reflector.go` — `ListAndWatch`, `watchHandler` only (item 8) | The file that connects controllers back to API machinery. Where is `ErrResourceExpired`/`410` handled, and what does the reflector do next? **This is objective 3.** |
 | `tools/cache/shared_informer.go` — `Run`, `HandleDeltas` (item 9) | One watch shared by many handlers. What does `HasSynced` promise, and why must a controller wait for it before its first reconcile? |
 
-**Do** — instrument a running informer: log every delta type (`Added`/`Updated`/`Deleted`/`Sync`) and force a relist by restarting the apiserver (the [P3](03-api-machinery.md) `3.C4` move) — watch `Replace` fire and the `Sync` deltas arrive.
-
-**Break it** — reproduce the `410`: overflow the [P3](03-api-machinery.md) watch-cache window under your informer and catch `watchHandler` relisting. The chain you traced across two phases now runs through your own log lines.
-
-**Write down** — the `410`-to-relist path with its `reflector.go` citation, tied explicitly back to P2's `ErrCompacted`.
+**Labs** — [Add one key a hundred times, count the reconciles](../labs/04/06-the-same-key-a-hundred-times.md) · [The gap between retries, measured against the limiter that sets it](../labs/04/07-the-hot-loop-and-the-backoff-that-hides-it.md) · [One Pop, one key, several deltas](../labs/04/08-deltas-are-per-key.md) · [The delete you never saw, delivered anyway](../labs/04/09-force-a-relist.md) · [The third layer of a failure you have met twice](../labs/04/10-the-410-under-your-own-informer.md) · [`HasSynced` is a promise about one moment, not about being current](../labs/04/11-what-hassynced-actually-promises.md) · [4.C4 — a controller with an empty cache concludes nothing should exist](../labs/04/12-4c4-act-before-the-cache-is-synced.md) · [The same drawing, now with the file names checked](../labs/04/13-the-same-drawing-corrected.md)
 
 <a id="m4-3"></a>
 ### Module 4.3 — Build artifact 1: the hand-wired operator (~1 week)
 
 The phase's centre. Everything above becomes something you wire yourself, modelled on `sample-controller`.
 
-**Do** — build a `client-go` operator with **every part by hand**: a CRD (and its generated clientset/listers/informers — read `code-generator` item 23 to make `pkg/generated/` legible), a shared informer, a lister, a rate-limiting workqueue, key-enqueuing handlers, a `syncHandler` that reconciles desired-vs-actual, a **finalizer** for cleanup, and a **status subresource** with conditions.
-
 **Gate** — [`envtest`](../strands/build-mechanics.md#gates): a real `kube-apiserver` and `etcd` out-of-cluster, so the reconciler meets genuine optimistic concurrency, watch delivery, defaulting and validation — not a fake client that agrees with whatever you wrote. **This is the objective gate a hand-wired controller otherwise lacks**, and the reason module 4.6's diff is a comparison rather than a story.
 
-**Break it** — chaos drill [4.C1](#chaos) for real: kill the operator mid-`syncHandler` and confirm it converges on restart with no lost work. If it loses work, the bug is that you trusted the event or did not requeue on error — fix it, because this *is* the capstone.
-
-**Write down** — the five hand-wired parts mapped to their `sample-controller` equivalents, and the one line in your worker loop that requeues a key on error (the no-lost-work guarantee).
+**Labs** — [The API type you write, and the four things generated from it](../labs/04/14-generate-the-clientset.md) · [Build artifact 1: every moving part wired by hand](../labs/04/15-the-hand-wired-loop.md) · [The gate: four assertions a fake client would pass and a real API server fails you on](../labs/04/16-envtest-is-a-real-apiserver.md) · [4.C1 — SIGKILL mid-`syncHandler`, twice, with one flag changed](../labs/04/17-4c1-kill-it-mid-reconcile.md) · [The error you returned, and the retry that never came](../labs/04/18-forget-to-requeue.md) · [Stage 2: the same binary, and a ClusterRole discovered one 403 at a time](../labs/04/19-stage-2-and-the-role-you-write-yourself.md)
 
 <a id="m4-4"></a>
 ### Module 4.4 — Exemplars, owner refs, GC and finalizers (~1 week)
@@ -103,11 +92,7 @@ The in-tree controllers, read for the patterns your operator glossed — and the
 | `controller-ref.md` + `garbage-collection.md` (items 18–19) | Adoption/orphaning, and why exactly one owner may have `controller: true`. `Orphan`/`Background`/`Foreground` propagation — what does each do to children? |
 | `garbagecollector/graph.go` + `namespace/` + KEP-5080 (items 20–21) | The owner-reference graph, and **the `kubernetes` finalizer** — the single most-encountered finalizer problem. What makes a namespace stick in `Terminating`? |
 
-**Do** — create an owner-reference chain (a CRD owning ConfigMaps), delete with each propagation policy, and watch children orphan, background-delete, or foreground-delete.
-
-**Break it** — chaos drill [4.C2](#chaos): add a finalizer to your CRD, then make its cleanup fail, and wedge the object (and a namespace) in `Terminating`. Diagnose it from the object's `metadata.finalizers` and the GC controller's behaviour, then clear it correctly — not by force-removing the finalizer, but by fixing the cleanup.
-
-**Write down** — the `Terminating` diagnosis: which finalizer, why it blocked, and the propagation policy that produced the child behaviour you saw.
+**Labs** — [`manageReplicas`: the subtraction, and the two policies wrapped around it](../labs/04/21-the-diff-is-the-easy-half.md) · [Make your own operator over-create, then name the two defences against it](../labs/04/22-expectations-or-over-create.md) · [Three things an owner reference will not do for you](../labs/04/23-one-owner-may-be-the-controller.md) · [The same delete, three times, with three different meanings](../labs/04/24-three-propagation-policies.md) · [4.C2 — stuck in `Terminating`, cleared twice, once wrongly](../labs/04/25-4c2-a-finalizer-that-never-completes.md) · [A namespace that will not go, and the condition that says why](../labs/04/26-a-namespace-stuck-in-terminating.md) · [The garbage collector matches on UID, and it checks before it deletes](../labs/04/27-the-uid-is-the-edge.md)
 
 <a id="m4-5"></a>
 ### Module 4.5 — Leader election (~3 days)
@@ -121,22 +106,14 @@ Self-contained, well-commented, and directly demonstrable — the answer to "wha
 | `tools/leaderelection/leaderelection.go` (item 16) | `LeaseLock`, the renew deadline versus the lease duration, and the `OnStoppedLeading` contract. What must a controller do the instant it loses the lease, and why is the renew deadline shorter than the lease? |
 | KEP-4355 Coordinated Leader Election (item 17) | `LeaseCandidate` and skew-aware leader selection — the modern extension. When does uncoordinated election pick the wrong leader during an upgrade? |
 
-**Do** — add leader election to your hand-wired operator and run two replicas; watch one lead, kill it, watch the standby acquire the lease after the renew deadline lapses.
-
-**Break it** — chaos drill [4.C3](#chaos): run the two replicas **without** leader election and watch them fight — double-creating, stomping each other's status. Then add it back. The fight is the argument for the lease.
-
-**Write down** — the observed failover timing (lease duration, renew deadline, actual takeover gap) with the `leaderelection.go` citation.
+**Labs** — [Two replicas, one Lease, and a failover you can time](../labs/04/28-two-replicas-one-lease.md) · [Why the renew deadline is shorter than the lease, and the window it does not close](../labs/04/29-why-the-renew-deadline-is-shorter.md) · [4.C3 — two replicas, no lease, and the fight you can measure](../labs/04/30-4c3-two-replicas-no-leader-election.md)
 
 <a id="m4-6"></a>
 ### Module 4.6 — Build artifact 2: kubebuilder, and the diff (~4 days)
 
 The scaffold, met *after* the hand-wiring, so `controller-gen`, `Reconcile(ctx, req)`, `envtest` and `zz_generated.deepcopy.go` land as **recognition, not magic** ([#9](https://github.com/k3ii/k8s-academy/issues/9) — order fixed, do not swap).
 
-**Do** — rebuild the *same* operator with `kubebuilder`: `make manifests`, the `Reconcile` method, the generated deepcopy. Gate it with the same [`envtest`](../strands/build-mechanics.md#gates) as artifact 1 — identical harness, which is what makes the comparison honest.
-
-**Break it** — feed the `kubebuilder` operator the *same* mid-reconcile kill from 4.C1. It should survive identically — and if it survives more gracefully, name the `controller-runtime` machinery (the manager, the shared cache, the default rate limiter) that bought that.
-
-**Write down** — **the capstone diff**: `kubebuilder`'s scaffold against your hand-wired code, every generated file mapped to the hand-written part it replaces, with what each one does that you did by hand.
+**Labs** — [Scaffold the same operator, and change nothing about the test](../labs/04/31-scaffold-the-same-operator.md) · [The same kill, and where the framework actually helps](../labs/04/32-the-same-kill-a-different-graceful.md) · [The diff: every generated file against the line you wrote by hand](../labs/04/33-the-diff.md)
 
 ---
 
@@ -145,12 +122,12 @@ The scaffold, met *after* the hand-wiring, so `controller-gen`, `Reconcile(ctx, 
 
 **Hand-driven, every one** — [Chaos Mesh is not introduced until P6](06-kubelet-node.md), deliberately after several phases of manual failure so the tool reads as a scripted wrapper over primitives already met. These drills are all *convergence under interruption* — the level-triggered guarantee tested, not asserted.
 
-| # | Drill | By hand | What you must produce afterwards |
-|---|---|---|---|
-| 4.C1 | **Kill the controller mid-reconcile** | SIGKILL the operator during `syncHandler` | That it converges on restart with **no lost work**, and the line that requeues on error — the capstone's core |
-| 4.C2 | **A finalizer that never completes** | make a CRD's finalizer cleanup fail | The specific finalizer wedging the object/namespace in `Terminating`, and the *correct* clearance (fix cleanup, not force-remove) |
-| 4.C3 | **Two replicas, no leader election** | run two operator pods without a lease | The concrete symptom of the fight (double-create, status stomp), then the lease that ends it |
-| 4.C4 | **A stale informer cache** | act on the cache immediately after a change, before `HasSynced` | Why acting before sync is wrong, and how re-read-from-cache-plus-resync recovers — the reason objective 2 exists |
+| # | Drill | What you must produce afterwards |
+|---|---|---|
+| [4.C1](../labs/04/17-4c1-kill-it-mid-reconcile.md) | **Kill the controller mid-reconcile** | That it converges on restart with **no lost work**, and the line that requeues on error — the capstone's core |
+| [4.C2](../labs/04/25-4c2-a-finalizer-that-never-completes.md) | **A finalizer that never completes** | The specific finalizer wedging the object/namespace in `Terminating`, and the *correct* clearance (fix cleanup, not force-remove) |
+| [4.C3](../labs/04/30-4c3-two-replicas-no-leader-election.md) | **Two replicas, no leader election** | The concrete symptom of the fight (double-create, status stomp), then the lease that ends it |
+| [4.C4](../labs/04/12-4c4-act-before-the-cache-is-synced.md) | **A stale informer cache** | Why acting before sync is wrong, and how re-read-from-cache-plus-resync recovers — the reason objective 2 exists |
 
 4.C1 is the capstone's restart test; 4.C3 is module 4.5's payoff.
 
@@ -172,7 +149,7 @@ Full entries with runtimes under [Controllers](../strands/talks.md#controllers).
 
 **Flux** — the reconcile loop you just hand-wrote, running in production ([#6](https://github.com/k3ii/k8s-academy/issues/6) settled Flux over Argo).
 
-- **Hands-on:** read Flux's controller source **immediately after building your own operator** — the single best available reality-check on what you wrote. Its four controllers (**source, kustomize, helm, notification**) are the same informer→workqueue→reconcile shape, with real reconcile intervals and real drift correction.
+- **Hands-on:** read Flux's controller source **immediately after building your own operator** — the single best available reality-check on what you wrote. Its four controllers (**source, kustomize, helm, notification**) are the same informer→workqueue→reconcile shape, with real reconcile intervals and real drift correction. The lab is [Someone else's reconcile loop, read the day after you wrote yours](../labs/04/20-flux-is-your-loop-in-production.md).
 - **Internals note:** Flux **closes the gap [P1](01-operate-shallow.md) opened.** There, `helm upgrade` did *not* reconcile — delete a resource it made and it stayed gone. Flux's helm-controller *does* reconcile: it re-reads desired state (a git commit) against actual and corrects drift, on an interval, forever. That difference — a controller versus a client-side templater — is the whole GitOps argument, and now you can point at the loop that makes it true.
 - **Maturity:** CNCF **graduated**. **GitOps splits across two phases by design:** its *mechanism* is here ("how does a controller make the cluster match a git commit"); its *practice* is [P12](12-gitops-platform.md) ("how do you run a delivery model on that").
 
@@ -193,6 +170,8 @@ Two artifacts, checked together:
 - the requeue-on-error line that makes restart lossless;
 - the `ErrResourceExpired`/`410` handling in `tools/cache/reflector.go` that your informer relies on;
 - the `Expectations` types in `controller_utils.go` if your operator needed them to avoid over-creating.
+
+**Lab** — [The capstone: two operators, one proof, four citations](../labs/04/34-the-capstone-writeup.md), which assembles the two artifacts, the transcript and the citations.
 
 Every path verified live per [P2's archaeology standard](../strands/source-archaeology.md#drills) — the two 55 KB `tools/cache` files are exactly where a copied line number rots.
 
