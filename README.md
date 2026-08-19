@@ -17,10 +17,14 @@ users is the point of doing it in that order.
 
 ## Status
 
-**The curriculum is written.** All thirteen phase files (P0–P12) are on `main` in
-[`phases/`](phases/), every [strand doc](strands/) exists, and
-`python3 strands/check-anchors.py` is green with no dangling links in either direction.
-What remains is to *walk* it — the labs, source traces and writeups are the learner's to run.
+**The curriculum is written, and so are its labs.** All thirteen phase files (P0–P12) are on
+`main` in [`phases/`](phases/), every [strand doc](strands/) exists, and all thirteen
+[`labs/`](labs/) directories are populated — 357 exercises, one file per idea, each stating a
+claim to test or an artifact to produce, with its exact commands, expected outcome, resource
+footprint and teardown. `python3 strands/check-anchors.py` is green in both directions, with
+module→exercise coverage enforced. What remains is the learner's to *produce*: walk the
+exercises, keep the [`journal/`](journal/) writeups and source traces, and build the eleven
+[`build/`](build/) Go modules the hand-wired-versus-scaffolded comparisons rest on.
 
 ### Phases
 
