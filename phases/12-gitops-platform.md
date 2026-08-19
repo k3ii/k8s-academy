@@ -1,6 +1,6 @@
 # Phase 12 — GitOps & platform engineering
 
-> **5–6 weeks.** The only phase that climbs *up*. Eleven phases removed abstraction until `kubectl run nginx` was a cited path from terminal to syscall; this one builds abstraction back — deliberately, for people who will never read that path. It is structurally the cheapest phase to cut and the last one written, and its real deliverable is not the platform but the **critique of the platform**: knowing what your abstraction costs the developer who consumes it. Nothing here is new machinery — a platform API is [a CRD plus a controller](04-controllers.md), which you have now written twice by hand. What is new is judgement.
+> **5–6 weeks.** The only phase that climbs *up*. Eleven phases removed abstraction until `kubectl run nginx` was a cited path from terminal to syscall; this one builds abstraction back — deliberately, for people who will never read that path. It is structurally the cheapest phase to cut and the last one written, and its real deliverable is not the platform but the **critique of the platform**: naming what your abstraction costs the developer who consumes it. Nothing here is new machinery — a platform API is [a CRD plus a controller](04-controllers.md), which you have now written twice by hand. What is new is judgement.
 > The range is planning information. **The gate at the bottom decides when the phase is finished.**
 
 | | |
@@ -12,6 +12,7 @@
 | **Ecosystem** | **The heaviest phase — and it does not all fit at once.** Flux · Helm · SOPS · sealed-secrets · Flagger · KRO · Crossplane · 2×vcluster, plus Istio and Prometheus reused from earlier. Run as [**two lab groups with a teardown between**](#ecosystem) ([#14](https://github.com/k3ii/k8s-academy/issues/14)), because both co-resident is unmeasured and unwise. |
 | **Cert** | **None.** Nothing in CKAD/CKA/CKS covers this. The last exam was CKS at [P10](10-security.md). |
 | **Lab** | [**`platform`**](../strands/lab-topologies.md#platform) — a topology added *for this phase* ([#14](https://github.com/k3ii/k8s-academy/issues/14), not #8). [#8](https://github.com/k3ii/k8s-academy/issues/8)'s "prefer `pair`" rule is for DaemonSet-heavy phases; **nothing here is a DaemonSet**, so a second node would only pay the OS+kubelet tax twice and fragment 5GB into two buckets. One node, one bucket. **First lab step: `kubectl top pod`.** |
+| **Labs** | [`labs/12/`](../labs/12/README.md) — 18 exercises, in order; two lab groups with a teardown between, on the single `platform` node. |
 | **Strands** | [build](../strands/build-mechanics.md#sizing) · [talks](../strands/talks.md#controllers) · [chaos](../strands/chaos.md#principle) |
 
 ---
@@ -19,7 +20,7 @@
 <a id="objectives"></a>
 ## 1. Objectives
 
-Every one is falsifiable — a running platform, a cited line, a timed production, or a critique a hostile reader could hold against the artifact. *understand* and *know* appear nowhere; the whole phase turns on the difference between knowing a tool and knowing what it costs.
+Every one is falsifiable — a running platform, a cited line, a timed production, or a critique a hostile reader could hold against the artifact. *understand* and *know* appear nowhere; the whole phase turns on the difference between driving a tool and naming what it costs.
 
 By the end you can:
 
@@ -44,44 +45,34 @@ No new corpus reading — the machinery is [Area 4](../strands/source-reading.md
 
 The [mechanism was P4](04-controllers.md); this is running a delivery model on the reconcile loop already read.
 
-**Do** — put an app under Flux: a `GitRepository` `Source` feeding a `Kustomization` and a `HelmRelease`. Watch the `Source` → `Kustomization` handoff and the reconcile interval. Then the drift beat: `kubectl scale` a Deployment Flux installed, watch **nothing happen** (helm-controller's drift detection is off by default), enable `mode: enabled`, scale again, watch it snap back. Then the secrets problem — you cannot commit a `Secret` — encrypting one three ways and comparing.
-
 > **Question to answer from the source:** in `helm-controller`, which function returns the drift mode, and what does it return when the field is unset? Cite the line — the default is the whole lab beat. Then: `HelmChart.spec.sourceRef.kind` accepts `GitRepository` in source-controller's enum — cite it, and state why that means **no chart registry is needed** on the isolated bridge (the git revision *is* the chart version).
 
-**Break it** — chaos drill [12.C1](#chaos): push a bad commit and watch it reconcile **everywhere at once** — the GitOps blast-radius lesson, the flip side of "git is the source of truth." Then rotate a SOPS-encrypted secret and watch every consumer that cached the old value break.
-
-**Write down** — the `commit → Source → Kustomization/HelmRelease → applied` path with the reconcile-interval and drift-mode lines cited; and the three-way secrets table (SOPS / sealed-secrets / ESO) compared on mechanism, not on preference.
+**Labs** — [`commit → Source → Kustomization → applied`](../labs/12/01-gitops-the-reconcile-loop-you-already-wrote.md) · [Drift detection off by default](../labs/12/02-drift-detection-off-by-default.md) · [12.C1 — a commit is a deploy to everything](../labs/12/03-12c1-a-commit-is-a-deploy-to-everything.md) · [Three ways to not commit a secret](../labs/12/04-three-ways-to-not-commit-a-secret.md)
 
 <a id="m12-2"></a>
 ### Module 12.2 — Progressive delivery (~0.5 wk)
 
 Flagger against the [P9](09-service-mesh.md) mesh — the same operation as [P1](01-operate-shallow.md)'s rollout, from the other end.
 
-**Do** — deploy `podinfo` + loadtester under a Flagger `Canary` that shifts traffic on a Prometheus SLO (the [P6](06-kubelet-node.md) Prometheus, reused). Trigger a canary; watch weighted traffic step up. Then ship a version that violates the SLO and watch **automated rollback** — no human, no `kubectl rollout undo`.
-
 > **Question to answer from observation and source:** which metric query gates the promotion, and where does Flagger read it? Contrast the blast radius with [P1](01-operate-shallow.md)'s `maxSurge`/`maxUnavailable`: the same "replace pods gradually," but one is blind to whether the new pods are *healthy by your definition* and one is not. State the exact difference in what each can express.
 
-**Break it** — chaos drill [12.C2](#chaos): break the metric source (kill Prometheus mid-canary) and watch Flagger's decision with no data — does it promote, hold, or roll back? The failure mode of a metric-gated system is the metric.
-
-**Write down** — the canary's metric query and its promotion/rollback thresholds, and a two-line contrast with the P1 rollout naming what Flagger can express that `maxSurge` structurally cannot.
+**Labs** — [A canary gated on a metric](../labs/12/05-a-canary-gated-on-a-metric.md) · [12.C2 — the metric dies mid-canary](../labs/12/06-12c2-the-metric-dies-mid-canary.md)
 
 <a id="m12-3"></a>
 ### Module 12.3 — Golden paths, portals, and platform-as-product (~1 wk)
 
 The judgement module. The most valuable content is the **failure mode**, so it is taught through postmortems, not a lab.
 
-**Do** — build a golden path with **no portal**: a template repo + a [P4](04-controllers.md) CRD + Flux, so a developer opens a pull request and gets an app. Then **read Backstage** (do not install — its `yarn tsc` build OOMs at ~4GB, the disqualifier is the build not the runtime, [#14](https://github.com/k3ii/k8s-academy/issues/14)) for its catalog model and scaffolder, and name the structural difference: the scaffolder is a **one-shot linear task runner** with no reconcile loop, no drift detection, no desired-state comparison — the opposite of everything Group A taught.
-
 > **Question to answer (from the tools against each other):** a Backstage scaffolder template and a Flux-reconciled CRD both "create an app from a form." One converges continuously and one runs once. Which failure does each hide from the developer, and which does it expose? Name a concrete case where the difference bites.
 
-**Break it** — chaos drill [12.C5](#chaos): hand a teammate (or your past self) the golden path with one leak deliberately left in — a value the abstraction *should* hide but doesn't — and time how long until they hit it. The leak is the lesson; a platform's abstractions fail at the worst moment.
-
-**Write down** — the golden path as it exists (template repo + CRD + Flux), and a one-page catalogue of platform failure modes: platforms nobody asked for, YAML generators that generate worse YAML, abstractions that leak under load.
+**Labs** — [A golden path with no portal](../labs/12/07-a-golden-path-with-no-portal.md) · [Backstage, read and never installed](../labs/12/08-backstage-read-never-installed.md) · [12.C5 — the leak in the golden path](../labs/12/09-12c5-the-leak-in-the-golden-path.md)
 
 <a id="teardown"></a>
 ### — teardown —
 
 Tear the delivery stack down before Group B. Istio + Prometheus alone are ~1.15GB; the platform node does not hold both groups honestly ([#14](https://github.com/k3ii/k8s-academy/issues/14)). The teardown is itself a GitOps test: if the cluster does not come back from git, Group A did not actually make git the source of truth.
+
+**Lab** — [The teardown that proves git](../labs/12/10-the-teardown-that-proves-git.md)
 
 ### Group B — platform API & tenancy
 
@@ -90,28 +81,20 @@ Tear the delivery stack down before Group B. Istio + Prometheus alone are ~1.15G
 
 Where a tenancy boundary is, and precisely where it leaks.
 
-**Do** — build the namespace-per-team boundary: RBAC + `ResourceQuota` + `LimitRange` + `NetworkPolicy`, and name where it leaks (node-level noisy neighbours, cluster-scoped resources, CRDs, shared CoreDNS). Then install **vcluster** — and the *first step is `kubectl top pod -n vcluster-a`* ([#14](https://github.com/k3ii/k8s-academy/issues/14)), because the module rests on the syncer's real idle RSS, not its 256Mi chart request (whose default limit is 4Gi — a 16× tell that the authors do not expect 256Mi to be the working set). **Drop that limit to ~1Gi.** Expose a tenant, create a pod inside it, and find that same pod as a real pod in a host namespace.
-
 > **Question to answer from the source and the cluster:** the vcluster syncer is a `kube-apiserver` + `kube-controller-manager` + kine/SQLite in **one Go process** — which half of a tenant pod is real (the container, on the host, scheduled by the [P5](05-scheduler.md) host scheduler) and which is a shim (the tenant's apiserver view)? Point at the pod in both apiservers. And: what does the 4Gi→1Gi limit convert unbounded growth *into*, and why is that OOMKill the better failure?
 
-**Break it** — chaos drill [12.C3](#chaos): break the vcluster syncer and observe which half of the cluster keeps working — the host pods keep running (they are real), the tenant's control-plane view goes dark. Then a tenant that escapes its quota, and where the boundary held or didn't.
-
-**Write down** — the same tenant pod shown in both apiservers with the host namespace named; the `top pod` number the module rests on; and the leak inventory for the namespace boundary.
+**Labs** — [A tenancy boundary and where it leaks](../labs/12/11-a-tenancy-boundary-and-where-it-leaks.md) · [The same pod in two apiservers](../labs/12/12-the-same-pod-in-two-apiservers.md) · [12.C3 — the syncer dies, the host pods live](../labs/12/13-12c3-the-syncer-dies-the-host-pods-live.md)
 
 <a id="m12-5"></a>
 ### Module 12.5 — Platform APIs (~1.5 wk)
 
 The module the whole build track prepared for. **KRO first, Crossplane second** — the numbers force the order ([#14](https://github.com/k3ii/k8s-academy/issues/14)).
 
-**Do** — start with **KRO**: 1 pod, 128Mi, no packages, no functions, no providers, no revisions, no OCI — a `ResourceGraphDefinition` in, child resources out, with **nothing in the way**. See "custom resource → controller → children" bare. *Then* **Crossplane v2** arrives with a reason to exist: it needs no cloud provider (v2 composes native Kubernetes resources directly), but functions are now mandatory (`mode` has exactly one value, `Pipeline`) and every function pod ships `resources: {}`. Write the mandatory `DeploymentRuntimeConfig` override — [`build-mechanics#sizing`](../strands/build-mechanics.md#sizing) applied to the platform you are building.
-
 > **Question to answer from the source:** in Crossplane at its pinned tag, the Composition `mode` enum — enumerate its values (there is one) and confirm `Resources` is **absent from the schema**, not deprecated. Then find where the default `DeploymentRuntimeConfig` is created and show its spec is empty — the line that makes your function pod BestEffort. Cite both. This is the phase's thesis in miniature: *the platform you build has the pod-sizing problem you spent P8 learning to see.*
 
 > **Second question (Helm vs Composition, mechanism-level):** a chart is client-side templating that produces a manifest; a Composition publishes an API — `kubectl get webapp` *works*, there is a controller, a status, and one RBAC verb behind it. Under Helm, `kubectl get webapp` simply fails, and self-service needs the **union of every permission the chart applies**. State the four consequences (drift, whether a live API object exists, who can self-service, what each can express) — the last being that Helm structurally cannot depend on state that does not exist yet, because it renders once.
 
-**Break it** — chaos drill [12.C4](#chaos): leave the `DeploymentRuntimeConfig` off and let the function pod run `resources: {}` on the platform node until something reclaims it — the hazard class that ruled out Argo CD, now on a pod you cannot avoid.
-
-**Write down** — the KRO-vs-Crossplane contrast (what the extra machinery buys and what it costs), the two cited Crossplane lines (the `mode` enum, the empty runtime config), and the Helm-vs-Composition four-consequence table.
+**Labs** — [KRO: custom resource in, children out](../labs/12/14-kro-custom-resource-in-children-out.md) · [Crossplane: the two lines that size your pod](../labs/12/15-crossplane-the-two-lines-that-size-your-pod.md) · [Helm cannot publish an API](../labs/12/16-helm-cannot-publish-an-api.md) · [12.C4 — the function pod with no limits](../labs/12/17-12c4-the-function-pod-with-no-limits.md)
 
 ---
 
@@ -120,13 +103,13 @@ The module the whole build track prepared for. **KRO first, Crossplane second** 
 
 Anchored in [`chaos.md#principle`](../strands/chaos.md#principle). GitOps changes what chaos *means*: for the first time the failure can be **committed**, so the blast radius is every cluster watching the repo. Every drill here is by hand — the fault is a commit, a rotation, a broken syncer — because recognising your own change's consequence from the system's behaviour is the skill.
 
-| # | Drill | Mechanism | What you must produce afterwards |
-|---|---|---|---|
-| 12.C1 | **Drift, then a bad commit** | by hand (`kubectl scale`; then `git push` a bad manifest) | Flux reverting the hand-edit once drift is on; the bad commit reconciling *everywhere at once* |
-| 12.C2 | **Kill the metric mid-canary** | by hand (`kubectl delete` Prometheus) | Flagger's decision with no data — promote, hold, or roll back — named |
-| 12.C3 | **Break the vcluster syncer** | by hand (`kubectl delete` the syncer) | Host pods still running (real) while the tenant view goes dark (shim) |
-| 12.C4 | **Function pod with `resources: {}`** | by hand (omit `DeploymentRuntimeConfig`) | The BestEffort pod's unbounded growth and what reclaimed it |
-| 12.C5 | **A leak in the golden path** | by hand (leave one abstraction leak) | Time-to-leak for a fresh consumer — the failure-mode evidence for the critique |
+| # | Drill | What you must produce afterwards |
+|---|---|---|
+| 12.C1 | [**Drift, then a bad commit**](../labs/12/03-12c1-a-commit-is-a-deploy-to-everything.md) | Flux reverting the hand-edit once drift is on; the bad commit reconciling *everywhere at once* |
+| 12.C2 | [**Kill the metric mid-canary**](../labs/12/06-12c2-the-metric-dies-mid-canary.md) | Flagger's decision with no data — promote, hold, or roll back — named |
+| 12.C3 | [**Break the vcluster syncer**](../labs/12/13-12c3-the-syncer-dies-the-host-pods-live.md) | Host pods still running (real) while the tenant view goes dark (shim) |
+| 12.C4 | [**Function pod with `resources: {}`**](../labs/12/17-12c4-the-function-pod-with-no-limits.md) | The BestEffort pod's unbounded growth and what reclaimed it |
+| 12.C5 | [**A leak in the golden path**](../labs/12/09-12c5-the-leak-in-the-golden-path.md) | Time-to-leak for a fresh consumer — the failure-mode evidence for the critique |
 
 12.C1's second half is the phase's signature drill: **a mistake you commit is a mistake you deploy to everything.** The rest each attack one platform guarantee (metric-gating, tenant isolation, pod bounds, abstraction) at the seam it actually breaks.
 
@@ -177,6 +160,8 @@ Reassemble a **lean** co-resident set (Flux + KRO/Crossplane + one vcluster tena
 - What the abstraction **hides** (correctly) and where it **leaks** (the value that shows through at the worst moment — your 12.C5 evidence).
 - What a real developer would **hate** about it — the failure-mode catalogue from 12.3, turned on your own platform.
 - Which of the eleven prior phases' hard-won skill your abstraction makes **unnecessary** versus merely **invisible** — the distinction that separates a platform engineer from someone who writes CRDs. A developer who never needs to look is served; a developer who *can't* look when it breaks is trapped.
+
+**Lab** — [The platform, and its critique](../labs/12/18-the-platform-and-its-critique.md)
 
 ---
 
