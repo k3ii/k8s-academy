@@ -10,7 +10,8 @@
 | **Source** | **The whole corpus**, re-read along one path rather than by subsystem — [the three cross-area traces](../strands/source-reading.md#traces), of which this phase attempts [trace #1](../strands/source-reading.md#trace-pod-create). No new file is opened that a prior phase didn't already read; what is new is reading them *in the order a single pod-create visits them*, which is the order no single phase could. |
 | **Build track** | **None** — [build mechanics](../strands/build-mechanics.md#artifact-table) lists no P11 artifact. Everything this phase runs was built or installed earlier; synthesis produces a trace and two incident write-ups, not a binary. |
 | **Ecosystem** | **None** — this phase installs nothing new. The [ecosystem distribution](https://github.com/k3ii/k8s-academy/issues/10) gives P11 no big rock by design: it is synthesis, not another tool. The distribution *comparison* that does appear (kubeadm vs k0s upgrade paths) is a property of the cluster you already run, folded into the upgrade capstone, not a new install. |
-| **Lab** | [`pair`](https://github.com/k3ii/k8s-academy/issues/8) for the trace — two nodes are enough to watch scheduling pick one. **`workhorse` (3 nodes) for the upgrade-and-scale beat**, because a zero-downtime upgrade means draining one node at a time while the other two keep serving, which two nodes cannot demonstrate honestly. Switching topology mid-phase is itself the point: the trace needs a pod, the upgrade needs a quorum-plus-spare. |
+| **Lab** | [`pair`](../strands/lab-topologies.md#pair) for the trace — two nodes are enough to watch scheduling pick one. **[`workhorse`](../strands/lab-topologies.md#workhorse) (3 nodes) for the upgrade-and-scale beat**, because a zero-downtime upgrade means draining one node at a time while the other two keep serving, which two nodes cannot demonstrate honestly. Switching topology mid-phase is itself the point: the trace needs a pod, the upgrade needs a quorum-plus-spare. |
+| **Labs** | [`labs/11/`](../labs/11/README.md) — 12 exercises, in order. The unit is the seam, not the hop; the trace half runs on `pair`, then one switch to `workhorse` for the upgrade-and-scale capstones, and the index says which two exercises need no cluster. |
 | **Strands** | [talks](../strands/talks.md#debugging) · [chaos](../strands/chaos.md#manual-drills) · [archaeology](../strands/source-archaeology.md#drills) |
 
 ---
@@ -41,55 +42,41 @@ The corpus offers no new reading here — every file below was opened in an earl
 
 You assemble the map from eight phases of notes *before* instrumenting anything, so the live trace confirms a prediction rather than discovers a path.
 
-**Do** — from your P2–P10 notes alone, draw the full path of a pod-create and mark, at each area boundary, the file you expect the request to be in. Then read [trace #1's spec](../strands/source-reading.md#trace-pod-create) and reconcile — where your map is wrong is where a phase didn't land.
-
 > **Question to answer from the source:** the trace crosses five areas. At each of the four *internal* seams, which single function hands the object to the next area — the last frame in area N and the first frame in area N+1? Name both.
 
-**Break it** — chaos drill [11.C4](#chaos): predict, then check, what the trace does when one component is down mid-flight (apiserver up, scheduler down → the pod sits `Pending` at a nameable line; scheduler up, kubelet down → `Scheduled` but not `Running`). The gap tells you which frame owns which transition.
-
-**Write down** — the predicted map with a file per seam, kept beside you, corrected in red as the live modules below prove or disprove each guess.
+**Labs** — [The map drawn from notes, before a single command](../labs/11/01-the-paper-trace-before-the-cluster.md)
 
 <a id="m11-2"></a>
 ### Module 11.2 — Seam A: client → apiserver → etcd (~4 days)
 
 Areas [2](../strands/source-reading.md#area-2-api-machinery) (P3) and [1](../strands/source-reading.md#area-1-etcd) (P2), read as one continuous handoff.
 
-**Do** — trace the create from `kubectl`'s command through the request filters, the create handler, the admission chain you read the dispatch for in P3, the generic registry, the etcd3 storage backend, and the etcd transaction that finally persists it — then confirm the write landed by reading it back out of etcd directly (the P2 skill).
-
 > **Question to answer from the source:** `handlers/create.go` runs admission *before* the object reaches `registry/generic/registry/store.go`. Cite the line where admission is invoked, and the line in `storage/etcd3/store.go` where the object becomes an etcd `Txn` — and state what guarantees the object is validated *before* it is durable, not after.
 
-**Break it** — chaos drill [11.C1](#chaos): corrupt the `caBundle` on a `failurePolicy: Fail` webhook (the P3/[P10](10-security.md) admission chain) and watch the create wedge *at the admission line you just cited* — diagnosed from apiserver logs alone. The outage names the frame.
-
-**Write down** — the `kubectl → filters → create.go → admission → store.go → etcd3/store.go → Txn` sub-path with a cited line at each arrow, and the raw etcd key the object landed under.
+**Labs** — [Seam A: `kubectl` to an etcd `Txn`, cited](../labs/11/02-seam-a-client-apiserver-etcd.md) · [11.C1 — a create wedged at admission](../labs/11/03-11c1-wedge-a-create-at-admission.md)
 
 <a id="m11-3"></a>
 ### Module 11.3 — Seam B: watch cache → scheduler → Binding (~3 days)
 
 Area [3](../strands/source-reading.md#area-3-scheduler) (P5) — how the persisted-but-unscheduled pod becomes a scheduled one.
 
-**Do** — trace the pod out of the watch cache into the scheduler's informer, through `schedule_one.go`'s filter/score cycle (the framework you built in P5), to the **Binding** it writes back through the apiserver — a second trip through Seam A, now for a `Binding` subresource. Watch the pod's `spec.nodeName` go from empty to set.
-
 > **Question to answer from the source:** the scheduler does not mutate the pod's node field directly — it POSTs a `Binding`. Cite the line in `schedule_one.go` that issues the bind, and explain why binding is a separate write and not an in-place update of the pod the scheduler already holds in cache.
 
-**Break it** — chaos drill [11.C4](#chaos): cordon every node and create the pod. It persists (Seam A completes) but never binds — `Pending`, `unschedulable`, at the scheduler frame that gives up. Uncordon one and watch the exact line fire.
-
-**Write down** — the `watch cache → informer → schedule_one.go → Binding` sub-path with the bind line cited, and the before/after of `spec.nodeName`.
+**Labs** — [Seam B: `spec.nodeName` empty to set, and the `Binding`](../labs/11/04-seam-b-watch-cache-scheduler-binding.md)
 
 <a id="m11-4"></a>
 ### Module 11.4 — Seam C: kubelet → CRI → CNI → the syscalls (~4 days)
 
 Areas [7](../strands/source-reading.md#area-7-kubelet) (P6) and [5](../strands/source-reading.md#area-5-networking) (P7) — the pod becomes a process, and the loop closes on [P0](00-linux-primitives.md).
 
-**Do** — trace the bound pod arriving at the kubelet through `config/apiserver.go`, into `pod_workers.go`, to `kuberuntime_manager.computePodActions`, across the **CRI** gRPC boundary to the runtime, and out to the **CNI** ADD that wires the netns — the exact CNI plugin you built in [P7 module 7.2](07-networking.md). End at the namespaces and cgroups you created by hand in [P0](00-linux-primitives.md): the container the trace produces *is* those primitives, now created for you.
-
 > **Question to answer from the source:** `computePodActions` decides *what* to do; cite the line where it decides a container must be created, and follow it to the CRI call. Then name the CNI ADD result — the veth/netns — and point at the P0 syscall (`clone`/`setns`/`unshare`) it corresponds to. The whole trace ends on a syscall you once made yourself.
 
-**Break it** — chaos drill [11.C4](#chaos): break the CNI (rename the plugin binary) and watch the pod stick at `ContainerCreating` — Seam C's last frame failing, the [CRI→CNI seam P6 named](06-kubelet-node.md) as the one it could only watch, now cited.
+The three sub-paths (11.2/11.3/11.4) joined are [the capstone](#capstone).
 
-**Write down** — the `config/apiserver.go → pod_workers.go → computePodActions → CRI → CNI` sub-path cited to source, ending with the P0 syscall the running container reduces to. The three sub-paths (11.2/11.3/11.4) joined are the capstone.
+**Labs** — [Seam C: kubelet → CRI → CNI → the syscalls](../labs/11/05-seam-c-kubelet-cri-cni-the-syscalls.md) · [11.C4 — kill one component, read the frame it owns](../labs/11/06-11c4-kill-one-trace-component-mid-flight.md)
 
 <a id="m11-5"></a>
-### Module 11.5 — The postmortems, re-read with the internals known (~3 days)
+### Module 11.5 — The postmortems, re-read with the internals in hand (~3 days)
 
 The debugging corpus watched differently now. The [DNS talk](../strands/talks.md#debugging) was planted in [P1](01-operate-shallow.md) for its *method*; you re-watch it here for its *mechanism*, because you have now read every layer it descends into.
 
@@ -97,9 +84,7 @@ The debugging corpus watched differently now. The [DNS talk](../strands/talks.md
 
 > **Question to answer (from the talk against your own trace):** the talk's resolution was three lines of code, found four layers below the symptom. For each layer it descended, name the phase that taught you to read it — and name the one layer, if any, this curriculum still leaves you unable to read.
 
-**Break it** — chaos drill [11.C3](#chaos): reproduce the *shape* of the DNS incident on your own cluster — a rolling update, `conntrack -L` watched as the table fills — not to exhaust it, but to see the mechanism the talk names begin on hardware you own.
-
-**Write down** — the DNS talk's descent as a layer-to-phase table, and a one-line statement of the transferable method it models: **hypothesis → instrument → disconfirm → descend a layer.**
+**Labs** — [The DNS talk, re-read for mechanism](../labs/11/08-the-dns-postmortem-re-read.md) · [11.C3 — the conntrack table filling under a rollout](../labs/11/09-11c3-a-rolling-update-under-conntrack-watch.md)
 
 ---
 
@@ -108,12 +93,12 @@ The debugging corpus watched differently now. The [DNS talk](../strands/talks.md
 
 Anchored in [`chaos.md#manual-drills`](../strands/chaos.md#manual-drills). These are the drills the strand marks **permanently manual** — upgrade, botched rollout, drain — because the failure modes are *procedural*, not injected, and each needs the whole picture the earlier phases could not yet supply. They are the rehearsals the [§5](#capstone) upgrade-and-scale capstone assembles.
 
-| # | Drill | Mechanism | What you must produce afterwards |
-|---|---|---|---|
-| 11.C1 | **Wedge a create at admission** | by hand (corrupt a `Fail` webhook `caBundle`) | The create failing *at the admission line cited in 11.2*, diagnosed from apiserver logs alone |
-| 11.C2 | **Botched rollout during the upgrade window** | by hand — the fault is your own YAML ([manual-drills #5](../strands/chaos.md#manual-drills)) | The rollout wedged, recognised from the controller's behaviour, rolled back with `kubectl rollout undo` |
-| 11.C3 | **Rolling update under conntrack watch** | by hand (`conntrack -L` during a rollout) | The conntrack table filling — the DNS-talk mechanism, observed on your cluster |
-| 11.C4 | **Kill one trace component mid-flight** | by hand (cordon nodes / rename CNI / stop scheduler) | The pod stuck at the exact frame the missing component owns — `Pending`, `ContainerCreating` — cited |
+| # | Drill | What you must produce afterwards |
+|---|---|---|
+| 11.C1 | [**Wedge a create at admission**](../labs/11/03-11c1-wedge-a-create-at-admission.md) | The create failing *at the admission line cited in 11.2*, diagnosed from apiserver logs alone |
+| 11.C2 | [**Botched rollout during the upgrade window**](../labs/11/10-11c2-a-botched-rollout-and-the-incident-note.md) | The rollout wedged, recognised from the controller's behaviour, rolled back with `kubectl rollout undo` |
+| 11.C3 | [**Rolling update under conntrack watch**](../labs/11/09-11c3-a-rolling-update-under-conntrack-watch.md) | The conntrack table filling — the DNS-talk mechanism, observed on your cluster |
+| 11.C4 | [**Kill one trace component mid-flight**](../labs/11/06-11c4-kill-one-trace-component-mid-flight.md) | The pod stuck at the exact frame the missing component owns — `Pending`, `ContainerCreating` — cited |
 
 Every drill here is **by hand** and stays that way ([manual-drills](../strands/chaos.md#manual-drills)): the skill is recognising your own procedure's failure from the system's behaviour, and injecting the fault externally removes exactly that skill. The drain drill lives in the capstone because it *is* the upgrade.
 
@@ -144,6 +129,8 @@ Join the three sub-paths from modules 11.2–11.4 into one cited trace, terminal
 
 **Cite `file:line` a hostile reader could check at every seam** — this is [trace #1's spec](../strands/source-reading.md#trace-pod-create), and the deliverable is the *citations*, not the diagram. A reader clones `k/k` at your stated commit and opens every line. "The apiserver validates it" fails the gate; `create.go:NNN` (at sha `abc123`) passes. Attempted only now, after every area is behind you — and named in [P0](00-linux-primitives.md) as the target from week one, so this closes the loop the curriculum opened.
 
+**Lab** — [Capstone 1: the three sub-paths joined, terminal to container](../labs/11/07-the-joined-trace-terminal-to-container.md)
+
 ### Capstone 2 — a minor-version upgrade with nothing dropped, then scale under load
 
 On `workhorse`, with a load generator running against a Service the whole time:
@@ -152,6 +139,8 @@ On `workhorse`, with a load generator running against a Service the whole time:
 2. **Scale under load** — drive load past the HPA threshold and name each component as it acts: metrics → HPA decision → new pod persisted (Seam A) → scheduled (Seam B) → running (Seam C) → in the Service's EndpointSlice ([P7](07-networking.md)). Record the measured latency of each hop; when a node can't satisfy the request, name the `Pending` frame.
 
 The two capstones are one claim from two sides: you can read the machine top to bottom, and you can change it underneath a running load without it noticing.
+
+**Lab** — [The upgrade that drops nothing](../labs/11/11-the-upgrade-that-drops-nothing.md) · [Scale under load, narrated by component](../labs/11/12-scale-under-load-narrated-by-component.md)
 
 ---
 
