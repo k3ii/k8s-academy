@@ -88,10 +88,10 @@ The gaps in the exercise numbering are the rejects.
 | [Accelerating Cluster Performance with Consistent Reads from Cache](https://kubernetes.io/blog/2024/08/15/consistent-read-from-cache-beta/) | 08-15 | 1.31 | `read` | `etcd` | Watch-cache reads with an etcd progress-notify fence instead of a quorum read. Visible only under load the lab cannot generate. |
 | [VolumeAttributesClass for Volume Modification Beta](https://kubernetes.io/blog/2024/08/15/kubernetes-1-31-volume-attributes-class/) | 08-15 | 1.31 | `read` | `storage` | Needs a CSI driver implementing `ModifyVolume`. The gap it fills — IOPS is neither the storage class nor the capacity — is the interesting part. |
 | [Prevent PersistentVolume Leaks When Deleting out of Order](https://kubernetes.io/blog/2024/08/16/kubernetes-1-31-prevent-persistentvolume-leaks-when-deleting-out-of-order/) | 08-16 | 1.31 | **`walk`** | `storage` | Delete the PV before the PVC and the backing volume leaks silently. Reproducible with the local-path provisioner, and the failure leaves no event. |
-| [Read Only Volumes Based On OCI Artifacts (alpha)](07-image-volume-source.md) | 08-16 | 1.31 | **`walk`** | `storage` | Mount an image as a volume. Alpha behind a gate here; at the pin, stable — via a beta that stayed *off by default for two releases*, which no graduation post mentions. |
+| [Read Only Volumes Based On OCI Artifacts (alpha)](https://kubernetes.io/blog/2024/08/16/kubernetes-1-31-image-volume-source/) | 08-16 | 1.31 | **`walk`** | `storage` | Mount an image as a volume. Alpha behind a gate here; at the pin, stable — via a beta that stayed *off by default for two releases*, which no graduation post mentions. |
 | [MatchLabelKeys in PodAffinity graduates to beta](https://kubernetes.io/blog/2024/08/16/matchlabelkeys-podaffinity/) | 08-16 | 1.31 | **`walk`** | `sched` | During a rolling update the scheduler cannot tell old pods from new ones, so anti-affinity fights the rollout. `pod-template-hash` in `matchLabelKeys` fixes it, and you can watch it deadlock first. |
 | [Pod Failure Policy for Jobs Goes GA](https://kubernetes.io/blog/2024/08/19/kubernetes-1-31-pod-failure-policy-for-jobs-goes-ga/) | 08-19 | 1.31 | **`walk`** | `api` | `backoffLimit` alone cannot tell a retriable failure from a hopeless one, so it burns money either way. Fail fast on exit code, ignore a preemption — both observable in one Job. |
-| [Streaming Transitions from SPDY to WebSockets](10-websocket-transition.md) | 08-20 | 1.31 | **`walk`** | `api` | The post is still true and that is the trap: swapping POST for GET quietly moved the RBAC surface of `pods/exec`, and it took until v1.35 to notice. Also where [2015's `nsenter` hangout note](../2015/README.md) finally lands. |
+| [Streaming Transitions from SPDY to WebSockets](https://kubernetes.io/blog/2024/08/20/websockets-transition/) | 08-20 | 1.31 | **`walk`** | `api` | The post is still true and that is the trap: swapping POST for GET quietly moved the RBAC surface of `pods/exec`, and it took until v1.35 to notice. Also where [2015's `nsenter` hangout note](../2015/README.md) finally lands. |
 | [Autoconfiguration For Node Cgroup Driver (beta)](https://kubernetes.io/blog/2024/08/21/cri-cgroup-driver-lookup-now-beta/) | 08-21 | 1.31 | `read` | `nodes` | The kubelet asks the runtime instead of being told twice. 1.6KB, and the cgroup exercise carries the observable half. |
 | [New CPUManager Static Policy: Distribute CPUs Across Cores](https://kubernetes.io/blog/2024/08/22/cpumanager-static-policy-distributed-cpu-across-cores/) | 08-22 | 1.31 | `read` | `nodes` | Alpha and hidden, and it needs real SMT topology to mean anything. A 4-vCPU guest cannot show the contention it fixes. |
 | [Custom Profiling in Kubectl Debug Graduates to Beta](https://kubernetes.io/blog/2024/08/22/kubernetes-1-31-custom-profiling-kubectl-debug/) | 08-22 | 1.31 | **`walk`** | `tooling` | Also `walk` on the observable half rather than a discontinuity: the default debug container gets no env, no resource limits and no volume mounts, so debugging a pod that needed any of them was not possible at all. One command pair shows the before and the after, and it is the cheapest exercise in the year. |
@@ -114,8 +114,8 @@ The gaps in the exercise numbering are the rejects.
 ## Exercises
 
 Thirteen `walk` verdicts, numbered in publication order. Two are written; the eleven marked
-*pending* are an authoring ticket's to claim once the rubric is ratified in
-[#57](https://github.com/k3ii/k8s-academy/issues/57).
+*pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
+in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|

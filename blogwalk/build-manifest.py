@@ -22,6 +22,13 @@ A post is any file under _posts carrying YAML frontmatter with a title. That
 definition, not the file extension, is what matches Hugo: two 2022 posts have
 no extension at all, one post opens with a UTF-8 BOM, two open with a blank
 line, and one opens with six dashes instead of three. All six are published.
+
+The `url` column is resolved, not derived. A post's live URL cannot be built
+from year, month, day and slug: only 557 posts take hugo.toml's site-wide
+`/:section/:year/:month/:day/:slug/`. 192 carry a per-post `url:` override in
+the month-only form `/:section/:year/:month/:slug/`, and 13 more override it
+with a hand-written literal path whose capitalisation is not the slug's. Ratified
+in issue #57 after a census derived these by hand and was right only by luck.
 """
 import os, re, sys
 from collections import Counter, defaultdict
@@ -67,6 +74,33 @@ def frontmatter(path):
     return fm
 
 
+# hugo.toml, [permalinks.page]: blog = "/:section/:year/:month/:day/:slug/"
+SITE_PERMALINK = '/:section/:year/:month/:day/:slug/'
+SITE = 'https://kubernetes.io'
+
+
+def resolve_url(rel, fm, date):
+    """The post's live URL under the pin's permalink rules, or '' if undecidable.
+
+    Hugo's precedence: a per-post `url:` wins over the site-wide template. An
+    override with no ':' in it is a literal path and is used as written, because
+    its capitalisation is deliberate and is not recoverable from the slug.
+    """
+    parts = rel.split('/')
+    stem = parts[-2] if parts[-1].rsplit('.', 1)[0] == 'index' and len(parts) > 1 \
+        else re.sub(r'\.[A-Za-z0-9]+$', '', parts[-1])
+    slug = clean(fm.get('slug')) or stem
+    tmpl = clean(fm.get('url')) or SITE_PERMALINK
+    if ':' not in tmpl:                                  # hand-written literal
+        return SITE + '/' + tmpl.strip('/') + '/'
+    if not re.match(r'^\d{4}-\d{2}-\d{2}', date):        # undated draft
+        return ''
+    path = (tmpl.replace(':section', 'blog').replace(':year', date[:4])
+                .replace(':month', date[5:7]).replace(':day', date[8:10])
+                .replace(':slug', slug))
+    return SITE + '/' + path.strip('/') + '/'
+
+
 def clean(v):
     v = (v or '').strip()
     if len(v) > 1 and v[0] in '"\'' and v[-1] == v[0]:
@@ -97,6 +131,9 @@ def collect(root):
                 notes.append(('year-mismatch', rel, f'dir={dir_year} date={date_year}'))
             if not date:
                 notes.append(('no-date', rel, ''))
+            url = resolve_url(rel, fm, date)
+            if not url:
+                notes.append(('no-url', rel, 'undated, so no permalink resolves'))
             rows.append({
                 'year': date_year or dir_year or '?',
                 'date': date,
@@ -104,6 +141,7 @@ def collect(root):
                 'bytes': str(os.path.getsize(full)),
                 'path': rel,
                 'slug': clean(fm.get('slug')),
+                'url': url,
                 'title': clean(fm.get('title')),
             })
     rows.sort(key=lambda r: (r['year'], r['date'] or '~', r['path']))
@@ -114,7 +152,7 @@ def collect(root):
     return rows, notes
 
 
-COLUMNS = ['year', 'date', 'draft', 'bytes', 'path', 'slug', 'title']
+COLUMNS = ['year', 'date', 'draft', 'bytes', 'path', 'slug', 'url', 'title']
 
 
 def write(rows, out):

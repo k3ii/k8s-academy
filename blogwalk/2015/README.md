@@ -33,12 +33,12 @@ progress record.
 |---|---|---|---|---|---|
 | [Welcome to the Kubernetes Blog!](https://kubernetes.io/blog/2015/03/welcome-to-kubernetes-blog/) | 03-20 | — | `skip` | `meta` | A link roundup to nine posts on other sites, six of which 404. |
 | [Kubernetes Gathering Videos](https://kubernetes.io/blog/2015/03/kubernetes-gathering-videos/) | 03-23 | — | `skip` | `meta` | A YouTube playlist embed, 301 characters long. |
-| [Hangout notes — March 27](https://kubernetes.io/blog/2015/03/Weekly-Kubernetes-Community-Hangout) | 03-28 | — | `skip` | `meta` | Raw meeting notes. Carries the `kubectl exec` demo — SPDY over HTTP, entered via `nsenter` — but as minutes, not as a lesson. |
+| [Hangout notes — March 27](https://kubernetes.io/blog/2015/03/Weekly-Kubernetes-Community-Hangout/) | 03-28 | — | `skip` | `meta` | Raw meeting notes. Carries the `kubectl exec` demo — SPDY over HTTP, entered via `nsenter` — but as minutes, not as a lesson. |
 | [Participate in a Kubernetes User Experience Study](https://kubernetes.io/blog/2015/03/participate-in-kubernetes-user/) | 03-31 | — | `skip` | `meta` | Recruitment ad; the study ran April 2015. |
-| [Hangout notes — April 3](https://kubernetes.io/blog/2015/04/Weekly-Kubernetes-Community-Hangout) | 04-04 | — | `skip` | `meta` | Minutes. The cluster-federation design discussion that became Ubernetes, then KubeFed, then nothing. |
+| [Hangout notes — April 3](https://kubernetes.io/blog/2015/04/Weekly-Kubernetes-Community-Hangout/) | 04-04 | — | `skip` | `meta` | Minutes. The cluster-federation design discussion that became Ubernetes, then KubeFed, then nothing. |
 | [Faster than a speeding Latte](https://kubernetes.io/blog/2015/04/faster-than-speeding-latte/) | 04-06 | — | `skip` | `meta` | 129 characters and a YouTube shortcode. |
 | [Hangout notes — April 10](https://kubernetes.io/blog/2015/04/weekly-kubernetes-community-hangout_11/) | 04-11 | — | `skip` | `meta` | Minutes. Contains the argument that produced the Deployment object — "treating rcs as pets vs. cattle" — in note form. |
-| [Introducing Kubernetes API Version v1beta3](01-introducing-kubernetes-v1beta3.md) | 04-16 | 0.15 | **`walk`** | `api` | Every version named in it is dead, including the one it calls the release candidate. The whole payload is why the API is versioned at all. |
+| [Introducing Kubernetes API Version v1beta3](https://kubernetes.io/blog/2015/04/introducing-kubernetes-v1beta3/) | 04-16 | 0.15 | **`walk`** | `api` | Every version named in it is dead, including the one it calls the release candidate. The whole payload is why the API is versioned at all. |
 | [Kubernetes Release: 0.15.0](https://kubernetes.io/blog/2015/04/kubernetes-release-0150/) | 04-16 | 0.15 | `read` | `api` | The changelog half of the row above: v1beta3 becomes the default API *and* the etcd storage version, so stored objects were rewritten on read. |
 | [Hangout notes — April 17](https://kubernetes.io/blog/2015/04/weekly-kubernetes-community-hangout_17/) | 04-17 | — | `skip` | `meta` | Minutes. |
 | [Kubernetes and the Mesosphere DCOS](https://kubernetes.io/blog/2015/04/kubernetes-and-mesosphere-dcos/) | 04-22 | 0.15 | `read` | `history` | The product is gone, but this is where "cloud native" gets defined in three bullets, three months before the CNCF existed. |
@@ -46,24 +46,24 @@ progress record.
 | [Hangout notes — April 24](https://kubernetes.io/blog/2015/04/weekly-kubernetes-community-hangout_29/) | 04-30 | — | `skip` | `meta` | Minutes. |
 | [AppC Support for Kubernetes through RKT](https://kubernetes.io/blog/2015/05/appc-support-for-kubernetes-through-rkt/) | 05-04 | 0.15 | `read` | `history` | The rkt bet, stated as a bet. rkt was archived in 2020; read it for what "support two runtimes with in-tree code" cost, which is the pressure CRI answered. |
 | [Kubernetes Release: 0.16.0](https://kubernetes.io/blog/2015/05/kubernetes-release-0160/) | 05-11 | 0.16 | `read` | `api` | One line in a changelog — "Cloning v1beta3 as v1 and exposing it in the apiserver" — is the moment `v1` exists. |
-| [Hangout notes — May 1](https://kubernetes.io/blog/2015/05/Weekly-Kubernetes-Community-Hangout) | 05-11 | — | `skip` | `meta` | Minutes. |
+| [Hangout notes — May 1](https://kubernetes.io/blog/2015/05/Weekly-Kubernetes-Community-Hangout/) | 05-11 | — | `skip` | `meta` | Minutes. |
 | [Resource Usage Monitoring in Kubernetes](https://kubernetes.io/blog/2015/05/resource-usage-monitoring-kubernetes/) | 05-12 | 0.16 | **`walk`** | `obs` | Heapster is archived and unpublished, cAdvisor's port 4194 is gone, and the modern path is a different API with a different owner. |
 | [Kubernetes Release: 0.17.0](https://kubernetes.io/blog/2015/05/kubernetes-release-0170/) | 05-15 | 0.17 | `skip` | `meta` | 55KB of PR titles — the largest post of the year and the emptiest. The v1beta3 conversion churn it records is already the payload of two rows above. |
 | [Docker and Kubernetes and AppC](https://kubernetes.io/blog/2015/05/docker-and-kubernetes-and-appc/) | 05-18 | 0.17 | **`walk`** | `nodes` | "We intend to continue to support Docker indefinitely." Indefinitely ended in v1.24, and the thing that replaced it is an interface, not a runtime. |
 | [Hangout notes — May 15](https://kubernetes.io/blog/2015/05/weekly-kubernetes-community-hangout_18/) | 05-18 | — | `skip` | `meta` | Minutes. |
 | [Kubernetes on OpenStack](https://kubernetes.io/blog/2015/05/kubernetes-on-openstack/) | 05-19 | 0.17 | `skip` | `ecosystem` | Availability announcement for a Murano app catalog entry; the catalog and the repo it points at are both gone. |
-| [Hangout notes — May 22](https://kubernetes.io/blog/2015/06/Weekly-Kubernetes-Community-Hangout) | 06-02 | — | `skip` | `meta` | Minutes. |
+| [Hangout notes — May 22](https://kubernetes.io/blog/2015/06/Weekly-Kubernetes-Community-Hangout/) | 06-02 | — | `skip` | `meta` | Minutes. |
 | [Cluster Level Logging with Kubernetes](https://kubernetes.io/blog/2015/06/cluster-level-logging-with-kubernetes/) | 06-11 | pre-1.0 | **`walk`** | `obs` | A fluentd DaemonSet, Elasticsearch and Kibana shipped *with* the cluster. Kubernetes ships no logging at all now, and that was a decision. |
 | [Slides: Cluster Management with Kubernetes](https://kubernetes.io/blog/2015/06/slides-cluster-management-with/) | 06-26 | pre-1.0 | `skip` | `meta` | Two links to a Google Slides deck. |
-| [The Distributed System ToolKit: Patterns for Composite Containers](05-the-distributed-system-toolkit-patterns.md) | 06-29 | pre-1.0 | **`walk`** | `api` | Sidecar, ambassador and adapter are still the three names everyone uses. The manifests are cosmetic; what changed is that one of the three became a field. |
+| [The Distributed System ToolKit: Patterns for Composite Containers](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/) | 06-29 | pre-1.0 | **`walk`** | `api` | Sidecar, ambassador and adapter are still the three names everyone uses. The manifests are cosmetic; what changed is that one of the three became a field. |
 | [How did the Quake demo from DockerCon Work?](https://kubernetes.io/blog/2015/07/how-did-quake-demo-from-dockercon-work/) | 07-02 | pre-1.0 | **`walk`** | `nodes` | Checkpoint/restore, done outside Kubernetes with CRIU because nothing supported it. The kubelet has an endpoint for it now — still alpha, eleven years later. |
 | [Kubernetes 1.0 Launch Event at OSCON](https://kubernetes.io/blog/2015/07/kubernetes-10-launch-party-at-oscon/) | 07-02 | pre-1.0 | `skip` | `meta` | Party invitation. `kuberneteslaunch.com` no longer resolves. |
 | [Announcing the First Kubernetes Enterprise Training Course](https://kubernetes.io/blog/2015/07/announcing-first-kubernetes-enterprise/) | 07-08 | pre-1.0 | `skip` | `meta` | Course ad; the course ran on 2015-07-20. |
-| [Hangout notes — July 10](https://kubernetes.io/blog/2015/07/Weekly-Kubernetes-Community-Hangout) | 07-13 | — | `skip` | `meta` | Minutes. |
+| [Hangout notes — July 10](https://kubernetes.io/blog/2015/07/Weekly-Kubernetes-Community-Hangout/) | 07-13 | — | `skip` | `meta` | Minutes. |
 | [Strong, Simple SSL for Kubernetes Services](https://kubernetes.io/blog/2015/07/strong-simple-ssl-for-kubernetes/) | 07-14 | pre-1.0 | **`walk`** | `security` | Neither strong nor simple now: an nginx sidecar terminating TLS from a hand-rolled secret, no rotation, no issuer, no expiry. Every layer of that has an owner today. |
 | [Hangout notes — July 17](https://kubernetes.io/blog/2015/07/weekly-kubernetes-community-hangout_23/) | 07-23 | — | `skip` | `meta` | Minutes. |
 | [The Growing Kubernetes Ecosystem](https://kubernetes.io/blog/2015/07/the-growing-kubernetes-ecosystem/) | 07-24 | 1.0 | `read` | `ecosystem` | A census of the ecosystem in the week 1.0 shipped. Read it as a survivorship list: count how many of the fifteen still exist under the same name. |
-| [Hangout notes — July 31](https://kubernetes.io/blog/2015/08/Weekly-Kubernetes-Community-Hangout) | 08-04 | — | `skip` | `meta` | Minutes. |
+| [Hangout notes — July 31](https://kubernetes.io/blog/2015/08/Weekly-Kubernetes-Community-Hangout/) | 08-04 | — | `skip` | `meta` | Minutes. |
 | [Using Kubernetes Namespaces to Manage Environments](https://kubernetes.io/blog/2015/08/using-kubernetes-namespaces-to-manage/) | 08-28 | 1.0 | **`walk`** | `api` | Almost the only 2015 post whose commands still run. The advice is what expired: a namespace is not an isolation boundary, and nothing in the post would tell you. |
 | [Kubernetes Performance Measurements and Roadmap](https://kubernetes.io/blog/2015/09/kubernetes-performance-measurements-and/) | 09-10 | 1.0 | `read` | `obs` | Two SLOs — 99% of API calls under 1s, 99% of pod startups under 5s — set in 2015 and still the scalability SLOs. The node target moved 100 → 5000; the promises did not. |
 | [Some things you didn't know about kubectl](https://kubernetes.io/blog/2015/10/some-things-you-didnt-know-about-kubectl_28/) | 10-28 | 1.0 | **`walk`** | `tooling` | Six features, one per section, and the fate of each is different: still there, renamed, silently ignored for three releases, or removed outright. |
@@ -79,8 +79,8 @@ progress record.
 ## Exercises
 
 Ten `walk` verdicts, numbered in publication order. Two are written; the eight marked *pending*
-are [#57](https://github.com/k3ii/k8s-academy/issues/57)'s to authorise once the rubric is
-ratified.
+are an authoring ticket's to claim. The rubric they are authored against was ratified in
+[#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
@@ -92,5 +92,5 @@ ratified.
 | 06 | Checkpoint and restore | pending |
 | 07 | Strong, simple SSL | pending |
 | 08 | Namespaces as environments | pending |
-| 09 | Some things you didn't know about kubectl | pending |
+| 09 | kubectl's undocumented corners | pending |
 | 10 | iptables, and the default that never moved | pending |
