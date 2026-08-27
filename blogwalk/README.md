@@ -221,17 +221,38 @@ roughly 2.0M tokens** — summed from `manifest.tsv`'s `bytes` column, so it mov
 pin does. It cannot be read in full by anyone, ever. Full reads are spent on `walk` candidates
 only.
 
-A first-screen digest of a whole year costs a fraction of reading that year end-to-end, and
-that fraction **falls as the years get later**:
+A first-screen digest of a whole year costs between a sixth and a tenth of reading that year
+end-to-end. Measured across the whole corpus by [`digest.py`](digest.py) — one instrument, one
+900-character cut, so the years are comparable with each other:
 
-| year | posts | source | digest | per post | cost of a digest |
-|---|---|---|---|---|---|
-| 2015 | 44 | 292KB | 93KB | ~530 tokens | **31%** |
-| 2024 | 54 | 568KB | 82KB | ~390 tokens | **14%** |
+| year | posts | source | digest | cost of a digest |
+|---|---|---|---|---|
+| 2015 | 44 | 292KB | 47KB | **16%** |
+| 2016 | 90 | 681KB | 100KB | **15%** |
+| 2017 | 53 | 460KB | 58KB | **13%** |
+| 2018 | 70 | 714KB | 76KB | **11%** |
+| 2019 | 52 | 551KB | 57KB | **10%** |
+| 2020 | 56 | 587KB | 61KB | **10%** |
+| 2021 | 53 | 582KB | 58KB | **10%** |
+| 2022 | 69 | 638KB | 75KB | **12%** |
+| 2023 | 78 | 709KB | 85KB | **12%** |
+| 2024 | 54 | 568KB | 59KB | **10%** |
+| 2025 | 78 | 777KB | 85KB | **11%** |
+| 2026 | 70 | 832KB | 76KB | **9%** |
 
-Later posts are twice as long and their first screen predicts the rest far better, because the
-genre is fixed: *what it was, what it is now, which gate, how to try it*. The digest itself
-barely grows. This is why the census is cut one year per pass rather than two — see
+Whole corpus: 767 posts, **7.22MB of source, 837KB of digest, 11%** — the same 7.22MB
+the paragraph above counts, because the script reads its source sizes from `manifest.tsv`
+rather than measuring them a second time. The nine uncensused years are 579 posts and
+5.71MB, which digest to **631KB at 11%**: the whole remainder of the sweep is affordable,
+one year to a pass.
+
+The ratio drifts down because the cut is a constant and the posts are not — a 2026 post averages
+1.8× the length of a 2015 one, so a fixed first screen is a smaller slice of it. That is
+arithmetic about the instrument, not a finding about the blog. The finding about the blog is a
+different one, and it concerns triage *quality* rather than cost: the modern genre is fixed —
+*what it was, what it is now, which gate, how to try it* — so a later post's first screen
+predicts the rest of it far better than an early post's does. The census is still cut one year
+per pass rather than two, for the file-shape reason rather than the cost one — see
 [the passes](#the-census-passes).
 
 ## The budget
@@ -326,6 +347,7 @@ blogwalk/TEMPLATE.md        the exercise template, forked from labs/
 blogwalk/manifest.tsv       one row per post at the pin
 blogwalk/build-manifest.py  regenerates the manifest, asserts the counts
 blogwalk/check-census.py    the gate — run it before closing any census pass
+blogwalk/digest.py          builds a year's triage digest; the reading budget, made mechanical
 blogwalk/YYYY/README.md     that year's full census
 blogwalk/YYYY/NN-slug.md    one exercise per `walk` post, numbered in publication order
 ```
