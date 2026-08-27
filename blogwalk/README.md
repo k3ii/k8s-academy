@@ -290,6 +290,34 @@ second tree is how you end up with two contradictory answers to "how much RAM do
 `blogwalk/check-census.py` is this sweep's only gate, and it checks census rows
 against `manifest.tsv`.
 
+## The gate
+
+```
+python3 blogwalk/check-census.py
+```
+
+Run it from the repo root before closing a census pass. It is the sibling of
+[`strands/check-anchors.py`](../strands/check-anchors.py) — same invocation style, same exit
+codes, green in **both** directions — and it exists because at 767 rows, *swept* and *feels
+swept* are indistinguishable by eye.
+
+`manifest.tsv` is the authority. Every row is matched back to a manifest row, so a post nobody
+censused and a row for a post that does not exist are equally loud, and the match is on the
+**`url` column byte-for-byte** — a case-only difference in one of the eleven literal
+permalinks fails. It also reads the four verdicts, the twelve topics and the budget band out
+of *this file*, so the rubric lives here and not in a second copy inside the checker; if it
+cannot parse them it fails rather than checking nothing.
+
+**An uncensused year is *pending*, not broken.** The gate is green today with ten years still
+to sweep, which is what makes it usable as a gate while the sweep runs. Read the per-year
+table it prints: `posts` comes from the manifest, `rows` from the census, and a year whose
+`walk` count leaves the [budget](#the-budget) is flagged on the run rather than on inspection.
+
+The one judgement it cannot make is `dated`. That verdict takes two tests and only the second
+— beyond the [9.5GB ceiling](../strands/lab-topologies.md#ceiling) — is mechanically visible
+at all, so a `dated` row whose *why* cites no hardware and no scale is reported as a
+**warning**: it asks a human to look, and does not decide.
+
 ## Layout
 
 ```
@@ -297,7 +325,7 @@ blogwalk/README.md          this file — method
 blogwalk/TEMPLATE.md        the exercise template, forked from labs/
 blogwalk/manifest.tsv       one row per post at the pin
 blogwalk/build-manifest.py  regenerates the manifest, asserts the counts
-blogwalk/check-census.py    the gate (not written yet — issue #58)
+blogwalk/check-census.py    the gate — run it before closing any census pass
 blogwalk/YYYY/README.md     that year's full census
 blogwalk/YYYY/NN-slug.md    one exercise per `walk` post, numbered in publication order
 ```

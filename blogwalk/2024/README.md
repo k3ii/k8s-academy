@@ -51,8 +51,8 @@ is not wrong — it is unexercised, and one year of evidence for a twelve-slot v
 ## Census
 
 Verdicts and topics are defined in [`../README.md`](../README.md#the-census). Every post has a
-row; a row's title links to its exercise file once that file exists and to the post until then.
-The gaps in the exercise numbering are the rejects.
+row, and a row's title always links the post — never the exercise file, so the row never
+changes once written. The **Exercises** table below is the progress record.
 
 | post | date | k8s | verdict | topic | why |
 |---|---|---|---|---|---|

@@ -25,9 +25,8 @@ Triage cost: 299KB of source, a 93KB first-screen digest, ~530 tokens a post.
 ## Census
 
 Verdicts and topics are defined in [`../README.md`](../README.md#the-census). Every post has a
-row; the gaps in the exercise numbering are the rejects. A row's title links to its exercise
-file once that file exists and to the post itself until then, so the census doubles as the
-progress record.
+row, and a row's title always links the post — never the exercise file, so the row never
+changes once written. The **Exercises** table below is the progress record.
 
 | post | date | k8s | verdict | topic | why |
 |---|---|---|---|---|---|
