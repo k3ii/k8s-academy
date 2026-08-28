@@ -45,7 +45,7 @@ speaking guide in two parts. Twelve rows, none of them about Kubernetes.
 
 That is also why **`meta` leads again at 24 rows and 34%**, its highest share since 2015, and
 why 2017's `ecosystem` lead turns out to have been a single year: vendor writing halves from 28%
-to 14%. **`storage` reaches 7 rows** — more than 2016 and 2017 together — which is CSI arriving.
+to 14%. **`storage` reaches 7 rows** — as many as 2016 and 2017 put together — which is CSI arriving.
 `sched` earned none. `etcd` earned one, its second in five years censused and the first outside
 2024, which retires the streak the 2017 pass flagged.
 
