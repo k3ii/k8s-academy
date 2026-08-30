@@ -61,14 +61,20 @@ def frontmatter(path):
         i += 1
     if i >= len(lines) or not re.fullmatch(r'-{3,}', lines[i].strip()):   # '---' or '------'
         return None
-    fm, key = {}, None
+    fm, key, folded = {}, None, False
     for line in lines[i + 1:]:
         if re.fullmatch(r'(-{3,}|\.{3})', line.strip()):
             break
         m = re.match(r'^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$', line)
         if m:
             key = m.group(1)
-            fm[key] = m.group(2).strip()
+            val = m.group(2).strip()
+            if val[:1] not in ('"', "'"):     # unquoted: a ' #' starts a trailing comment
+                val = re.sub(r'\s+#.*$', '', val).strip()
+            fm[key] = val
+            folded = bool(re.fullmatch(r'[>|][+-]?', fm[key]))
+        elif line.lstrip().startswith('#') and not folded:
+            key = None            # a comment, not a continuation of the key above it
         elif key and line.strip():                        # folded scalar, e.g. 'author: >'
             fm[key] = (fm[key] + ' ' + line.strip()).strip()
     return fm
