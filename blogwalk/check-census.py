@@ -15,8 +15,11 @@ manifest row, so a post nobody censused and a row for a post that does not exist
 loud. A row is matched **by its URL, byte-identical to the manifest's `url` column** — never
 by rebuilding one. Only 552 of 767 posts take `hugo.toml`'s permalink; 205 override it and
 eleven of those are hand-written literals whose capitalisation is not the slug's, so a
-checker that resolves URLs itself is wrong on 27% of the corpus. The ten unpublished drafts
-resolve to no permalink at all, carry an empty `url`, and are matched on their title.
+checker that resolves URLs itself is wrong on 27% of the corpus. The eleven unpublished
+drafts are matched on their title instead. Ten of them are undated, so no permalink resolves
+and their `url` is empty; the eleventh carries a date, so one *does* resolve and the manifest
+records it — and the site returns 404 for it. `draft: true` decides, not whether a URL came
+out, so `by_url` below is built from published posts only. Ratified in #73.
 
 **The vocabularies are read out of `blogwalk/README.md`**, not restated here: the four
 verdicts from its verdict table, the twelve topics from its vocabulary line, the budget from
@@ -32,8 +35,10 @@ order, so date order and every date cell are checked against the manifest *first
 sorted any other way would silently mis-attribute every exercise it has.
 
 **A year with no `README.md` is pending, not broken** — the same treatment, and the same
-word, `check-anchors.py` gives a phase whose `labs/NN/` does not exist yet. The sweep is ten
-passes from finished, and a gate that is red for an uncensused year is not usable as a gate.
+word, `check-anchors.py` gives a phase whose `labs/NN/` does not exist yet. A gate that is
+red for an uncensused year is not usable as a gate while the sweep is still running, and the
+sweep ran for twelve passes. All twelve years are censused now; the rule stays because the pin
+will move and a thirteenth year will arrive pending.
 
 Failure classes, as ratified in #58:
 
@@ -48,7 +53,10 @@ Failure classes, as ratified in #58:
   8. *warning only* — a `dated` row whose why cites no hardware and no scale. `dated` takes
      two tests after #57 and only the second is mechanically checkable at all, so this
      prompts a human instead of deciding anything
-  9. a census row out of publication order, or a date cell disagreeing with the manifest
+  9. a census row out of publication order, or a date cell disagreeing with the manifest.
+     An unpublished draft has no publication date, so undated rows are required to sit in one
+     block at the end — where manifest.tsv itself sorts them — and the dated rows before them
+     are required to ascend
 """
 import re, sys, pathlib, collections
 
@@ -62,7 +70,8 @@ EXERCISE_HEADER = ["#", "exercise", "state"]
 STATES = ("written", "pending")
 
 LINKED = re.compile(r"^\[(?P<title>.+)\]\((?P<url>[^)\s]+)\)$")
-DRAFT = re.compile(r"^(?P<title>.+?)\s+\(draft\)$")
+# a `(draft)` cell is an *unlinked* title: "](" in it means a link wearing a draft suffix
+DRAFT = re.compile(r"^(?!.*\]\()(?P<title>.+?)\s+\(draft\)$")
 EX_FILE = re.compile(r"^(\d\d)-[a-z0-9-]+\.md$")
 # class 8 is a prompt, not a proof: does the why cite hardware or scale at all?
 SCALE = re.compile(r"ceiling|bare metal|\bnodes?\b|\bRAM\b|memory|hardware|load balancer|"
@@ -160,8 +169,8 @@ for year in censused:
     text = (ydir / "README.md").read_text()
     rel = f"blogwalk/{year}/README.md"
     posts = POSTS[year]
-    by_url = {p["url"]: p for p in posts if p["url"]}
-    by_title = {p["title"]: p for p in posts if not p["url"]}
+    by_url = {p["url"]: p for p in posts if p["url"] and p["draft"] != "true"}
+    by_title = {p["title"]: p for p in posts if p["draft"] == "true"}
 
     rows = table(text, "Census", CENSUS_HEADER)
     if rows is None:
@@ -234,8 +243,17 @@ for year in censused:
     # ordering two posts published the same day in different offsets is not a thing this
     # gate can adjudicate. A day going backwards is unambiguous, and is what it checks.
     dates = [e["date"][:10] for _, e in matched]
-    if dates != sorted(dates):
-        bad = next(i for i in range(1, len(dates)) if dates[i] < dates[i - 1])
+    # undated drafts have no place in publication order; manifest.tsv sorts them last and so
+    # must the census, which makes the dated prefix the thing that has to ascend
+    tail = len(dates)
+    while tail and not dates[tail - 1]:
+        tail -= 1
+    if any(not d for d in dates[:tail]):
+        i = next(i for i, d in enumerate(dates[:tail]) if not d)
+        fail(9, f"{rel}: undated row {matched[i][0]} sits before dated rows — "
+                f"unpublished drafts belong in one block at the end")
+    elif dates[:tail] != sorted(dates[:tail]):
+        bad = next(i for i in range(1, tail) if dates[i] < dates[i - 1])
         fail(9, f"{rel}: census is not in publication order — row {matched[bad][0]} "
                 f"({dates[bad]}) follows {dates[bad - 1]}")
 

@@ -53,8 +53,9 @@ why no census may build a link by hand. Only 552 posts take the site-wide permal
 the month-only form** — all of 2015, 2016 and 2017, twelve of 2018, six of 2020 — and eleven of
 those are hand-written literal paths whose capitalisation is not the slug's, so
 `weekly-kubernetes-community-hangout` is served at
-`/blog/2015/03/Weekly-Kubernetes-Community-Hangout/`. The ten drafts resolve to nothing and
-carry an empty `url`. 757 URLs, no collisions. Hugo's precedence — per-post override first,
+`/blog/2015/03/Weekly-Kubernetes-Community-Hangout/`. Ten of the eleven drafts are undated, so
+nothing resolves for them and their `url` is empty; the eleventh is dated, so a permalink does
+resolve and the manifest records one the site answers with 404. 757 URLs, no collisions. Hugo's precedence — per-post override first,
 site template second, literal used as written — is implemented once in
 [`build-manifest.py`](build-manifest.py) and nowhere else.
 
@@ -107,12 +108,16 @@ where it predates versioned releases. A row's link never changes once written, w
 lets a census pass emit its table and never revisit it; the exercise file is linked from the
 year's **Exercises** table instead, alongside its `written`/`pending` state.
 
-**An unpublished draft still gets a row.** The ten `draft: true` posts — 2026 only, the v1.37
-queue — are post files at the pin, and *every post gets a row* does not carve out the ones the
-pin caught mid-flight. They resolve to no permalink, so their `post` cell carries the title
-unlinked followed by `(draft)`, and the row is verdict-eligible like any other. The reason to
-keep them is that the pin will move: when those ten publish, their rows are already written and
-the refresh is a link, not a census.
+**An unpublished draft still gets a row.** The eleven `draft: true` posts — 2026 only, the
+v1.37 queue — are post files at the pin, and *every post gets a row* does not carve out the ones
+the pin caught mid-flight. Their `post` cell carries the title unlinked followed by `(draft)`,
+and the row is verdict-eligible like any other. **`draft: true` is what decides that, not
+whether a URL resolved** (ratified in #73): ten of the eleven are undated and resolve to no
+permalink, but the eleventh carries a date, so the template resolves a URL for it that the site
+returns 404 for. An unlinked row is the honest one. Ten of the eleven also carry no publication
+date, so they sort last — in the manifest and in the census — and the exercise numbering counts
+them last too. The reason to keep them is that the pin will move: when they publish, their rows
+are already written and the refresh is a link, not a census.
 
 Verdicts:
 
@@ -242,9 +247,10 @@ end-to-end. Measured across the whole corpus by [`digest.py`](digest.py) — one
 
 Whole corpus: 767 posts, **7.22MB of source, 837KB of digest, 11%** — the same 7.22MB
 the paragraph above counts, because the script reads its source sizes from `manifest.tsv`
-rather than measuring them a second time. The nine uncensused years are 579 posts and
-5.71MB, which digest to **631KB at 11%**: the whole remainder of the sweep is affordable,
-one year to a pass.
+rather than measuring them a second time. The estimate the sweep was budgeted against —
+579 posts and 5.71MB left after the first three passes, digesting to **631KB at 11%** — held
+to the end: every remaining year fitted one pass, and the last and cheapest, 2026, came in
+at 9%.
 
 The ratio drifts down because the cut is a constant and the posts are not — a 2026 post averages
 1.8× the length of a 2015 one, so a fixed first screen is a smaller slice of it. That is
@@ -329,8 +335,9 @@ permalinks fails. It also reads the four verdicts, the twelve topics and the bud
 of *this file*, so the rubric lives here and not in a second copy inside the checker; if it
 cannot parse them it fails rather than checking nothing.
 
-**An uncensused year is *pending*, not broken.** The gate is green today with ten years still
-to sweep, which is what makes it usable as a gate while the sweep runs. Read the per-year
+**An uncensused year is *pending*, not broken.** The gate was green with ten years still to
+sweep, which is what made it usable as a gate while the sweep ran, and it is green now with
+none left. Read the per-year
 table it prints: `posts` comes from the manifest, `rows` from the census, and a year whose
 `walk` count leaves the [budget](#the-budget) is flagged on the run rather than on inspection.
 
