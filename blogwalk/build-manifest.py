@@ -73,6 +73,8 @@ def frontmatter(path):
                 val = re.sub(r'\s+#.*$', '', val).strip()
             fm[key] = val
             folded = bool(re.fullmatch(r'[>|][+-]?', fm[key]))
+            if folded:
+                fm[key] = ''      # '>' and '|' are block syntax, never content
         elif line.lstrip().startswith('#') and not folded:
             key = None            # a comment, not a continuation of the key above it
         elif key and line.strip():                        # folded scalar, e.g. 'author: >'
