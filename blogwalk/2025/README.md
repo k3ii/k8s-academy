@@ -4,7 +4,7 @@
 feature post arriving in March. It ties 2023 as the second-largest year censused, behind 2016's
 90 — see [the method](../README.md).
 
-**Yield: 12 `walk`**, upper-[band](../README.md#yield). 50 `read`, 2 `dated`, 14 `skip`.
+**Yield: 12 `walk`**, upper-[band](../README.md#the-budget). 50 `read`, 2 `dated`, 14 `skip`.
 
 **The first year the blog is mostly not about itself.** `meta` takes 12 rows and 15%, a new floor
 under 2023's 17%, and this is the first year the census has reached whose largest topic is about

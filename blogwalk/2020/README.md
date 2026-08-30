@@ -6,7 +6,7 @@ three of them shipped inside the year. This is **the year the archive stopped on
 started arguing with itself**: a post that promises something the project later reversed, and a
 post edited to strike a sentence out rather than correct it — see [the method](../README.md).
 
-**Yield: 9 `walk`**, one above the floor of the [8–15 band](../README.md#yield). 23 `read`, **1
+**Yield: 9 `walk`**, one above the floor of the [8–15 band](../README.md#the-budget). 23 `read`, **1
 `dated`**, 23 `skip`.
 
 **The best find in the year is a promise the project broke.**

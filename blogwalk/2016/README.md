@@ -9,7 +9,7 @@ Deployments arrive, PetSet is introduced *and* renamed to StatefulSet nine month
 goes alpha, CRI is proposed, and Minikube, Helm and kubeadm all launch — see
 [the method](../README.md).
 
-**Yield: 15 `walk`**, at the ceiling of the [8–15 band](../README.md#yield) and inside it.
+**Yield: 15 `walk`**, at the ceiling of the [8–15 band](../README.md#the-budget) and inside it.
 34 `read`, 3 `dated`, 38 `skip`.
 
 The ceiling was reached but did not bind. Seventeen posts had a case for an exercise; both that

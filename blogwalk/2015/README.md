@@ -8,7 +8,7 @@ Ingress, and `kubectl apply` does not exist yet.
 That is why 2015 was censused first — see [the method](../README.md). If the format survives
 this year it survives the staleness case entirely.
 
-**Yield: 10 `walk`**, inside the [8–15 band](../README.md#yield). 11 `read`, 2 `dated`,
+**Yield: 10 `walk`**, inside the [8–15 band](../README.md#the-budget). 11 `read`, 2 `dated`,
 21 `skip`. The 21 rejects are 11 weekly-hangout notes, a launch party, a training-course ad, a
 UX-study recruitment, two video posts, a slide deck, two changelog dumps and three vendor
 availability announcements — a little under half the year, which is what a project's first nine

@@ -7,7 +7,7 @@ the year, with the earliest posts still targeting 1.5. This is **the year the se
 moved** — RBAC goes beta in 1.6 and GA in 1.8, NetworkPolicy goes stable in 1.7, and
 containerd arrives as a real alternative to Docker under CRI — see [the method](../README.md).
 
-**Yield: 8 `walk`**, on the floor of the [8–15 band](../README.md#yield). 25 `read`, **0
+**Yield: 8 `walk`**, on the floor of the [8–15 band](../README.md#the-budget). 25 `read`, **0
 `dated`**, 20 `skip`.
 
 **The floor is now tested, and it held without being leaned on.** Two prior years reached the

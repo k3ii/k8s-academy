@@ -4,7 +4,7 @@
 January posts and its release interview arriving alongside. Only 2016's 90 is bigger among the
 years censused so far — see [the method](../README.md).
 
-**Yield: 13 `walk`**, upper-[band](../README.md#yield), level with 2022 and 2024 and behind only
+**Yield: 13 `walk`**, upper-[band](../README.md#the-budget), level with 2022 and 2024 and behind only
 2016's 15. 51 `read`, 2 `dated`, 12 `skip`.
 
 **A new floor, and a flat year.** The reject rate is 15%, against 48%, 42%, 38%, 40%, 37%, 41%,

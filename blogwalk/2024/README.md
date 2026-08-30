@@ -5,7 +5,7 @@
 [2015](../2015/README.md) and the reason this year was censused second — see
 [the method](../README.md).
 
-**Yield: 13 `walk`**, at the top of the [8–15 band](../README.md#yield) and inside it. 28 `read`,
+**Yield: 13 `walk`**, at the top of the [8–15 band](../README.md#the-budget) and inside it. 28 `read`,
 3 `dated`, 10 `skip`.
 
 The three `dated` rows are the *DIY: Create Your Own Cloud* series, and they are the cleanest
@@ -102,7 +102,7 @@ changes once written. The **Exercises** table below is the progress record.
 | [Announcing the 2024 Steering Committee Election Results](https://kubernetes.io/blog/2024/10/02/steering-committee-results-2024/) | 10-02 | 1.31 | `skip` | `meta` | Election results. |
 | [Spotlight on Kubernetes Upstream Training in Japan](https://kubernetes.io/blog/2024/10/28/k8s-upstream-training-japan-spotlight/) | 10-28 | 1.31 | `skip` | `meta` | Community interview about a contributor onboarding programme. |
 | [Kubernetes v1.32 sneak peek](https://kubernetes.io/blog/2024/11/08/kubernetes-1-32-upcoming-changes/) | 11-08 | 1.32 | `skip` | `meta` | Deprecation preview. Superseded by the release it previews. |
-| [How we built a dynamic API Server for the Aggregation Layer in Cozystack](https://kubernetes.io/blog/2024/11/21/dynamic-kubernetes-api-server-for-cozystack/) | 11-21 | 1.31 | `read` | `api` | A vendor post that earns its row: it states why CRDs plus a controller were rejected and what the aggregation layer bought instead. Under [the vendor rule](../README.md#three-genres-with-a-rule-because-they-are-most-of-the-corpus) that makes it `read`, and the same rule keeps it off `walk`. |
+| [How we built a dynamic API Server for the Aggregation Layer in Cozystack](https://kubernetes.io/blog/2024/11/21/dynamic-kubernetes-api-server-for-cozystack/) | 11-21 | 1.31 | `read` | `api` | A vendor post that earns its row: it states why CRDs plus a controller were rejected and what the aggregation layer bought instead. Under [the vendor rule](../README.md#four-genres-with-a-rule-because-they-are-most-of-the-corpus) that makes it `read`, and the same rule keeps it off `walk`. |
 | [Gateway API v1.2: WebSockets, Timeouts, Retries, and More](https://kubernetes.io/blog/2024/11/21/gateway-api-v1-2/) | 11-21 | 1.32 | `read` | `net` | Notable for the breaking change: `v1alpha2` GRPCRoute and ReferenceGrant removed, and a controller still speaking `v1alpha2` breaks even if your YAML says `v1`. |
 | [Kubernetes v1.32: Penelope](https://kubernetes.io/blog/2024/12/11/kubernetes-v1-32-release/) | 12-11 | 1.32 | `skip` | `meta` | Release announcement, 44 enhancements. |
 | [QueueingHint Brings a New Possibility to Optimize Pod Scheduling](https://kubernetes.io/blog/2024/12/12/scheduler-queueinghint/) | 12-12 | 1.32 | `read` | `sched` | ActiveQ, BackoffQ and the unschedulable pool, and why a pod used to wait 5 minutes for an event that had already happened. Best explanation of the scheduling queue anywhere. |

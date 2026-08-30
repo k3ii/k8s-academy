@@ -5,7 +5,7 @@ whole year: the release cadence changed from four a year to three in July. This 
 blog stopped being about the project and became about the software** — see
 [the method](../README.md).
 
-**Yield: 11 `walk`**, mid-[band](../README.md#yield) and the highest of any year since 2016. 31
+**Yield: 11 `walk`**, mid-[band](../README.md#the-budget) and the highest of any year since 2016. 31
 `read`, **0 `dated`**, 11 `skip`.
 
 **The reject rate halves, and the shape of the year explains why.** 21%, against 48%, 42%, 38%,

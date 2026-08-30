@@ -6,7 +6,7 @@ This is **the year the storage stack was rebuilt in public** — CSI runs alpha,
 across twelve months — and the year the blog's centre of gravity moved from *what a company
 built on Kubernetes* to *what shipped in the release* — see [the method](../README.md).
 
-**Yield: 9 `walk`**, inside the [8–15 band](../README.md#yield). 32 `read`, **1 `dated`**, 28
+**Yield: 9 `walk`**, inside the [8–15 band](../README.md#the-budget). 32 `read`, **1 `dated`**, 28
 `skip`.
 
 **The band's real test still has not arrived.** 2017 landed on the floor, 2016 and 2024 on or

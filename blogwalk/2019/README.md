@@ -6,7 +6,7 @@ them shipped inside the year. This is **the year the archive started going wrong
 not versions drifting out from under a post, but posts that were broken on the day they were
 published — see [the method](../README.md).
 
-**Yield: 8 `walk`**, on the floor of the [8–15 band](../README.md#yield). 24 `read`, **1
+**Yield: 8 `walk`**, on the floor of the [8–15 band](../README.md#the-budget). 24 `read`, **1
 `dated`**, 19 `skip`.
 
 **The band lands on its floor for the second time in six years, and again nothing was cut to get

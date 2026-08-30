@@ -4,7 +4,7 @@
 release interview arriving in April. Only 2016's 90 and 2018's 70 are
 bigger among the years censused so far — see [the method](../README.md).
 
-**Yield: 13 `walk`**, upper-[band](../README.md#yield), level with 2024 and behind only 2016's 15. 43 `read`, 1 `dated`, 12 `skip`.
+**Yield: 13 `walk`**, upper-[band](../README.md#the-budget), level with 2024 and behind only 2016's 15. 43 `read`, 1 `dated`, 12 `skip`.
 
 **The reject rate reaches its floor.** 17%, against 48%, 42%, 38%, 40%, 37%, 41%, 21% and 19% for
 the years already censused — the lowest in the archive. `meta` takes 14 rows and 20%, also the
