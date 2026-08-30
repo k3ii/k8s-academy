@@ -9,9 +9,9 @@
 
 **Do**
 
-1. `mkdir /sys/fs/cgroup/forkers`, with `+pids` delegated.
+1. `mkdir /sys/fs/cgroup/forkers`, with `+pids` delegated **from the root** (`cat /sys/fs/cgroup/cgroup.subtree_control` — add it there if missing). Do *not* write into `forkers/cgroup.subtree_control`: that would make `forkers` a non-leaf and step 3's shell move would fail with `EBUSY`, as in [the OOM drill](06-oom-inside-a-wall.md).
 2. `echo 32 > /sys/fs/cgroup/forkers/pids.max`. Read it back. Do not proceed until it reads `32`.
-3. In your *second* session, `echo $$ > /sys/fs/cgroup/forkers/cgroup.procs`, confirm with `cat /proc/self/cgroup`, then run a bounded forker first: `for i in $(seq 1 64); do sleep 300 & done`.
+3. In your *second* session, start a dedicated shell (`bash`) rather than moving the login shell out of its systemd session scope, then inside it `echo $$ > /sys/fs/cgroup/forkers/cgroup.procs`, confirm with `cat /proc/self/cgroup`, then run a bounded forker first: `for i in $(seq 1 64); do sleep 300 & done`.
 4. Read the errors. Read `pids.current` and `pids.events`.
 5. Now the unbounded version, still inside the cgroup: `:(){ :|:& };:`. Watch it fail to take the machine down.
 6. From the *first* session — which is outside the cgroup — confirm you can still fork: `ls`, `ps aux | wc -l`.
