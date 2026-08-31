@@ -374,3 +374,18 @@ slight underestimate.
 - **The `ha`-plus-`forge` margin is 0.5GB**, which is thin. If `ha` needs its full
   7.5GB in practice, `forge` stops for that topology and the cache survives the pause —
   a fallback, not the plan.
+- **The eleven artifacts have a directory layout and no module convention.** This doc
+  puts the learner's code in `build/NN-artifact/`, and the thirteen `labs/` directories
+  kept to it — fourteen such paths are cited, from `build/00-scratch` to
+  `build/08-csi-driver`, with no session inventing a second shape. What no ruling covers
+  is what goes *inside*: the module path each `go.mod` declares, whether `cmd/` is
+  mandatory for a single-binary artifact, and the invocation the acceptance harness is
+  run by. Thirty-nine exercises carry a `**Build**` key and only two state a module path
+  at all, both of them `probe` for a throwaway. It bites at the second artifact, not the
+  first: P4's two operators are built to be diffed against each other, and P5's plugin
+  is meant to be carried onto the scheduler binary from earlier in the same phase. A
+  convention chosen after eleven `go.mod` files exist is eleven edits; chosen before the
+  first, it is one paragraph. Left open on purpose when
+  [map #29](https://github.com/k3ii/k8s-academy/issues/29) closed: the exercise *shape*
+  is settled by two prototypes, and the scaffold has no evidence behind it yet, because
+  no artifact in this curriculum has been built.
