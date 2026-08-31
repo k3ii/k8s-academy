@@ -28,9 +28,9 @@ interface built for a different purpose.
 **The exercises no longer point here for that.** Five lab files carried a *"what does
 not exist yet"* pointer to this section; [#75](https://github.com/k3ii/k8s-academy/issues/75)
 retired it, because a provision block that fails today is a bug worth reporting rather
-than the gap in `factory` it used to be. What is still missing is
-[on the node itself](#provision), not in `factory`. This section keeps the history of why
-the interface was written first.
+than the gap in `factory` it used to be. What the exercises point at instead is
+[the node's contents](#node-baseline), which is a decision rather than a gap. This
+section keeps the history of why the interface was written first.
 
 `phases/08-storage.md` shipped one such block before this document existed. It was not
 fiction — it was this same specification, written as though it were built.
@@ -215,7 +215,8 @@ SSH gets `No route to host`. `just gate <vm>` polls SSH to 240s, then waits on
 `cloud-init status`.
 
 **4 — so is the Ansible baseline.** `just play` runs `site.yml`, applying the `common`
-role. A node that skipped it is not the node the exercises assume.
+role. A node that skipped it is not the node the exercises assume — and a node that had
+it is [still not a node with Kubernetes on it](#node-baseline), by design.
 **[UNVERIFIED]** — `ansible/inventory/hosts.yml` is static and hand-maintained today,
 which is exactly what ephemeral lab nodes break. The contract is that **lab nodes reach
 Ansible through a dynamic inventory generated from the `tofu` output**, not by hand-editing
@@ -226,6 +227,92 @@ account; there is no `debian` user. `factory` commits `Host 10.10.10.*` → `Pro
 factory` in its `ssh/config`, so `-J factory` is redundant from the Mac and wrong from
 `hopper`, which is already in the subnet. `factory` deleted those flags from its own
 outputs deliberately.
+
+<a id="node-baseline"></a>
+## The Kubernetes install is the learner's, not `factory`'s
+
+**Decided in [#77](https://github.com/k3ii/k8s-academy/issues/77): `factory` delivers a
+configured Debian guest, and the exercises put Kubernetes on it.** `factory`'s Ansible
+roles are `common`, `control`, `carthage` and `zeko_*`; none installs a container runtime
+or `kubeadm`. Checked on a freshly baselined `pair-cp` on 2026-08-31, `kubeadm`, `kubelet`,
+`kubectl`, `containerd` and `crictl` are all absent. That is the shape, not a gap.
+
+The alternative was a `kubernetes` role in `factory`, keyed on the `role` field
+[the labs state already publishes](#provision). It was rejected because
+[`labs/01/01`](../labs/01/01-provision-and-kubeadm-init.md) is called *"A two-node cluster,
+stood up by hand"* and a runtime somebody else installed is a piece of that taken away —
+and because [P0](../phases/00-linux-primitives.md) spends three weeks arriving at what a
+container is before a runtime exists to make one. Landing in P1 on a node that already has
+containerd would spend that.
+
+**The version is not pinned here.** [`certs.md`](certs.md#tooling) holds it once: the exams
+track the newest Kubernetes minor, v1.35 as of today, and lab clusters follow the same rule
+rather than a frozen one. Read the minor from there, call it `$V`, and use it in the two
+lines that name it below.
+
+<a id="node-baseline-steps"></a>
+### The procedure, stated once
+
+Three exercises stand up a cluster from scratch —
+[`labs/01/01`](../labs/01/01-provision-and-kubeadm-init.md),
+[`labs/03/18`](../labs/03/18-the-webhook-the-apiserver-dials.md) and
+[`labs/04/03`](../labs/04/03-sample-controller-against-a-real-cluster.md). The first walks
+these commands with commentary, because that is its subject. The other two run them and
+move on. Run all of it **on every node of the topology**, control plane and workers alike.
+
+```sh
+V=<the current Kubernetes minor, per certs.md#tooling>   # 0. deliberately not pasteable
+
+sudo swapoff -a                                  # 1. the kubelet refuses to start with swap on
+sudo sed -i '/\sswap\s/s/^/#/' /etc/fstab        #    and again after the next reboot
+
+printf 'overlay\nbr_netfilter\n' | sudo tee /etc/modules-load.d/k8s.conf
+sudo modprobe overlay && sudo modprobe br_netfilter
+printf 'net.bridge.bridge-nf-call-iptables=1\nnet.bridge.bridge-nf-call-ip6tables=1\nnet.ipv4.ip_forward=1\n' \
+  | sudo tee /etc/sysctl.d/99-k8s.conf
+sudo sysctl --system                             # 2. bridged traffic must reach iptables
+
+sudo apt-get update && sudo apt-get install -y containerd
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
+sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+sudo sed -i 's#bin_dir = "/usr/lib/cni"#bin_dir = "/opt/cni/bin"#' /etc/containerd/config.toml
+sudo systemctl restart containerd                # 3. see the two edits below
+
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL "https://pkgs.k8s.io/core:/stable:/$V/deb/Release.key" \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$V/deb/ /" \
+  | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl       # 4. apt must not move a cluster's minor
+```
+
+**Both `sed` lines against `config.toml` are load-bearing, and they fail differently.**
+
+`SystemdCgroup = true` matches the cgroup driver the kubelet uses on a systemd host. Leave
+it `false` and the two disagree about who owns the cgroup tree; the kubelet reports the
+node `NotReady` and says so in its own log, which is the recoverable kind of failure.
+
+**`bin_dir` is the other kind** ([#76](https://github.com/k3ii/k8s-academy/issues/76)).
+Debian's `containerd` package ships `bin_dir = "/usr/lib/cni"`, because Debian's
+`containernetworking-plugins` installs there. Flannel — and every CNI exercise in this
+curriculum — installs to **`/opt/cni/bin`**. Leave the Debian default and the node flips to
+`Ready` while **no pod can ever start**: the conflist names a plugin type containerd cannot
+find, sandbox creation fails, and pods sit in `ContainerCreating` with `SandboxChanged`
+repeating and nothing naming the path. Found the hard way while
+[weighing `pair`](#measured) — ten minutes of a dead cluster whose own success signal had
+already fired.
+
+`/opt/cni/bin` is the path the curriculum assumes throughout, so the config moves and the
+plugins do not: [`labs/07`](../labs/07/) installs a hand-written plugin there and
+[`labs/11/06`](../labs/11/06-11c4-kill-one-trace-component-mid-flight.md) breaks the
+datapath by moving `/opt/cni/bin/bridge` aside. On an unpatched node that break is a no-op.
+
+**`etcd-only`, `k0s-light` and `bare` want none of this.** Each installs what it needs, or
+deliberately needs nothing: three etcd binaries copied out from [`forge`](#build-guest),
+`get.k0s.sh` for a distribution that ships its own runtime, and for
+[`bare`](#bare) the whole point is that no runtime exists.
 
 <a id="teardown"></a>
 ## Teardown

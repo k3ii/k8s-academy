@@ -5,7 +5,7 @@
 
 **Rests on** — [the CA and serving cert](17-a-ca-and-a-serving-cert-by-hand.md), whose SANs were chosen for exactly this, and [the policy](16-a-policy-with-no-webhook.md), whose rule this webhook deliberately duplicates so [the two can be compared](20-the-same-rejection-twice.md).
 
-**Topology** — [`pair`](../../strands/lab-topologies.md#pair), **freshly provisioned — this is the phase's first cluster.** The provisioning commands are [in the strand](../../strands/lab-topologies.md#provision) and are not repeated here; `ssh hopper` is mandatory and `just gate` is not optional. Note also [what does not exist yet](../../strands/lab-topologies.md#contract) — that note applies to every exercise in this directory from here on and is stated there once.
+**Topology** — [`pair`](../../strands/lab-topologies.md#pair), **freshly provisioned — this is the phase's first cluster.** The provisioning commands are [in the strand](../../strands/lab-topologies.md#provision) and are not repeated here; `ssh hopper` is mandatory and `just gate` is not optional. [Kubernetes is yours to install on the guest](../../strands/lab-topologies.md#node-baseline-steps), as it was in [`labs/01/01`](../01/01-provision-and-kubeadm-init.md); the commands are in the strand and are not repeated here either. That applies to every exercise in this directory from here on and is stated there once.
 
 `pair` runs every exercise up to and including [the expired credential](41-3c5-an-expired-component-certificate.md).
 

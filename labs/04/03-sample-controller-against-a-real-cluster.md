@@ -5,7 +5,7 @@
 
 **Rests on** — [the two cited lines](02-the-line-that-enqueues-a-key.md). You have read this controller; now it runs, and every log line it prints maps to a line you can point at.
 
-**Topology** — [`pair`](../../strands/lab-topologies.md#pair), **freshly provisioned — this is the phase's first cluster.** The provisioning commands are [in the strand](../../strands/lab-topologies.md#provision) and are not repeated here; `ssh hopper` is mandatory and `just gate` is not optional. [What does not exist yet](../../strands/lab-topologies.md#contract) applies to every exercise in this directory and is stated there once.
+**Topology** — [`pair`](../../strands/lab-topologies.md#pair), **freshly provisioned — this is the phase's first cluster.** The provisioning commands are [in the strand](../../strands/lab-topologies.md#provision) and are not repeated here; `ssh hopper` is mandatory and `just gate` is not optional. [Kubernetes is yours to install on the guest](../../strands/lab-topologies.md#node-baseline-steps), as it was in [`labs/01/01`](../01/01-provision-and-kubeadm-init.md). That applies to every exercise in this directory and is stated there once.
 
 `pair` runs every exercise from here to [the capstone](34-the-capstone-writeup.md), with three exercises in between that use no cluster at all and say so.
 
