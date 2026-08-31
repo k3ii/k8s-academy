@@ -5,7 +5,7 @@
 
 **Rests on** — nothing read yet. Wiring the cluster *before* [module 2.1](../../phases/02-etcd.md#m2-1)'s reading is deliberate: `--initial-cluster`, `--initial-cluster-token` and `--initial-cluster-state` are the three flags [the restore drill](28-restore-from-snapshot.md) turns on, and meeting them first as "the flags that made it start" is what makes the restore procedure's ordering legible three weeks from now.
 
-**Topology** — [`etcd-only`](../../strands/lab-topologies.md#etcd-only), **no Kubernetes anywhere in this phase**. The provisioning commands are [in the strand](../../strands/lab-topologies.md#provision) and are not repeated here; `ssh hopper` is mandatory and `just gate` is not optional. Note also [what does not exist yet](../../strands/lab-topologies.md#contract) — that note applies to every exercise in this directory and is stated there once.
+**Topology** — [`etcd-only`](../../strands/lab-topologies.md#etcd-only), **no Kubernetes anywhere in this phase**. The provisioning commands are [in the strand](../../strands/lab-topologies.md#provision) and are not repeated here; `ssh hopper` is mandatory and `just gate` is not optional.
 
 What `just play` gives you is a configured Debian guest and nothing else: **there is no etcd on it.** Installing and wiring three of them is this exercise.
 

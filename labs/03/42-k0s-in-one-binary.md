@@ -5,7 +5,7 @@
 
 **Rests on** — [the hand-started apiserver](05-hand-start-an-apiserver.md) and the whole of [module 3.0](01-hand-wire-the-control-plane.md). The contrast only lands because you did those first, which is [why the phase orders them this way](../../phases/03-api-machinery.md#m3-6).
 
-**Topology** — [`k0s-light`](../../strands/lab-topologies.md#k0s-light), provisioned fresh. The [`pair`](../../strands/lab-topologies.md#pair) cluster was destroyed at [the end of module 3.5](41-3c5-an-expired-component-certificate.md); provision per [the strand](../../strands/lab-topologies.md#provision) and note [what does not exist on a fresh guest](../../strands/lab-topologies.md#contract).
+**Topology** — [`k0s-light`](../../strands/lab-topologies.md#k0s-light), provisioned fresh. The [`pair`](../../strands/lab-topologies.md#pair) cluster was destroyed at [the end of module 3.5](41-3c5-an-expired-component-certificate.md); provision per [the strand](../../strands/lab-topologies.md#provision). A baselined guest has no container runtime on it and step 1 does not need one: k0s ships its own.
 
 **Do**
 

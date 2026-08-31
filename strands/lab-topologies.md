@@ -25,11 +25,12 @@ This was deliberate ([#49](https://github.com/k3ii/k8s-academy/issues/49)). The
 curriculum leads and the homelab follows; the alternative was ~100 exercises citing an
 interface built for a different purpose.
 
-**What has not caught up is the prose in the exercises.** Several lab files still link
-here for *"what does not exist yet"*, which is no longer what this section says. Retiring
-that phrasing is [#75](https://github.com/k3ii/k8s-academy/issues/75); until it closes,
-read those pointers as historical. A provision block that fails today is a bug worth
-reporting, not the gap in `factory` it used to be.
+**The exercises no longer point here for that.** Five lab files carried a *"what does
+not exist yet"* pointer to this section; [#75](https://github.com/k3ii/k8s-academy/issues/75)
+retired it, because a provision block that fails today is a bug worth reporting rather
+than the gap in `factory` it used to be. What is still missing is
+[on the node itself](#provision), not in `factory`. This section keeps the history of why
+the interface was written first.
 
 `phases/08-storage.md` shipped one such block before this document existed. It was not
 fiction — it was this same specification, written as though it were built.
@@ -206,7 +207,7 @@ expands it to a preset node map, rather than making you hand-edit a fleet defini
 Its state key is **`labs/terraform.tfstate`, separate from `vms/`** — this is the
 load-bearing part of the design, because it is what makes [teardown](#teardown)
 structurally incapable of touching persistent guests. `just tofu <dir> <cmd>` is
-already generic in `factory`, so `just tofu labs …` costs nothing once the module lands.
+already generic in `factory`, so `just tofu labs …` cost nothing when the module landed.
 
 **3 — the boot wait is real and P8 never mentioned it.** `tofu apply` returns when the
 *clone* completes, about 9 seconds in, and the guest still has to boot; an immediate
