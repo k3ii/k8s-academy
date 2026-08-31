@@ -261,6 +261,50 @@ predicts the rest of it far better than an early post's does. The census is stil
 per pass rather than two, for the file-shape reason rather than the cost one — see
 [the passes](#the-census-passes).
 
+## Known defects in the rubric
+
+Five defects the twelve passes found in the rules above. All five are **flagged and not
+applied**, and that is a ruling rather than a backlog: each of them binds on *verdicts*, verdicts
+are immutable under [#57](https://github.com/k3ii/k8s-academy/issues/57), and the only sitting
+that could act on them is a re-pin, which [#52](https://github.com/k3ii/k8s-academy/issues/52)
+puts out of scope. They are written down because a reader who finds one of them for themselves
+should find it already named, not think the sweep missed it. Ruled in
+[#78](https://github.com/k3ii/k8s-academy/issues/78).
+
+The first four are rubric questions — the rules would need rewriting before a verdict could
+change:
+
+- **`ecosystem` and `tooling` are not distinguished anywhere, and the boundary decides
+  eligibility**, because the vendor rule bars an `ecosystem` post from `walk`. Filing Helm as a
+  project's tool rather than a company's product is what let *Helm Charts* take an exercise. The
+  case that shows the seam is Stern, whose company died and whose tool outlived it.
+  ([#64](https://github.com/k3ii/k8s-academy/issues/64))
+- **The rules are ordered and nothing says in what order.** `dated` requires a walkthrough, and
+  the vendor rule reaches its candidates first; applied in that order it cost `dated` its only row
+  in both 2017 and 2021. Reverse the two and those years read differently.
+  ([#65](https://github.com/k3ii/k8s-academy/issues/65),
+  [#69](https://github.com/k3ii/k8s-academy/issues/69))
+- **The release-announcement rule's "load-bearing line" escape hatch cannot fire on a version
+  fact**, because [#54](https://github.com/k3ii/k8s-academy/issues/54) forbids sourcing a version
+  from an announcement. In practice the genre has collapsed to a class-wide `skip`, and the rule
+  should say so rather than describe an exception that cannot be taken.
+  ([#65](https://github.com/k3ii/k8s-academy/issues/65))
+- **The maintainer-interview rule tests *owns code*, where the test actually applied was *process
+  versus engineering*.** SIG Node's spotlight interviewees own the kubelet and the post is pure
+  process, so the written rule and the applied rule disagree on the exact case the rule exists
+  for. ([#66](https://github.com/k3ii/k8s-academy/issues/66),
+  [#69](https://github.com/k3ii/k8s-academy/issues/69),
+  [#73](https://github.com/k3ii/k8s-academy/issues/73))
+
+The fifth is not a rubric question. It is a **reader-visible defect in a shipped artifact**:
+
+- **The spotlight rule was applied inconsistently across five years.** 2024 and 2026 follow what
+  is written; 2020, 2021, 2022, 2023 and 2025 skipped every spotlight they met. So two
+  spotlight posts of comparable substance can carry different verdicts for no reason a reader can
+  recover from the rules, and the census file is where they will meet it. Recorded here rather
+  than repaired, on the same immutability rule as the four above.
+  ([#73](https://github.com/k3ii/k8s-academy/issues/73))
+
 ## The budget
 
 **8–15 `walk` verdicts per year** — roughly 100–180 exercises against [`labs/`](../labs/)'s 357.
