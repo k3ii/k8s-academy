@@ -77,19 +77,20 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Ten `walk` verdicts, numbered in publication order. Two are written; the eight marked *pending*
-are an authoring ticket's to claim. The rubric they are authored against was ratified in
-[#57](https://github.com/k3ii/k8s-academy/issues/57).
+Ten `walk` verdicts, numbered in publication order. All ten are written. The rubric they are
+authored against was ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57); the section
+order and the ladder they use were amended in
+[#78](https://github.com/k3ii/k8s-academy/issues/78).
 
 | # | exercise | state |
 |---|---|---|
 | 01 | [Every version in this post is dead, and every rename in it is still law](01-introducing-kubernetes-v1beta3.md) | written |
-| 02 | Resource usage monitoring | pending |
-| 03 | Docker, appc, and the interface that replaced both | pending |
-| 04 | Cluster-level logging | pending |
+| 02 | [The pipeline in this post is gone; the sentence describing the kubelet's role is still exact](02-resource-usage-monitoring-kubernetes.md) | written |
+| 03 | [Both runtimes this post promises to support are gone, and the promise underneath them was kept](03-docker-and-kubernetes-and-appc.md) | written |
+| 04 | [The manifest in this post never parsed, and the stack it describes is no longer shipped at all](04-cluster-level-logging-with-kubernetes.md) | written |
 | 05 | [Two of the three patterns are still patterns; one became a field](05-the-distributed-system-toolkit-patterns.md) | written |
-| 06 | Checkpoint and restore | pending |
-| 07 | Strong, simple SSL | pending |
-| 08 | Namespaces as environments | pending |
-| 09 | kubectl's undocumented corners | pending |
-| 10 | iptables, and the default that never moved | pending |
+| 06 | [Kubernetes shipped the half of this post that produces a file, and not the half that resumes a process](06-how-did-quake-demo-from-dockercon-work.md) | written |
+| 07 | [Every line of this post still runs, and the sentence it quotes to justify itself is gone](07-strong-simple-ssl-for-kubernetes.md) | written |
+| 08 | [The commands in this post all still work; the sentence in the middle of it is the reason people lose clusters](08-using-kubernetes-namespaces-to-manage.md) | written |
+| 09 | [Nine features, six fates, and the one command in the post that never ran at all](09-some-things-you-didnt-know-about-kubectl.md) | written |
+| 10 | [The option this post buries in bullet two is still the default eleven years later, and its replacement is locked on](10-kubernetes-1-1-performance-upgrades-improved-tooling-and-a-growing-community.md) | written |
