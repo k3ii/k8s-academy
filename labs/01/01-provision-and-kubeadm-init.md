@@ -11,21 +11,26 @@
 
 1. **Put Kubernetes on both nodes yourself.** The five provisioning steps end at a configured Debian guest. That guest has no container runtime and no `kubeadm`. [The strand carries the commands](../../strands/lab-topologies.md#node-baseline-steps). It also explains [why they are yours to run](../../strands/lab-topologies.md#node-baseline). Do this on `.130` and on `.131`, and do it before anything below.
 
-   Two of those lines are for reading, and not for pasting. Both lines edit `/etc/containerd/config.toml`. The two lines fail in different ways:
+   Three things in that procedure are worth reading rather than pasting. Two of them can still bite you. The third used to, and the way it was fixed is the interesting part:
 
-   - `SystemdCgroup = true` fails loudly. The kubelet reports the node as `NotReady`, and it names the cgroup driver.
-   - `bin_dir = "/opt/cni/bin"` fails silently. It does not fail until step 5. The node reaches `Ready`, and then no pod ever starts.
+   - **The containerd tarball fails loudly, and it fails first.** Reach for `apt-get install -y containerd` instead, and step 2 below prints a `RuntimeConfig` warning at you. Do the same thing one minor version later and step 2 refuses to run at all. [The strand carries the whole story](../../strands/lab-topologies.md#node-baseline-steps), and the short version is that Debian's containerd is a dead end and was never going to stop being one.
+   - **`SystemdCgroup = true` fails loudly, and it fails late.** The kubelet reports the node as `NotReady`, and it names the cgroup driver.
+   - **The CNI plugin directory used to fail silently, and now it does not.** The old baseline pointed containerd at `/usr/lib/cni` while the plugins sat in `/opt/cni/bin`, and the node reached `Ready` before a single pod could start. Upstream containerd and `kubernetes-cni` agree on that directory without being told, so this one is a failure you have inherited the fix for rather than one you can still cause. Read [why it cost ten minutes anyway](../../strands/lab-topologies.md#node-baseline-steps), and keep the shape: a node whose own success signal fires before the thing that matters works.
 
-   Note which of the two failures you would have caught.
+   Note which of the three you would have caught.
 
-2. On `.130`, initialise the control plane:
+2. On `.130`, initialise the control plane. Pull the images first, in their own command:
 
    ```sh
+   sudo kubeadm config images pull
+
    sudo kubeadm init \
      --pod-network-cidr=10.244.0.0/16 \
      --apiserver-advertise-address=10.10.10.130 \
      | tee ~/kubeadm-init.log
    ```
+
+   The first command is not an optimisation, and skipping it teaches you nothing. `kubeadm init` prints nothing at all between `This might take a minute or two` and the `[certs]` phase, for as long as the pull runs. Through a `tee`, those minutes are indistinguishable from a hang, and you will reach for `Ctrl-C` at the exact moment the tool is working correctly. `kubeadm` names this command itself, in the line printed just before the silence starts. Take it at its word.
 
    `--pod-network-cidr` is not decoration. Flannel reads the value from the `podCIDR` field of the Node object. The controller-manager allocates that field only because you passed the flag here. A wrong value gives you a cluster in which every pod stays in `ContainerCreating` forever. The error message names neither flag.
 

@@ -312,7 +312,8 @@ The first exercise walks through these commands and comments on them, because th
 its subject. The other two exercises run the commands and move on.
 
 **Run all of these commands on every node of the topology.** This includes the control
-plane and the workers.
+plane and the workers. Step 5 is the one exception, and it belongs to the control plane
+alone.
 
 ```sh
 V=<the current Kubernetes minor, per certs.md#tooling>   # 0. deliberately not pasteable
@@ -326,12 +327,25 @@ printf 'net.bridge.bridge-nf-call-iptables=1\nnet.bridge.bridge-nf-call-ip6table
   | sudo tee /etc/sysctl.d/99-k8s.conf
 sudo sysctl --system                             # 2. bridged traffic must reach iptables
 
-sudo apt-get update && sudo apt-get install -y containerd
+CD=2.2.1; RUNC=1.5.1                             # 3. upstream, and not apt. See below.
+
+curl -fsSLO "https://github.com/containerd/containerd/releases/download/v$CD/containerd-$CD-linux-amd64.tar.gz"
+curl -fsSLO "https://github.com/containerd/containerd/releases/download/v$CD/containerd-$CD-linux-amd64.tar.gz.sha256sum"
+sha256sum -c "containerd-$CD-linux-amd64.tar.gz.sha256sum"
+sudo tar Cxzf /usr/local "containerd-$CD-linux-amd64.tar.gz"
+sudo curl -fsSL -o /etc/systemd/system/containerd.service \
+  "https://raw.githubusercontent.com/containerd/containerd/v$CD/containerd.service"
+
+curl -fsSLo runc.amd64 "https://github.com/opencontainers/runc/releases/download/v$RUNC/runc.amd64"
+curl -fsSL "https://github.com/opencontainers/runc/releases/download/v$RUNC/runc.sha256sum" \
+  | grep ' runc.amd64$' | sha256sum -c -
+sudo install -m 755 runc.amd64 /usr/local/sbin/runc
+
 sudo mkdir -p /etc/containerd
-containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
+/usr/local/bin/containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
 sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
-sudo sed -i 's#bin_dir = "/usr/lib/cni"#bin_dir = "/opt/cni/bin"#' /etc/containerd/config.toml
-sudo systemctl restart containerd                # 3. see the two edits below
+sudo systemctl daemon-reload
+sudo systemctl enable --now containerd           # see the one edit below
 
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL "https://pkgs.k8s.io/core:/stable:/$V/deb/Release.key" \
@@ -340,32 +354,87 @@ echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
   | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl       # 4. apt must not move a cluster's minor
+
+sudo kubeadm config images pull                  # 5. control plane only. Silence, spent up front.
 ```
 
-**Both `sed` lines against `config.toml` are load-bearing. They fail in different
-ways.**
+**Debian's `containerd` package cannot run Kubernetes 1.37, which is why step 3 takes
+the upstream tarball.** Trixie ships containerd `1.7.24`. Since
+[KEP-4033](https://git.k8s.io/enhancements/keps/sig-node/4033-group-driver-detection-over-cri)
+went GA, `kubeadm` asks the runtime for its cgroup driver over the CRI `RuntimeConfig`
+RPC, and containerd 1.7 does not answer:
 
-**The first edit sets `SystemdCgroup = true`.** That value matches the cgroup driver
-that the kubelet uses on a systemd host. If you leave the value as `false`, the two
-components disagree about who owns the cgroup tree. The kubelet then reports the node as
-`NotReady`, and it says why in its own log. That is the recoverable kind of failure.
+```
+E0902 21:43:34.028287 ... "RuntimeConfig from runtime service failed" err="rpc error: code = Unimplemented desc = method RuntimeConfig not implemented"
+        [WARNING ContainerRuntimeVersion]: You must update your container runtime to a version that supports the CRI method RuntimeConfig.
+```
 
-**The second edit sets `bin_dir`, and its failure is the other kind**
-([#76](https://github.com/k3ii/k8s-academy/issues/76)). The Debian `containerd` package
-ships `bin_dir = "/usr/lib/cni"`, because the Debian package
-`containernetworking-plugins` installs there. Flannel installs to **`/opt/cni/bin`**, and
-so does every CNI exercise in this curriculum. If you keep the Debian default, the node
-still flips to `Ready`, but **no pod can ever start**. Here is the failure in order. The
-conflist names a plugin type that containerd cannot find. Sandbox creation fails. Pods
-then sit in `ContainerCreating`, `SandboxChanged` repeats, and nothing names the path.
-The author found this failure the hard way while [weighing `pair`](#measured). It cost
-ten minutes of a dead cluster whose own success signal had already fired.
+**That warning is not survivable for long, and the wait does not help.** `kubeadm` falls
+back to reading `cgroupDriver` from the kubelet config, and the fallback is removed in
+1.38. containerd 1.7 will never gain the RPC either. The backport,
+[containerd#11346](https://github.com/containerd/containerd/pull/11346), was closed
+unmerged in April 2025, and its author's parting note reads: "When the feature is GA'd
+containerd v1.7 becomes incompatible with kubernetes. The kubelet refuses to start." So
+`apt-get install -y containerd` is a dead end. The author walked into it on 2026-09-02,
+on an already-baselined `pair-cp`.
 
-**The curriculum assumes `/opt/cni/bin` throughout, so the config moves and the plugins
-do not.** [`labs/07`](../labs/07/) installs a hand-written plugin in that directory.
+**containerd 2.x drags `runc` along with it.** [containerd 2.0 requires runc
+1.2.0](https://github.com/containerd/containerd/blob/main/docs/containerd-2.0.md) or
+later, and trixie ships `1.1.15`. Step 3 therefore installs a runc binary to
+`/usr/local/sbin`, which the default systemd `PATH` reaches before `/usr/sbin`.
+
+**Step 3 pins two versions, and `$V` stays unpinned.** The reason is the checksum. A
+tarball fetched by hand is worth verifying, and a sum cannot be verified against a
+version that floats. Bump both deliberately, and re-read the sums when you do.
+
+**One `sed` line against `config.toml` is load-bearing, and it is the cgroup driver.**
+`SystemdCgroup = true` matches the driver that the kubelet uses on a systemd host. If
+you leave the value as `false`, the two components disagree about who owns the cgroup
+tree. The kubelet then reports the node as `NotReady`, and it says why in its own log.
+That is the recoverable kind of failure.
+
+**The `bin_dir` edit is gone, and nothing replaces it**
+([#76](https://github.com/k3ii/k8s-academy/issues/76)). That edit existed because two
+defaults disagreed, and not because anything was missing. Debian's `containerd` patched
+`bin_dir` to `/usr/lib/cni`. The plugins were in `/opt/cni/bin` the whole time, put
+there by `kubernetes-cni`, which `kubelet` depends on and which step 4 therefore
+installs without being asked. containerd was looking in the wrong one of two
+directories. Upstream containerd defaults to the directory `kubernetes-cni` uses, and at
+config schema `version = 3` the field is a list reading `bin_dirs = ['/opt/cni/bin']`.
+The two halves agree on their own, so there is nothing left to `sed`.
+
+**The failure mode outlives the edit, and it is worth keeping in view.** containerd looks
+in a directory. The conflist names a plugin type that is not in it. Sandbox creation
+fails, pods sit in `ContainerCreating`, `SandboxChanged` repeats, and nothing names the
+directory. The node reaches `Ready` before any of this, so its own success signal fires
+and then no pod ever starts. The author met this the hard way while [weighing
+`pair`](#measured), and it cost ten minutes of a cluster that had already told him it
+was fine. Any future disagreement about that path — a plugin installed by hand, a
+`bin_dirs` someone tidied — arrives dressed in exactly these clothes.
+
+**Flannel is not what fills `/opt/cni/bin`, and the strand used to imply otherwise.**
+Flannel's DaemonSet drops `/opt/cni/bin/flannel` and a conflist. That conflist delegates
+to `bridge` and chains `portmap`, and those two pull in `host-local` and `loopback`.
+Flannel ships none of the four. `kubernetes-cni` does, and a check on `pair-wk` on
+2026-09-02 found version `1.9.1-1.1` of it owning `/opt/cni/bin/bridge`. This is also
+why step 3 does not install the CNI plugins itself: step 4 already has.
+
+**The curriculum assumes `/opt/cni/bin` throughout, and `kubernetes-cni` fills it.**
+[`labs/07`](../labs/07/) installs a hand-written plugin in that directory.
 [`labs/11/06`](../labs/11/06-11c4-kill-one-trace-component-mid-flight.md) breaks the
-datapath by moving `/opt/cni/bin/bridge` aside. On a node without this edit, that break
-does nothing at all.
+datapath by moving `/opt/cni/bin/bridge` aside. That break needs `bridge` to be there
+first.
+
+**Step 5 pulls the images, and it is not an optimisation.** It runs on the control plane
+only, because a worker needs `kube-proxy` and `pause` and `kubeadm join` fetches those
+two by itself. `kubeadm init` prints nothing between "This might take a minute or two"
+and the `[certs]` phase, for however long the pull runs. On `pair` on 2026-09-02 that
+was `kube-apiserver` in 28 seconds and `kube-controller-manager` in twelve minutes, on
+the same link, because the CDN edge had collapsed to 40 KB/s in between. containerd logs
+a pull only when it completes, so nothing anywhere moves for minutes at a stretch. Piped
+into `tee`, that is indistinguishable from a hang, and the temptation is to `Ctrl-C` a
+tool that is working. `kubeadm config images pull` spends the same minutes and names each
+image as it lands.
 
 **`etcd-only`, `k0s-light` and `bare` want none of this procedure.** Each one installs
 what it needs, or needs nothing on purpose:
