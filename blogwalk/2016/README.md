@@ -139,10 +139,10 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Fifteen `walk` verdicts, numbered in publication order. The first eight are written; the rest are
-*pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
-[#57](https://github.com/k3ii/k8s-academy/issues/57); the section order and the ladder they use
-were amended in [#78](https://github.com/k3ii/k8s-academy/issues/78).
+Fifteen `walk` verdicts, numbered in publication order. All fifteen are written. The rubric they
+are authored against was ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57); the
+section order and the ladder they use were amended in
+[#78](https://github.com/k3ii/k8s-academy/issues/78).
 
 | # | exercise | state |
 |---|---|---|
@@ -154,10 +154,10 @@ were amended in [#78](https://github.com/k3ii/k8s-academy/issues/78).
 | 06 | [The annotation in this post still applies cleanly and has never done anything, and the architecture it describes is now on the API's own list of what it cannot do](06-kubernetes-network-policy-apis.md) | written |
 | 07 | [The closing promise of this post is now a documented pattern, every command in it fails, and the error it prints survives in the current documentation in three incompatible forms](07-autoscaling-in-kubernetes.md) | written |
 | 08 | [The project marked this post partly obsolete without saying which part, its one still-exact snippet is the one nobody should use, and its example manifest contradicts its own table](08-security-best-practices-kubernetes-deployment.md) | written |
-| 09 | kubeadm join, and the hole the hash closed | pending |
-| 10 | Two ways to ask for a volume, and how differently they died | pending |
-| 11 | helm init, and the component removed for existing | pending |
-| 12 | Four endpoints where there used to be a dashboard | pending |
-| 13 | The flag that was removed instead of defaulted | pending |
-| 14 | The rename that declined to migrate you | pending |
-| 15 | Three rungs of OpenAPI, one of them a 404 | pending |
+| 09 | [The three stages in this post are still exactly right, all five of its own links are dead, and the hole its join command left open was renamed rather than closed](09-how-we-made-kubernetes-easy-to-install.md) | written |
+| 10 | [This post became the current documentation almost word for word, and both annotations it printed outlived the removal notice it printed for one of them](10-dynamic-provisioning-and-storage-in-kubernetes.md) | written |
+| 11 | [The canonical location this post promoted is unreachable from every page of the current documentation, and what outlived it is a label set the same documentation says nothing reads](11-helm-charts-making-it-simple-to-package-and-deploy-apps-on-kubernetes.md) | written |
+| 12 | [The dashboard this post built is gone, every latency segment it had to parse out of kubelet logs is now a histogram the kubelet emits directly, and all four of them are still alpha](12-visualize-kubelet-performance-with-node-dashboard.md) | written |
+| 13 | [Both switches this post asks you to set have been removed — one because what it enabled became mandatory, the other because what it enabled was abandoned](13-container-runtime-interface-cri-in-kubernetes.md) | written |
+| 14 | [Nothing in the documentation admits PetSet ever existed, and the smaller rename inside this post’s own tutorial was left half-done in a sentence that still names an object nobody creates](14-statefulset-run-scale-stateful-applications-in-kubernetes.md) | written |
+| 15 | [The endpoint this post tells you to fetch has moved twice, an authorization page still tells you to permit the version before the one this post announced, and the section describing the version that replaced it wears a badge from a switch that no longer exists](15-kubernetes-supports-openapi.md) | written |
