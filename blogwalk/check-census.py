@@ -40,6 +40,13 @@ red for an uncensused year is not usable as a gate while the sweep is still runn
 sweep ran for twelve passes. All twelve years are censused now; the rule stays because the pin
 will move and a thirteenth year will arrive pending.
 
+**Authoring progress is counted here and stored nowhere.** Classes 3 and 4 already parse
+every year's Exercises table and cross-check each `state` cell against the file on disk, so
+the run can report `written` and `pending` per year for free — and a second, hand-maintained
+roll-up in `blogwalk/README.md` would be a copy of that state which nothing checks. Reported,
+never judged: an unwritten exercise is not a failure, on the same reasoning as an uncensused
+year. Ratified in #80.
+
 Failure classes, as ratified in #58:
 
   1. a post in the manifest with no census row, in a year that has been censused
@@ -48,7 +55,9 @@ Failure classes, as ratified in #58:
   4. an exercise file with no `walk` row, or whose row carries a different verdict, or
      whose state disagrees with what is on disk — checked in both directions
   5. a post link not byte-identical to that post's `url` column
-  6. a verdict or a topic outside the ratified vocabulary
+  6. a verdict or a topic outside the ratified vocabulary, or either cell written with
+     emphasis rather than as a plain backticked word — the by-topic reading route is a grep
+     over those cells, added in #80
   7. a row missing its k8s version or its one-line why
   8. *warning only* — a `dated` row whose why cites no hardware and no scale. `dated` takes
      two tests after #57 and only the second is mechanically checkable at all, so this
@@ -185,6 +194,7 @@ for year in censused:
             fail("table", f"{where} has {len(cells)} cells, expected {len(CENSUS_HEADER)}")
             continue
         post, date, k8s, verdict, topic, why = cells
+        raw_verdict, raw_topic = verdict, topic
         verdict, topic = bare(verdict), bare(topic)
 
         # 5 — the link, byte-identical to the manifest, or an unlinked draft by title
@@ -219,6 +229,13 @@ for year in censused:
             fail(6, f"{where}: verdict {verdict!r} is not one of {sorted(VERDICTS)}")
         if topic not in TOPICS:
             fail(6, f"{where}: topic {topic!r} is not one of the twelve")
+        # 6 — and the cells are backticked with no emphasis, because the by-topic reading
+        # route ratified in #80 is a grep for "`walk` | `api`" and bold breaks it silently.
+        # Both prototype years bolded `walk` and neither the gate nor #57 noticed.
+        for cell, val, col in ((raw_verdict, verdict, "verdict"), (raw_topic, topic, "topic")):
+            if val in (VERDICTS | TOPICS) and cell != f"`{val}`":
+                fail(6, f"{where}: {col} cell is {cell!r}, not {'`' + val + '`'!r} — the "
+                        f"by-topic route greps these cells, so emphasis breaks it")
         # 7 — the two cells that carry the judgement
         if not k8s:
             fail(7, f"{where}: no k8s version (use — where the post predates versioning)")
@@ -305,7 +322,12 @@ for year in censused:
         fail(4, f"blogwalk/{year}/{name} has no row {num:02d} in the Exercises table")
 
     nwalk = len(walks)
-    report.append((year, len(posts), len(rows), nwalk,
+    # `written` is counted, never judged: pending is a true state of the tree until the last
+    # authoring pass lands, and a gate that goes red because work is unfinished is a gate
+    # people stop running. Classes 3 and 4 above already make a *lying* state cell fail.
+    nwritten = sum(1 for cells in ex
+                   if len(cells) == len(EXERCISE_HEADER) and cells[2] == "written")
+    report.append((year, len(posts), len(rows), nwalk, nwritten,
                    "" if BAND_LO <= nwalk <= BAND_HI else "  <- outside the budget"))
 
 for w in warnings:
@@ -315,13 +337,13 @@ for p in problems:
 if problems or warnings:
     print()
 
-print(f"{'year':>6} {'posts':>6} {'rows':>6} {'walk':>6}")
-tp = tr = tw = 0
-for year, np_, nr, nw, flag in report:
-    tp, tr, tw = tp + np_, tr + nr, tw + nw
-    print(f"{year:>6} {np_:>6} {nr:>6} {nw:>6}{flag}")
-print(f"{'':>6} {'-' * 6:>6} {'-' * 6:>6} {'-' * 6:>6}")
-print(f"{'':>6} {tp:>6} {tr:>6} {tw:>6}   censused")
+print(f"{'year':>6} {'posts':>6} {'rows':>6} {'walk':>6} {'written':>8} {'pending':>8}")
+tp = tr = tw = tx = 0
+for year, np_, nr, nw, nx, flag in report:
+    tp, tr, tw, tx = tp + np_, tr + nr, tw + nw, tx + nx
+    print(f"{year:>6} {np_:>6} {nr:>6} {nw:>6} {nx:>8} {nw - nx:>8}{flag}")
+print(f"{'':>6} {'-' * 6:>6} {'-' * 6:>6} {'-' * 6:>6} {'-' * 8:>8} {'-' * 8:>8}")
+print(f"{'':>6} {tp:>6} {tr:>6} {tw:>6} {tx:>8} {tw - tx:>8}   censused")
 total = sum(len(v) for v in POSTS.values())
 print(f"{'':>6} {total:>6}{'':>14}   pinned")
 
@@ -331,4 +353,12 @@ if pending:
 print(f"\n{len(censused)}/{len(censused) + len(pending)} years censused, "
       f"{tw} walk against a budget of {BAND_LO}–{BAND_HI} a year, "
       f"{len(problems)} problems, {len(warnings)} warnings")
+# The map's authoring condition — "every `walk` verdict has its exercise file" — is only
+# visible from here, so the gate says it outright rather than leaving the last authoring
+# pass to work out that it was the last one.
+if censused and not pending:
+    if tw == tx:
+        print(f"{tx}/{tw} exercises written — every `walk` verdict has its exercise file.")
+    else:
+        print(f"{tx}/{tw} exercises written, {tw - tx} pending.")
 sys.exit(1 if problems else 0)

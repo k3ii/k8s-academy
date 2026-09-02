@@ -9,7 +9,7 @@ has produced, behind 2016's 15 and out of a year barely three-quarters the size.
 1 `dated`, 13 `skip`.
 
 **The census closes, and the budget never bound.** Twelve years, 767 rows: 135 `walk`, 394 `read`,
-17 `dated`, 221 `skip`. The 8–15 band was reached at both ends — 2017, 2019 and 2024's floor of 8,
+17 `dated`, 221 `skip`. The 8–15 band was reached at both ends — 2017's and 2019's floor of 8,
 2016's ceiling of 15 — and in twelve years it never once cut a post that the rubric would otherwise
 have kept. Every year that came in low did so because the posts were release notes, and every year
 that came in high did so because the posts were walkthroughs. The band described the corpus; it

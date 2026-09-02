@@ -233,6 +233,9 @@ exercise or goes away.
   [`README.md`](README.md); the release history lives in
   [`research/blog-era-translation.md`](../research/blog-era-translation.md); an exercise file
   restates neither.
+- **References point backward only** — an earlier year, or a lower `NN` in the same year, never
+  a later one — and a reference is a pointer, never a prerequisite. The rule and the reason are
+  in [Where to start](README.md#where-to-start); this is the line that binds an author.
 
 Paths in the skeleton below are written from inside a year directory — `../../strands/...`,
 `../../research/...` — because that is where the copy lands. They do not resolve from this file.
