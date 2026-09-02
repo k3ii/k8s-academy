@@ -1,86 +1,113 @@
 # Lab topologies
 
-Eight named guest layouts, their per-node sizing and addresses, how one is provisioned
-and torn down, and how you reach a cluster running inside the bastion. An exercise
-names **one topology** and links here; it never restates a footprint.
+This document describes nine named guest layouts. For each layout it gives three
+things. It gives the size of each node. It gives the address of each node. It gives the
+commands that build the layout and remove it. The document also explains how you reach
+a cluster that runs inside the bastion.
 
-Derived from [`../research/lab-topologies.md`](../research/lab-topologies.md), research
-date 2026-08-18, verified against `k3ii/factory@6f4692f` — which carries the full
-audit of what `factory` actually contains, and the seven sizing decisions quoted from
-[#8](https://github.com/k3ii/k8s-academy/issues/8) and the eighth from
-[#14](https://github.com/k3ii/k8s-academy/issues/14). Facts that could not be confirmed
-against a real tree or a real measurement are marked **[UNVERIFIED]** inline and
-collected under [What is not confirmed](#unverified).
+**How to use this document.** An exercise names **one topology**. The exercise links to
+the row for that topology in this document. An exercise never repeats a footprint.
+
+**Where these facts come from.** This document derives from
+[`../research/lab-topologies.md`](../research/lab-topologies.md). The research date is
+2026-08-18. The research is verified against `k3ii/factory@6f4692f`. That tree holds the
+full audit of what `factory` contains. Seven of the sizing decisions come from
+[#8](https://github.com/k3ii/k8s-academy/issues/8). The eighth comes from
+[#14](https://github.com/k3ii/k8s-academy/issues/14). Some facts have no real tree and
+no real measurement behind them. This document marks each of those facts
+**[UNVERIFIED]** where the fact occurs. It also lists them together in
+[What is not confirmed](#unverified).
 
 <a id="contract"></a>
-## The invocations below were a contract before they were a description
+## The commands were a contract before they were a description
 
-**`tofu/labs` landed in [`k3ii/factory`](https://github.com/k3ii/factory) on 2026-08-30
-(`266dac0`), with all nine topologies declared.** Every provision and teardown command in
-this document was written before the module existed — a specification `factory` was
-expected to implement, not a description of something already built. `factory` has since
-implemented it, and the commands here match what the module exposes.
+**The `tofu/labs` module landed in [`k3ii/factory`](https://github.com/k3ii/factory) on
+2026-08-30, in commit `266dac0`. The module declares all nine topologies.**
 
-This was deliberate ([#49](https://github.com/k3ii/k8s-academy/issues/49)). The
-curriculum leads and the homelab follows; the alternative was ~100 exercises citing an
-interface built for a different purpose.
+Read the history in the correct order. Every provision command and every teardown
+command in this document was written before the module existed. Each command was a
+specification. The specification told `factory` what to build. It did not describe
+something that was already built. `factory` has since implemented the specification.
+The commands in this document now match what the module exposes.
 
-**The exercises no longer point here for that.** Five lab files carried a *"what does
-not exist yet"* pointer to this section; [#75](https://github.com/k3ii/k8s-academy/issues/75)
-retired it, because a provision block that fails today is a bug worth reporting rather
-than the gap in `factory` it used to be. What the exercises point at instead is
-[the node's contents](#node-baseline), which is a decision rather than a gap. This
-section keeps the history of why the interface was written first.
+This order was deliberate ([#49](https://github.com/k3ii/k8s-academy/issues/49)). The
+curriculum leads, and the homelab follows. The alternative was worse. Approximately 100
+exercises would cite an interface that was built for a different purpose.
 
-`phases/08-storage.md` shipped one such block before this document existed. It was not
-fiction — it was this same specification, written as though it were built.
+**The exercises no longer point here for that reason.** Five lab files held a pointer to
+this section. The pointer was named *"what does not exist yet"*.
+[#75](https://github.com/k3ii/k8s-academy/issues/75) removed the pointer. The reason is
+simple. A provision block that fails today is a bug, and you report it. It is no longer
+a gap in `factory`. The exercises now point to [the contents of a node](#node-baseline)
+instead. That is a decision, and not a gap. This section keeps the record of why the
+interface came first.
+
+`phases/08-storage.md` shipped one such block before this document existed. That block
+was not fiction. It was this same specification. The author wrote it as though the
+module already existed.
 
 <a id="ceiling"></a>
-## The ceiling — ~9.5GB spendable
+## The ceiling — you can spend about 9.5GB
 
-The node is an i5-8400T: 6 cores, and after everything that must stay up, **~9.5GB of
-RAM and 95G of disk** to spend on a topology.
+The node is an i5-8400T. It has 6 cores. Some machines must stay up at all times. After
+you subtract them, you can spend **about 9.5GB of RAM and 95G of disk** on a topology.
 
-| Holds RAM | Amount | Status |
+| What holds RAM | Amount | Status |
 |---|---|---|
 | The Proxmox host | ~1.6GB | Measured. |
-| `hopper` | 2048MB | **Must stay up** — the only machine that runs `tofu` and Ansible. |
-| `carthage` | 1024MB | **Must stay up** — holds the OpenTofu state bucket. |
-| `jeremie` | 1024MB | **Reclaimed** ([#8](https://github.com/k3ii/k8s-academy/issues/8)) — destroyed 2026-08-18, for the duration of the academy. |
-| [`forge`](#build-guest) | 1536MB · 2560MB during P3 and P5 | Never torn down, and **not part of any topology**. |
+| `hopper` | 2048MB | **Must stay up.** It is the only machine that runs `tofu` and Ansible. |
+| `carthage` | 1024MB | **Must stay up.** It holds the OpenTofu state bucket. |
+| `jeremie` | 1024MB | **Reclaimed** ([#8](https://github.com/k3ii/k8s-academy/issues/8)). Destroyed on 2026-08-18, for the duration of the academy. |
+| [`forge`](#build-guest) | 1536MB · 2560MB during P3 and P5 | Never torn down. It is **not part of any topology**. |
 | Host page cache | ~1.0GB | Held back deliberately. |
 | **A topology, plus `forge`** | **~9.5GB** | |
 
-**~9.5GB, not the ~9.9GB the host reports as available.** Same budget at two points in
-the subtraction: 9.9 is before the page-cache holdback, 9.5 after. A footprint line that
-fits in 9.9 and not in 9.5 does not fit. `jeremie` is destroyed and `forge` is declared,
-so the assumptions hold — but the figure is still
-[subtraction rather than observation](#unverified).
+**Budget against 9.5GB. Do not budget against the 9.9GB that the host reports as
+available.** Both figures are the same budget at two points in one subtraction. The
+9.9GB figure comes before the page-cache holdback. The 9.5GB figure comes after it. A
+footprint that fits in 9.9GB but not in 9.5GB does not fit. `jeremie` is destroyed, and
+`forge` is declared, so the assumptions behind the figure hold. The figure is still
+[a subtraction and not an observation](#unverified).
 
-**One topology at a time, on RAM *and* disk.** `workhorse` at 65G and `nested` at 40G
-will not coexist in 95G even though their RAM would fit — a topology can fail to
-provision for disk while the memory arithmetic says yes.
+**Run one topology at a time. This rule applies to RAM and also to disk.** For example,
+`workhorse` needs 65G and `nested` needs 40G. The two need 105G together, and only 95G
+exists. Their RAM would fit together, but their disks do not. A topology can therefore
+fail to provision because of disk while the memory arithmetic says that it fits.
 
-**`balloon 0` on every guest: there is no reclaim.** No guest carries a `virtio-balloon`
-device, so nothing hands a page back once the guest has touched it — the configured size
-is a ceiling each guest walks toward and never retreats from, and that is what makes the
-arithmetic safe to budget against. It is *not* a commitment taken at boot: the guests
-also run without `prealloc=on`, so KVM backs their RAM lazily and the host pays only for
-pages actually touched. Measured on `factory` at 27 hours' uptime, `hopper` cost 937MB of
-its 2048MB, `forge` 915MB of 1536MB and `carthage` 879MB of 1024MB. Every row below is
-therefore an **upper bound**: a topology that is up is cheaper than its figure until it
-has been worked. KSM is off (`/sys/kernel/mm/ksm/run` is `0`), so the multi-node rows get
-no page-sharing discount either — sum-of-nodes is the right shape.
-6.1GB of swap exists and is not a valve — swapped etcd means fsync stalls, missed Raft
-heartbeats, and a cluster that looks broken for reasons unrelated to the lesson.
-Staying under budget is the whole mechanism.
+**Every guest runs with `balloon 0`. No guest gives a page back.** No guest carries a
+`virtio-balloon` device. Nothing can therefore reclaim a page after the guest touches
+it. The configured size is a ceiling. Each guest walks toward that ceiling and never
+retreats from it. This behaviour is what makes the arithmetic safe to budget against.
+
+**The guest does not take all of its RAM at boot.** The guests also run without
+`prealloc=on`. KVM therefore backs guest RAM lazily. The host pays only for the pages
+that the guest touches. Measurements on `factory` after 27 hours of uptime show this
+effect:
+
+- `hopper` used 937MB of its 2048MB.
+- `forge` used 915MB of its 1536MB.
+- `carthage` used 879MB of its 1024MB.
+
+**Read every row in the table below as an upper bound.** A topology that is up costs
+less than its figure until you work it.
+
+**KSM is off, so the multi-node rows get no discount.** The file
+`/sys/kernel/mm/ksm/run` contains `0`. The host does not share identical pages between
+guests. The sum of the nodes is therefore the correct shape for a multi-node figure.
+
+**Do not treat swap as a safety valve.** The host has 6.1GB of swap. A swapped etcd
+gives you fsync stalls. The stalls cause missed Raft heartbeats. The cluster then looks
+broken for reasons that have nothing to do with the lesson. Staying under budget is the
+whole mechanism.
 
 <a id="topologies"></a>
 ## The nine topologies
 
-Sizing is an **allocation decision, not a measurement** for eight of the nine rows.
-`pair` [has been weighed](#measured); for the rest, see
-[what is not confirmed](#unverified). Link to a row, not to the table.
+**Read the sizing as an allocation decision, and not as a measurement.** This applies to
+eight of the nine rows. Only `pair` [has been weighed](#measured). For the other rows,
+see [what is not confirmed](#unverified).
+
+**Link to a row, and not to the table.** Each row carries its own anchor.
 
 | Topology | Nodes | Per node | RAM | Disk | For |
 |---|---|---|---|---|---|
@@ -94,37 +121,45 @@ Sizing is an **allocation decision, not a measurement** for eight of the nine ro
 | <a id="nested"></a>**`nested`** | 1 | 6144MB / 4c / 40G, kind/k3d inside · `.190` | 6.0GB | 40G | Multi-cluster escape hatch |
 | <a id="platform"></a>**`platform`** | 1 | 6144MB / 4c / 40G, real kubeadm, untainted · `.191` | 6.0GB | 40G | P12 ([#14](https://github.com/k3ii/k8s-academy/issues/14)) |
 
-**`bare` is the only topology that is not a cluster.** No kubeadm, no k0s, not even
-containerd — [the Ansible baseline](#provision) and nothing else, because P0's entire
-subject is what a container is *before* a runtime exists to make one. It is also the
-cheapest thing in the curriculum: 2.0GB of a 9.5GB budget, which is why P0 can afford to
-fork-bomb it, fill it and OOM it without arithmetic.
+**`bare` is the only topology that is not a cluster.** It has no kubeadm, no k0s and no
+containerd. It carries [the Ansible baseline](#provision) and nothing more. The reason
+is the subject of P0. P0 teaches what a container is *before* a runtime exists to make
+one. `bare` is also the cheapest item in the curriculum. It uses 2.0GB of a 9.5GB
+budget. P0 can therefore fork-bomb it, fill it and OOM it, and you do not need to do
+any arithmetic first.
 
-**`nested` and `platform` are the same shape and are not the same topology.**
-kind-in-a-VM versus a real single-node kubeadm cluster: the first is a place to run
-several throwaway clusters, the second is the thing a platform gets built on.
+**`nested` and `platform` have the same shape, but they are not the same topology.**
+`nested` runs kind inside a VM. `platform` is a real single-node kubeadm cluster.
+`nested` is a place to run several throwaway clusters. `platform` is the machine that
+you build a platform on.
 
-**The seven come from [#8](https://github.com/k3ii/k8s-academy/issues/8), `platform`
-from [#14](https://github.com/k3ii/k8s-academy/issues/14), and `bare` from
-[#34](https://github.com/k3ii/k8s-academy/issues/34).** #14 proposed `platform` as an
-addition and #8's resolution was never edited, so the repo mis-cited it in two places
-until this document. `bare` was added when generating P0's exercises found that they had
-no topology they could name: `solo` and `k0s-light` both install a cluster P0 exists to
-do without, and running P0 on [`forge`](#build-guest) would fork-bomb, disk-fill and
-`pivot_root` the one guest eleven other phases depend on.
+**The topologies come from three issues.** Seven come from
+[#8](https://github.com/k3ii/k8s-academy/issues/8). `platform` comes from
+[#14](https://github.com/k3ii/k8s-academy/issues/14). `bare` comes from
+[#34](https://github.com/k3ii/k8s-academy/issues/34). Note one detail of the history:
+#14 proposed `platform` as an addition, and nobody edited the resolution of #8. The repo
+therefore mis-cited the count in two places until this document corrected it.
 
-**`workhorse`'s workers get 1 core each, not 2.** Deliberate: the third node exists so
-the scheduler has somewhere to choose *between*, and six vCPU on a six-core host is
-already oversubscribed.
+**`bare` was added for a specific reason.** The author generated the P0 exercises and
+found that the exercises had no topology to name. `solo` and `k0s-light` both install a
+cluster, and P0 exists to work without a cluster. [`forge`](#build-guest) was also not
+an option. P0 would fork-bomb it, fill its disk and `pivot_root` it, and eleven other
+phases depend on that one guest.
+
+**Each `workhorse` worker gets 1 core, and not 2.** This is deliberate. The third node
+exists so that the scheduler has somewhere to choose *between*. Six vCPU on a six-core
+host is already oversubscribed.
 
 <a id="measured"></a>
-## One row is measured: `pair` costs 5.1GB, and the row said 5.0
+## One row is measured: `pair` costs 5.1GB, and the row says 5.0GB
 
-**`pair` was provisioned on `factory` and weighed on 2026-08-31
+**The author provisioned `pair` on `factory` and weighed it on 2026-08-31**
 ([#50](https://github.com/k3ii/k8s-academy/issues/50)). The other eight rows are still
-arithmetic.** The host-side figures below are per-guest `VmRSS` from `/proc/<pid>/status`
-for each `kvm` process — what the host actually pays for a guest, not what the guest
-reports about itself.
+arithmetic.
+
+**Read the figures below as host-side figures.** Each figure is the `VmRSS` value from
+`/proc/<pid>/status` for the `kvm` process of one guest. It is what the host pays for
+the guest. It is not what the guest reports about itself.
 
 | Stage | `pair-cp` | `pair-w1` | Host total | Against the 5.0GB row |
 |---|---|---|---|---|
@@ -134,43 +169,47 @@ reports about itself.
 | **At rest** — both nodes `Ready`, 10 pods, idle | 2966MB | 2041MB | **5007MB** | **98%** |
 | **Under load** — 18 pods, 3 PVCs bound | 3106MB | 2079MB | **5185MB** | **101%** |
 
-**The 5.0GB figure is right to within 1.3%, and it is right for a reason the arithmetic
-never states.** It is not a forecast of demand that happened to land: both guests saturate
-their configured allocation and stay there, `pair-cp` at 3106MB of 3072 and `pair-w1` at
-2079MB of 2048. The row predicts *allocation* — and with [no balloon to hand a page
-back](#ceiling), allocation is what a worked guest eventually costs. Most of what the
-guests hold is page cache: 2.0GB of `pair-cp`'s 3.0GB at the end, with 118MB of MemFree
-left.
+**The 5.0GB figure is correct to within 1.3%. It is correct for a reason that the
+arithmetic never states.** The figure is not a forecast of demand that happened to be
+right. Both guests fill their configured allocation and then stay there. `pair-cp` holds
+3106MB of its 3072MB. `pair-w1` holds 2079MB of its 2048MB. The row predicts
+*allocation*. There is [no balloon to hand a page back](#ceiling). Allocation is
+therefore what a worked guest eventually costs. Most of what the guests hold is page
+cache. At the end of the test, 2.0GB of the 3.0GB in `pair-cp` was page cache, and only
+118MB of MemFree was left.
 
-**The direction of the error is up, by about 32MB per guest.** A saturated guest costs its
-configured size *plus* QEMU's own process overhead — `pair-cp` +34MB, `pair-w1` +31MB.
-Every row omits that term, so every row is low: by 0.6% for `pair`, and by three times as
-much in absolute terms for the three-node topologies. The ~9.5GB ceiling absorbs it. A
-footprint line computed to the last 100MB does not.
+**The error goes upward, by approximately 32MB per guest.** A saturated guest costs its
+configured size *plus* the process overhead of QEMU. That overhead was 34MB for
+`pair-cp` and 31MB for `pair-w1`. Every row in the table above omits this term. Every
+row is therefore low. The error is 0.6% for `pair`. In absolute terms, it is three times
+as large for the three-node topologies. The ceiling of approximately 9.5GB absorbs the
+error. A footprint that you compute to the last 100MB does not.
 
-**Installing the cluster costs as much as running it.** containerd and the v1.35 packages
-alone took the topology to 74% of its row with nothing scheduled: +675MB on `pair-cp` and
-+630MB on `pair-w1` of host RSS that never comes back, because apt's page cache is a
-touched page like any other. An exercise budgeting from "cluster idle" has already spent
-three quarters of the row before it starts.
+**Installing the cluster costs as much as running it.** containerd and the v1.35
+packages alone took the topology to 74% of its row, and nothing was scheduled yet. Host
+RSS grew by 675MB on `pair-cp` and by 630MB on `pair-w1`. That memory never comes back,
+because the page cache of apt holds touched pages like any other cache. Learn from this:
+an exercise that budgets from "cluster idle" has already spent three quarters of the row
+before it starts.
 
-**Neither guest swapped and neither OOM-killed** under a P8-shaped workload — a local-path
-provisioner, the external snapshotter, `csi-driver-host-path` and three writer pods on 1Gi
-PVCs. So the headroom the row claims does exist; it is about 1% of the row, held in page
-cache the kernel drops before it kills anything.
+**Neither guest swapped, and neither guest was OOM-killed.** The workload had the shape
+of P8. It ran a local-path provisioner, the external snapshotter,
+`csi-driver-host-path`, and three writer pods on 1Gi PVCs. The headroom that the row
+claims does therefore exist. That headroom is approximately 1% of the row. The kernel
+holds it in page cache, and the kernel drops that cache before it kills anything.
 
-**The measurement is one-way.** RSS never retreats, so *at rest* cannot be re-read after
-*under load* on the same guest: the order of the rows above is the only order they can be
-taken in. Re-measuring means destroying the topology and starting over. Two of the ten
-at-rest pods were `coredns` replicas still pending on
-[#76](https://github.com/k3ii/k8s-academy/issues/76), which is why that row is not
-re-taken here.
+**The measurement runs in one direction only.** RSS never retreats. You cannot read *at
+rest* again after you read *under load* on the same guest. The order of the rows above
+is the only order in which you can take them. To measure again, you must destroy the
+topology and start over. Two of the ten at-rest pods were `coredns` replicas that were
+still pending because of [#76](https://github.com/k3ii/k8s-academy/issues/76). That is
+why this document does not re-take that row.
 
 <a id="addresses"></a>
 ## Addresses
 
-`10.10.10.0/24`, gateway `.1`, and `factory`'s own convention is **`vm_id` = the last
-octet**.
+The subnet is `10.10.10.0/24`, and the gateway is `.1`. The convention in `factory` is
+simple: **the `vm_id` is the last octet**.
 
 | Range | Use |
 |---|---|
@@ -178,87 +217,102 @@ octet**.
 | `.130`–`.199` | Lab topologies, one block of ten each — see the table above. **`.190`–`.199` is the single-node block**, and holds `nested`, `platform` and `bare` rather than one topology's ten |
 | `.200`–`.250` | MetalLB, [reserved by prose only](#unverified) |
 
-Blocks of ten waste nothing and keep each topology's nodes contiguous, which matters
-when a hundred exercises cite them by address. `9000` is the template and `110`/`120`
-are refused at plan time by a validation in `tofu/vms` — the same guard should exist in
-`tofu/labs`.
+**Blocks of ten cost nothing and keep the nodes of each topology contiguous.** That
+property matters because a hundred exercises cite these nodes by address.
+
+**Three addresses are refused at plan time.** `9000` is the template, and a validation
+in `tofu/vms` refuses `110` and `120`. The same guard should also exist in `tofu/labs`.
 
 <a id="provision"></a>
 ## Provisioning
 
-Five steps, and **none of them run on the Mac.**
+Provisioning has five steps. **You run none of them on the Mac.**
 
 ```sh
-ssh hopper                                    # 1. mandatory — see below
+ssh hopper                                    # 1. required. See below.
 cd factory && git pull
 just tofu labs apply -var 'topology=pair'     # 2. bring the topology up
-just gate <node>                              # 3. wait for boot + cloud-init
+just gate <node>                              # 3. wait for boot and cloud-init
 just play                                     # 4. Ansible baseline
-ssh zain@10.10.10.130                         # 5. from the Mac, no -J
+ssh zain@10.10.10.130                         # 5. from the Mac. Do not use -J.
 ```
 
-**1 — `ssh hopper` is not a convenience.** Every `factory` recipe touching Proxmox,
-OpenTofu or Ansible calls `factory_require_hopper`, which refuses to run on macOS *in
-code*: *"Those run on hopper. This machine writes code and pushes git."* An exercise
-that omits this line does not run; it exits non-zero before anything is provisioned.
+**Step 1 — `ssh hopper` is not a convenience.** Every `factory` recipe that touches
+Proxmox, OpenTofu or Ansible calls `factory_require_hopper`. That function refuses to
+run on macOS *in code*. It prints this message: *"Those run on hopper. This machine
+writes code and pushes git."* An exercise that omits this line does not run. It exits
+with a non-zero status before it provisions anything.
 
-**2 — the `topology` variable is the contract.** `tofu/labs` takes a topology name and
-expands it to a preset node map, rather than making you hand-edit a fleet definition.
-Its state key is **`labs/terraform.tfstate`, separate from `vms/`** — this is the
-load-bearing part of the design, because it is what makes [teardown](#teardown)
-structurally incapable of touching persistent guests. `just tofu <dir> <cmd>` is
-already generic in `factory`, so `just tofu labs …` cost nothing when the module landed.
+**Step 2 — the `topology` variable is the contract.** `tofu/labs` takes a topology name.
+It expands the name to a preset node map. You do not hand-edit a fleet definition. The
+state key of the module is **`labs/terraform.tfstate`**, and that key is separate from
+`vms/`. This separation is the load-bearing part of the design. It is what makes
+[teardown](#teardown) structurally unable to touch a persistent guest. Note also that
+`just tofu <dir> <cmd>` was already generic in `factory`. `just tofu labs …` therefore
+cost nothing when the module landed.
 
-**3 — the boot wait is real and P8 never mentioned it.** `tofu apply` returns when the
-*clone* completes, about 9 seconds in, and the guest still has to boot; an immediate
-SSH gets `No route to host`. `just gate <vm>` polls SSH to 240s, then waits on
-`cloud-init status`.
+**Step 3 — the boot wait is real, and P8 never mentioned it.** `tofu apply` returns when
+the *clone* completes, after approximately 9 seconds. The guest must still boot. An
+immediate SSH attempt returns `No route to host`. `just gate <vm>` polls SSH for up to
+240s. It then waits on `cloud-init status`.
 
-**4 — so is the Ansible baseline.** `just play` runs `site.yml`, applying the `common`
-role. A node that skipped it is not the node the exercises assume — and a node that had
-it is [still not a node with Kubernetes on it](#node-baseline), by design.
-**[UNVERIFIED]** — `ansible/inventory/hosts.yml` is static and hand-maintained today,
-which is exactly what ephemeral lab nodes break. The contract is that **lab nodes reach
-Ansible through a dynamic inventory generated from the `tofu` output**, not by hand-editing
-a file per topology.
+**Step 4 — the Ansible baseline is also real.** `just play` runs `site.yml` and applies
+the `common` role. A node that skipped this step is not the node that the exercises
+assume. A node that had this step is [still not a node with Kubernetes on
+it](#node-baseline), and that is by design.
 
-**5 — the guest account is `zain`, and needs no jump flag.** cloud-init creates that one
-account; there is no `debian` user. `factory` commits `Host 10.10.10.*` → `ProxyJump
-factory` in its `ssh/config`, so `-J factory` is redundant from the Mac and wrong from
-`hopper`, which is already in the subnet. `factory` deleted those flags from its own
-outputs deliberately.
+**[UNVERIFIED]** — `ansible/inventory/hosts.yml` is static today, and somebody maintains
+it by hand. Ephemeral lab nodes break exactly that pattern. The contract is different:
+**lab nodes must reach Ansible through a dynamic inventory that is generated from the
+`tofu` output**. You must not hand-edit a file for each topology.
+
+**Step 5 — the guest account is `zain`, and you need no jump flag.** cloud-init creates
+that one account. There is no `debian` user. `factory` commits `Host 10.10.10.*` →
+`ProxyJump factory` in its `ssh/config`. `-J factory` is therefore redundant from the
+Mac. It is also wrong from `hopper`, because `hopper` is already in the subnet.
+`factory` deleted those flags from its own outputs deliberately.
 
 <a id="node-baseline"></a>
-## The Kubernetes install is the learner's, not `factory`'s
+## The Kubernetes install belongs to the learner, and not to `factory`
 
-**Decided in [#77](https://github.com/k3ii/k8s-academy/issues/77): `factory` delivers a
-configured Debian guest, and the exercises put Kubernetes on it.** `factory`'s Ansible
-roles are `common`, `control`, `carthage` and `zeko_*`; none installs a container runtime
-or `kubeadm`. Checked on a freshly baselined `pair-cp` on 2026-08-31, `kubeadm`, `kubelet`,
-`kubectl`, `containerd` and `crictl` are all absent. That is the shape, not a gap.
+**[#77](https://github.com/k3ii/k8s-academy/issues/77) settled this question.
+`factory` delivers a configured Debian guest. The exercises put Kubernetes on it.**
 
-The alternative was a `kubernetes` role in `factory`, keyed on the `role` field
-[the labs state already publishes](#provision). It was rejected because
-[`labs/01/01`](../labs/01/01-provision-and-kubeadm-init.md) is called *"A two-node cluster,
-stood up by hand"* and a runtime somebody else installed is a piece of that taken away —
-and because [P0](../phases/00-linux-primitives.md) spends three weeks arriving at what a
-container is before a runtime exists to make one. Landing in P1 on a node that already has
-containerd would spend that.
+The Ansible roles in `factory` are `common`, `control`, `carthage` and `zeko_*`. None of
+them installs a container runtime, and none installs `kubeadm`. A check on a freshly
+baselined `pair-cp` on 2026-08-31 found that `kubeadm`, `kubelet`, `kubectl`,
+`containerd` and `crictl` were all absent. That is the intended shape. It is not a gap.
 
-**The version is not pinned here.** [`certs.md`](certs.md#tooling) holds it once: the exams
-track the newest Kubernetes minor, v1.35 as of today, and lab clusters follow the same rule
-rather than a frozen one. Read the minor from there, call it `$V`, and use it in the two
-lines that name it below.
+**The alternative was rejected, for two reasons.** The alternative was a `kubernetes`
+role in `factory`, keyed on the `role` field that [the labs state already
+publishes](#provision). The first reason is the title of
+[`labs/01/01`](../labs/01/01-provision-and-kubeadm-init.md). That exercise is called *"A
+two-node cluster, stood up by hand"*. A runtime that somebody else installs takes a
+piece of that exercise away. The second reason is
+[P0](../phases/00-linux-primitives.md). P0 spends three weeks arriving at what a
+container is, before a runtime exists to make one. If a learner then arrives in P1 on a
+node that already has containerd, those three weeks are wasted.
+
+**This document does not pin the Kubernetes version.**
+[`certs.md`](certs.md#tooling) holds the version once. The exams track the newest
+Kubernetes minor version, which is v1.35 today. The lab clusters follow the same rule,
+and not a frozen version. Read the minor version from `certs.md`, call it `$V`, and use
+it in the two lines below that name it.
 
 <a id="node-baseline-steps"></a>
 ### The procedure, stated once
 
-Three exercises stand up a cluster from scratch —
-[`labs/01/01`](../labs/01/01-provision-and-kubeadm-init.md),
-[`labs/03/18`](../labs/03/18-the-webhook-the-apiserver-dials.md) and
-[`labs/04/03`](../labs/04/03-sample-controller-against-a-real-cluster.md). The first walks
-these commands with commentary, because that is its subject. The other two run them and
-move on. Run all of it **on every node of the topology**, control plane and workers alike.
+Three exercises stand up a cluster from nothing:
+
+- [`labs/01/01`](../labs/01/01-provision-and-kubeadm-init.md)
+- [`labs/03/18`](../labs/03/18-the-webhook-the-apiserver-dials.md)
+- [`labs/04/03`](../labs/04/03-sample-controller-against-a-real-cluster.md)
+
+The first exercise walks through these commands and comments on them, because that is
+its subject. The other two exercises run the commands and move on.
+
+**Run all of these commands on every node of the topology.** This includes the control
+plane and the workers.
 
 ```sh
 V=<the current Kubernetes minor, per certs.md#tooling>   # 0. deliberately not pasteable
@@ -288,31 +342,37 @@ sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl       # 4. apt must not move a cluster's minor
 ```
 
-**Both `sed` lines against `config.toml` are load-bearing, and they fail differently.**
+**Both `sed` lines against `config.toml` are load-bearing. They fail in different
+ways.**
 
-`SystemdCgroup = true` matches the cgroup driver the kubelet uses on a systemd host. Leave
-it `false` and the two disagree about who owns the cgroup tree; the kubelet reports the
-node `NotReady` and says so in its own log, which is the recoverable kind of failure.
+**The first edit sets `SystemdCgroup = true`.** That value matches the cgroup driver
+that the kubelet uses on a systemd host. If you leave the value as `false`, the two
+components disagree about who owns the cgroup tree. The kubelet then reports the node as
+`NotReady`, and it says why in its own log. That is the recoverable kind of failure.
 
-**`bin_dir` is the other kind** ([#76](https://github.com/k3ii/k8s-academy/issues/76)).
-Debian's `containerd` package ships `bin_dir = "/usr/lib/cni"`, because Debian's
-`containernetworking-plugins` installs there. Flannel — and every CNI exercise in this
-curriculum — installs to **`/opt/cni/bin`**. Leave the Debian default and the node flips to
-`Ready` while **no pod can ever start**: the conflist names a plugin type containerd cannot
-find, sandbox creation fails, and pods sit in `ContainerCreating` with `SandboxChanged`
-repeating and nothing naming the path. Found the hard way while
-[weighing `pair`](#measured) — ten minutes of a dead cluster whose own success signal had
-already fired.
+**The second edit sets `bin_dir`, and its failure is the other kind**
+([#76](https://github.com/k3ii/k8s-academy/issues/76)). The Debian `containerd` package
+ships `bin_dir = "/usr/lib/cni"`, because the Debian package
+`containernetworking-plugins` installs there. Flannel installs to **`/opt/cni/bin`**, and
+so does every CNI exercise in this curriculum. If you keep the Debian default, the node
+still flips to `Ready`, but **no pod can ever start**. Here is the failure in order. The
+conflist names a plugin type that containerd cannot find. Sandbox creation fails. Pods
+then sit in `ContainerCreating`, `SandboxChanged` repeats, and nothing names the path.
+The author found this failure the hard way while [weighing `pair`](#measured). It cost
+ten minutes of a dead cluster whose own success signal had already fired.
 
-`/opt/cni/bin` is the path the curriculum assumes throughout, so the config moves and the
-plugins do not: [`labs/07`](../labs/07/) installs a hand-written plugin there and
+**The curriculum assumes `/opt/cni/bin` throughout, so the config moves and the plugins
+do not.** [`labs/07`](../labs/07/) installs a hand-written plugin in that directory.
 [`labs/11/06`](../labs/11/06-11c4-kill-one-trace-component-mid-flight.md) breaks the
-datapath by moving `/opt/cni/bin/bridge` aside. On an unpatched node that break is a no-op.
+datapath by moving `/opt/cni/bin/bridge` aside. On a node without this edit, that break
+does nothing at all.
 
-**`etcd-only`, `k0s-light` and `bare` want none of this.** Each installs what it needs, or
-deliberately needs nothing: three etcd binaries copied out from [`forge`](#build-guest),
-`get.k0s.sh` for a distribution that ships its own runtime, and for
-[`bare`](#bare) the whole point is that no runtime exists.
+**`etcd-only`, `k0s-light` and `bare` want none of this procedure.** Each one installs
+what it needs, or needs nothing on purpose:
+
+- `etcd-only` takes three etcd binaries, copied out from [`forge`](#build-guest).
+- `k0s-light` runs `get.k0s.sh`, for a distribution that ships its own runtime.
+- [`bare`](#bare) installs nothing. The whole point is that no runtime exists.
 
 <a id="teardown"></a>
 ## Teardown
@@ -322,112 +382,129 @@ ssh hopper
 just tofu labs destroy       # never `just destroy-vms` — that one is hardcoded to tofu/vms
 ```
 
-**`just destroy-vms` is the wrong verb and always will be.** It is hardcoded to
-`tofu/vms`, the persistent fleet. Keeping labs in [their own state
-key](#provision) is what makes the two impossible to confuse.
+**`just destroy-vms` is the wrong verb, and it always will be.** It is hardcoded to
+`tofu/vms`, which is the persistent fleet. Keeping the labs in [their own state
+key](#provision) is what makes the two commands impossible to confuse.
 
-**The separate state key has been tested once, not just asserted.** `just tofu labs
-destroy` was run against a live `pair` on 2026-08-31
-([#50](https://github.com/k3ii/k8s-academy/issues/50)): it reported `2 destroyed`, and
-`hopper`, `carthage` and [`forge`](#build-guest) came through it as the same processes
-they were before — same PIDs, uptimes running on unbroken. `forge` is the one that
-matters, because eleven phases depend on it.
+**Somebody has tested the separate state key. It is not only asserted.** The author ran
+`just tofu labs destroy` against a live `pair` on 2026-08-31
+([#50](https://github.com/k3ii/k8s-academy/issues/50)). It reported `2 destroyed`.
+`hopper`, `carthage` and [`forge`](#build-guest) came through the teardown as the same
+processes as before. They kept the same PIDs, and their uptimes ran on unbroken. `forge`
+is the guest that matters most here, because eleven phases depend on it.
 
-**Teardown has two layers, ruled at different scopes**
+**Teardown has two layers, and different issues rule them at different scopes**
 ([#8](https://github.com/k3ii/k8s-academy/issues/8),
-[#35](https://github.com/k3ii/k8s-academy/issues/35)). The *guest* layer is the one #8
-settled, and it is coarse:
+[#35](https://github.com/k3ii/k8s-academy/issues/35)).
+
+**The first layer is the *guest* layer. #8 settled it, and it is coarse:**
 
 > Every phase starts from a clean provision — no long-lived clusters accreting across
 > phases. Because both RAM and disk are one-topology-at-a-time, teardown is not hygiene
 > but a hard precondition for the next phase booting at all.
 
-Three guest-layer scopes are settled, all coarser than an exercise: per **phase**, per
-**lab group** within a phase (P12 runs two, with a teardown between), and *everything
-else down* for a **big rock** like a service mesh. Consecutive exercises sharing a live
-cluster is the intended pattern, not a shortcut — a provision, gate and baseline is
-minutes of wall-clock before any teaching happens. An exercise's line about the guest is
-therefore usually a **continuity marker** (*"leave it up, 8.3 continues on it"*), with a
-real `just tofu labs destroy` where the exercise ends a phase, ends a group, or installs
-a big rock.
+Three guest-layer scopes are settled. All three are coarser than one exercise:
 
-The second layer is finer and always runs: **each exercise deletes what it created** —
-its namespace, its CRs, its `iptables` rules, its loop devices — before the next one
-starts. #8 was read as *no teardown at all between exercises* while the storage phase was
-being drafted, and the reading survived until objects left behind by one exercise started
-answering the next one's question for it. A cluster that has been used for eleven
-exercises is not the cluster the twelfth was written against. So an exercise's teardown
-step does the fine layer unconditionally, then names the coarse one: **stays**, or
-**goes**.
+- Per **phase**.
+- Per **lab group** within a phase. P12 runs two groups, with a teardown between them.
+- *Everything else down* for a **big rock**, such as a service mesh.
 
-**Disk needs evicting too, and that is a build-track fact**: `go clean -modcache` and
-`docker system prune` belong in the same runbook — see
+**Consecutive exercises may share a live cluster. That is the intended pattern, and not
+a shortcut.** A provision, a gate and a baseline cost minutes of wall-clock time before
+any teaching happens. The line about the guest in an exercise is therefore usually a
+**continuity marker**, such as *"leave it up, 8.3 continues on it"*. A real `just tofu
+labs destroy` appears where the exercise ends a phase, ends a group, or installs a big
+rock.
+
+**The second layer is finer, and it always runs: each exercise deletes what it
+created.** This includes its namespace, its CRs, its `iptables` rules and its loop
+devices. The exercise deletes them before the next exercise starts.
+
+Learn from the mistake here. Somebody read #8 as *no teardown at all between exercises*
+while the storage phase was being drafted. That reading survived until objects left
+behind by one exercise started to answer the next exercise's question for it. A cluster
+that eleven exercises have used is not the cluster that the twelfth was written against.
+The teardown step of an exercise therefore does two things. It runs the fine layer
+unconditionally. It then names the coarse layer: the topology **stays**, or it **goes**.
+
+**Disk needs eviction too, and that is a build-track fact.** `go clean -modcache` and
+`docker system prune` belong in the same runbook. See
 [`build-mechanics#p5-split`](build-mechanics.md#p5-split), where `workhorse` plus
 `forge` is 90G of 95G.
 
 <a id="access"></a>
-## Reaching a cluster from the Mac
+## How to reach a cluster from the Mac
 
-The subnet is NAT'd and reachable only through the `factory` bastion. Egress is
-MASQUERADE; nothing reaches the guests unsolicited.
+The subnet is NAT'd. You can reach it only through the `factory` bastion. Egress uses
+MASQUERADE. Nothing reaches the guests unsolicited.
 
-**Services get a real address: MetalLB in L2 mode on `.200`–`.250`.** Chosen over
-`kubectl port-forward` on pedagogical grounds — port-forward bypasses the
-Service/LoadBalancer datapath entirely and hides the mechanics this curriculum exists to
-teach, while L2 makes *"how does a LoadBalancer get an IP"* concrete via ARP. `vmbr0` is
-`10.10.10.1/24` with `bridge-ports none` — no physical port, no competing DHCP, no other
-L2 speakers — which is close to ideal for L2 mode.
+**Services get a real address. MetalLB runs in L2 mode on `.200`–`.250`.** The choice
+was pedagogical. `kubectl port-forward` bypasses the Service and LoadBalancer datapath
+completely. It hides the mechanics that this curriculum exists to teach. L2 mode instead
+makes one question concrete through ARP: *"how does a LoadBalancer get an IP?"* The
+bridge `vmbr0` is `10.10.10.1/24` with `bridge-ports none`. It therefore has no physical
+port, no competing DHCP and no other L2 speakers. Those conditions are close to ideal
+for L2 mode.
 
-**`kubectl port-forward` stays sanctioned wherever access is incidental rather than the
-lesson**, which is most exercises. Reach for it without ceremony; the rule above is about
-what an exercise *teaches*, not about every time you need a dashboard.
+**`kubectl port-forward` stays sanctioned where access is incidental rather than the
+lesson.** That describes most exercises. Use it without ceremony. The rule above governs
+what an exercise *teaches*. It does not govern every time that you need a dashboard.
 
-To open a VIP in a browser on the Mac:
+To open a VIP in a browser on the Mac, run this command:
 
 ```sh
 ssh -L 8080:10.10.10.200:80 factory     # then http://localhost:8080
 ```
 
-**[UNVERIFIED]** — a per-VIP `-L` forward is this document's convention, not an inherited
-decision; #8 settled MetalLB and the SSH proxy but never wrote the literal command. It is
-preferred over a `-D` SOCKS proxy because it needs no browser configuration and leaves no
-proxy setting to forget afterwards.
+**[UNVERIFIED]** — one `-L` forward per VIP is the convention of this document. It is
+not an inherited decision. #8 settled MetalLB and the SSH proxy, but #8 never wrote the
+literal command. This document prefers `-L` over a `-D` SOCKS proxy for two reasons. It
+needs no browser configuration. It also leaves no proxy setting for you to forget
+afterwards.
 
 <a id="build-guest"></a>
 ## `forge` is not part of any topology
 
-The build guest is always up, sized independently, and **subtracted from the ceiling
-before a topology is chosen** — it is co-resident with whatever is running, never a node
-in it. It holds the Go module cache and the registry precisely so that a teardown does
-not cost them.
+The build guest is always up. It is sized independently. **You subtract it from the
+ceiling before you choose a topology.** It is co-resident with whatever runs. It is never
+a node in a topology. It holds the Go module cache and the registry for one precise
+reason: a teardown must not cost them.
 
-That is the whole of `forge`'s relationship to this document. Its sizing, why 1536MB and
-not 2048MB, the 2560MB resize that P3 and P5 each take and give back, the kernel
-lockstep with the lab nodes, and the registry all live in
-[`build-mechanics#forge`](build-mechanics.md#forge).
+That is the whole relationship of `forge` to this document. The rest of its detail
+lives in [`build-mechanics#forge`](build-mechanics.md#forge). That document holds four
+subjects:
+
+- Why `forge` gets 1536MB, and not 2048MB.
+- The 2560MB resize that P3 and P5 each take and then give back.
+- The kernel lockstep with the lab nodes.
+- The registry.
 
 <a id="unverified"></a>
 ## What is not confirmed
 
-The provenance rule for the strands is that a fact's status travels with it. These are
-the ones without a verified source, and an exercise should not be written as though they
-were settled:
+The provenance rule for the strands is that the status of a fact travels with the fact.
+The facts below have no verified source. Do not write an exercise as though these facts
+were settled.
 
-1. **One row of the table is measured; the other eight are not.** `pair` was stood up and
-   weighed on 2026-08-31 — [one row is measured](#measured). Every other RAM figure is an
-   allocation decision: the number that will be *given* to a guest, not one observed in
-   use. The disk column is unmeasured for all nine, `pair` included.
-2. **Per-node addresses are mostly allocated here, not observed.** Only `pair`'s
-   `.130`/`.131` pre-dates this document, and only `.110`, `.120`, `.125` and `.192` have
-   ever been occupied. `.111` was `jeremie` and is now free.
-3. **How ephemeral nodes enter the Ansible inventory** is specified as dynamic-from-tofu
+1. **One row of the table is measured. The other eight rows are not.** The author stood
+   `pair` up and weighed it on 2026-08-31 — [one row is measured](#measured). Every other
+   RAM figure is an allocation decision. It is the number that a guest will be *given*.
+   It is not a number observed in use. The disk column is unmeasured for all nine rows,
+   and that includes `pair`.
+2. **This document allocates most per-node addresses. It does not observe them.** Only
+   the `.130` and `.131` addresses of `pair` pre-date this document. Only `.110`, `.120`,
+   `.125` and `.192` have ever been occupied. `.111` belonged to `jeremie`, and it is now
+   free.
+3. **How ephemeral nodes enter the Ansible inventory** is specified as dynamic-from-tofu,
    and implemented as neither.
-4. **`.200`–`.250` is reserved in prose only.** There is no IPAddressPool, no MetalLB
-   config and no comment in `factory` claiming the range.
-5. **The browser-to-VIP command** is chosen in [Reaching a cluster](#access), not inherited.
-6. **The ~9.5GB ceiling is subtraction, not observation.** `jeremie` is destroyed
-   (2026-08-18) and `forge` is declared, so the assumptions the figure rests on now hold;
-   the host reports 15.49 GiB total, which leaves 9.4 GiB once every guest that must stay
-   up is charged at its configured ceiling. But the row calling the Proxmox host's ~1.6GB
-   *"Measured"* is the only measured term in a column of allocations, and the two are not
-   the same kind of number.
+4. **The range `.200`–`.250` is reserved in prose only.** `factory` has no IPAddressPool,
+   no MetalLB config, and no comment that claims the range.
+5. **The browser-to-VIP command** is chosen in [Reaching a cluster](#access). It is not
+   inherited.
+6. **The ceiling of approximately 9.5GB is a subtraction, and not an observation.**
+   `jeremie` is destroyed, since 2026-08-18, and `forge` is declared. The assumptions
+   behind the figure therefore hold now. The host reports 15.49 GiB in total. That leaves
+   9.4 GiB after you charge every guest that must stay up at its configured ceiling. But
+   note one weakness. One row calls the approximately 1.6GB of the Proxmox host
+   *"Measured"*. That row holds the only measured term in a column of allocations. The two
+   kinds of number are not the same.
