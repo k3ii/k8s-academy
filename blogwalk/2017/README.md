@@ -113,17 +113,18 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Eight `walk` verdicts, numbered in publication order. All eight are *pending* — an authoring
-ticket's to claim. The rubric they are authored against was ratified in
-[#57](https://github.com/k3ii/k8s-academy/issues/57).
+Eight `walk` verdicts, numbered in publication order. All eight are written. The rubric they
+are authored against was ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57); the
+section order and the ladder they use were amended in
+[#78](https://github.com/k3ii/k8s-academy/issues/78).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | Two storage-class annotations, one of them silently ignored | pending |
-| 02 | Affinity against a label that was renamed | pending |
-| 03 | The Service is still called kube-dns | pending |
-| 04 | Three defaults that moved under apps/v1 | pending |
-| 05 | kubeadm upgrade, and the control plane that never self-hosted | pending |
-| 06 | RBAC at GA, on an apiserver that allows everything | pending |
-| 07 | The annotation that used to switch isolation on | pending |
-| 08 | docker ps returns nothing, successfully | pending |
+| 01 | [The four cases in this post are now five, the fifth is described by two reference pages that contradict each other about whether it can happen, and the whole table of cloud defaults died on one schedule](01-dynamic-provisioning-and-storage-classes-kubernetes.md) | written |
+| 02 | [Two of this post's four affinity examples cannot be applied, the word "slightly" hides the whole difference between a filter and a score, and the page that replaced it still tells you to switch off a field through a gate that is locked on](02-advanced-scheduling-in-kubernetes.md) | written |
+| 03 | [Every JSON value in this post carries typographic quotation marks, so none of the four configurations could ever have been parsed, the last code fence is never closed so the post ends inside it, and the only name that survived the rewrite is the one that stopped describing what answers](03-configuring-private-dns-zones-upstream-nameservers-kubernetes.md) | written |
+| 04 | [The two sentences this post is most emphatic about are still printed almost word for word on the task pages that replaced it, both were made false by the concept pages next door, and the symmetry it claims between the two controllers is now an asymmetry documented in two places that never mention each other](04-kubernetes-statefulsets-daemonsets.md) | written |
+| 05 | [Every forecast in this post has been answered and none of them in its own terms: the feature it wanted to make the default is gone so completely that its name now belongs to the mechanism it was built to replace, the command it promised for v1.9 arrived four times under four other verbs, and the one-command upgrade is one command inside sixteen spread across two pages](05-kubeadm-v18-released.md) | written |
+| 06 | [The rule at the centre of this post names an API group that now serves nothing and the API server accepts it without a warning, two of the post's other manifests never worked and `kubectl` rather than the API server is what catches them, and the one property the post praises — that RBAC rules are purely additive — is why one flag on your own control plane makes every Role here decoration](06-using-rbac-generally-available-18.md) | written |
+| 07 | [The first of this post's two manifests is still exactly right, the second stopped being right in the release the post was written to announce, and on the cluster this curriculum builds neither of them does anything at all — the object is stored, the command reports success, and the API has no field anywhere in which to say that nothing is enforcing it](07-enforcing-network-policies-in-kubernetes.md) | written |
+| 08 | [The project this post announces survives in the pinned documentation as a tab id, a PNG filename and an AppArmor profile; the runtime it was written to displace has six migration pages, a glossary entry and a note saying it does not implement CRI at all; and whether this curriculum's two hand-edits to `config.toml` match anything is a test of a containerd major version the pin says will stop working in v1.38](08-containerd-container-runtime-options-kubernetes.md) | written |
