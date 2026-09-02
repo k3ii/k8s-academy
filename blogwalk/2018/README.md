@@ -130,14 +130,14 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Nine `walk` verdicts, numbered in publication order. One of the nine is written; eight are still
+Nine `walk` verdicts, numbered in publication order. Two of the nine are written; seven are still
 *pending*. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
 | 01 | [The webhook that fails before it runs](01-extensible-admission-is-beta.md) | written |
-| 02 | One sidecar that could write to every Node | pending |
+| 02 | [One sidecar that could write to every Node](02-container-storage-interface-beta.md) | written |
 | 03 | Two kustomizes, one of them inside kubectl | pending |
 | 04 | GA is not the end of the ladder | pending |
 | 05 | A field that still applies and does nothing | pending |
