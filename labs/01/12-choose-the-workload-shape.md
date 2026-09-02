@@ -1,22 +1,22 @@
 <a id="choose-the-workload-shape"></a>
 # Five workload kinds, chosen by the property that forces the choice
 
-**Claim** — for each of five workload kinds you can state the one property that makes it the only correct choice, and demonstrate that property rather than assert it. Two of the five differ in exactly one guarantee.
+**Claim** — for each of five workload kinds, you can state the one property that makes it the only correct choice. You can also demonstrate that property, instead of asserting it. Two of the five kinds differ in exactly one guarantee.
 
-**Topology** — [`pair`](../../strands/lab-topologies.md#pair), still up. Two nodes matters here: a DaemonSet on one node teaches nothing.
+**Topology** — [`pair`](../../strands/lab-topologies.md#pair), still up. Two nodes matter here, because a DaemonSet on one node teaches nothing.
 
 **Do**
 
-1. **DaemonSet.** Deploy one, then check its pods against `kubectl get nodes`. Now cordon the worker and add a *third* node's worth of expectation — you cannot, so instead remove the control plane's taint tolerance and count again. Ask: what scheduled these pods, and what tolerations did the controller add on its own?
+1. **DaemonSet.** Deploy one, then check its pods against `kubectl get nodes`. Now cordon the worker. You cannot add the expectation of a *third* node, so do this instead: remove the toleration for the control plane's taint, and count the pods again. Then ask two questions. What scheduled these pods? Which tolerations did the controller add on its own?
 
    ```sh
    kubectl get ds/agent -o jsonpath='{.spec.template.spec.tolerations}' | jq
    ```
 
-   The tolerations you never wrote are the interesting output.
+   The tolerations that you never wrote are the interesting output.
 
-2. **Job and CronJob.** Run a Job with `completions: 4, parallelism: 2` and a command that exits non-zero one time in three. Watch the retry, then find the two fields that decide when a Job gives up. Schedule a CronJob at `* * * * *`, let three fire, and find where the old ones went.
-3. **StatefulSet.** Deploy three replicas with a headless Service. Then demonstrate the three guarantees a Deployment does not give:
+2. **Job and CronJob.** Run a Job with `completions: 4, parallelism: 2`, and give it a command that exits non-zero one time in three. Watch the retry. Then find the two fields that decide when a Job gives up. Next, schedule a CronJob at `* * * * *`, let three of them fire, and find where the old ones went.
+3. **StatefulSet.** Deploy three replicas with a headless Service. Then demonstrate the three guarantees that a Deployment does not give:
 
    ```sh
    kubectl get pods -l app=db          # names are ordinal, not random
@@ -25,13 +25,13 @@
    kubectl exec -it client -- nslookup db-0.db
    ```
 
-   Predict the scale-down order before running it.
+   Predict the scale-down order before you run the third command.
 
-4. **Deployment** you already have. Put it beside the StatefulSet and write the single sentence that distinguishes them.
-5. Give one workload each of the five shapes and ask, for each, *what would go wrong if I used a Deployment instead*. Two of them have no good answer, and saying so is the correct result.
+4. **Deployment.** You already have one. Put it beside the StatefulSet, and write the single sentence that distinguishes the two.
+5. Give one workload to each of the five shapes. For each one, ask the same question: *what would go wrong if I used a Deployment instead?* Two of the five have no good answer, and saying so is the correct result.
 
-**Expect** — the DaemonSet's pods carry five or six tolerations the controller injected, including `node.kubernetes.io/unschedulable`, which is why a DaemonSet pod appears on a cordoned node; the Job's `backoffLimit` and `activeDeadlineSeconds` are the two give-up fields, and the CronJob's history is bounded by `successfulJobsHistoryLimit`. The StatefulSet scales **down in reverse ordinal order** and each pod has a stable DNS name of the form `db-0.db.<ns>.svc`, which is the actual point of the headless Service. **`volumeClaimTemplates` is deliberately not used here** — the persistence half of StatefulSet is [P8](../../phases/08-storage.md)'s subject and this cluster has no provisioner; the ordering and identity guarantees are the half that belongs to P1.
+**Expect** — the pods of the DaemonSet carry five or six tolerations that the controller injected. One of them is `node.kubernetes.io/unschedulable`, and it is why a DaemonSet pod appears on a cordoned node. The two give-up fields of the Job are `backoffLimit` and `activeDeadlineSeconds`. The history of the CronJob is bounded by `successfulJobsHistoryLimit`. The StatefulSet scales **down in reverse ordinal order**, and each pod has a stable DNS name in the form `db-0.db.<ns>.svc`. That name is the actual point of the headless Service. Note one deliberate omission: **this exercise does not use `volumeClaimTemplates`**. The persistence half of StatefulSet is the subject of [P8](../../phases/08-storage.md), and this cluster has no provisioner. The ordering and identity guarantees are the half that belongs to P1.
 
-**Write down** — the five-row table: kind, the one forcing property, and the failure you would get from using a Deployment instead.
+**Write down** — the table of five rows: the kind, the one forcing property, and the failure that you would get if you used a Deployment instead.
 
-**Teardown** — delete the DaemonSet, Job, CronJob and StatefulSet, and confirm the CronJob's leftover Jobs went with it. Keep `deploy/web`. **The topology stays.**
+**Teardown** — delete the DaemonSet, the Job, the CronJob and the StatefulSet. Confirm that the leftover Jobs of the CronJob went with it. Keep `deploy/web`. **The topology stays.**

@@ -1,23 +1,26 @@
 # Source reading
 
-The k/k, etcd, CNI, CSI, Gateway API and Cilium corpus, per depth area: ~180 items
-and 67 KEPs, each with a named entry point, a difficulty marker, and a reason to
-open it. **No item is a bare link** — every one carries something to answer from the
-source.
+This document holds the reading corpus for k/k, etcd, CNI, CSI, Gateway API and
+Cilium, organised by depth area. It lists about 180 items and 67 KEPs. Each item
+carries three things: a named entry point, a difficulty marker, and a reason to open
+it. **No item here is a bare link.** Every one gives you something to answer from the
+source itself.
 
-Derived from [`../research/source-reading-corpus.md`](../research/source-reading-corpus.md),
-verified 2026-08-17 against `kubernetes/kubernetes@master` (`CHANGELOG-1.37` in
-development), `etcd-io/etcd@main` (k/k vendors `go.etcd.io/etcd/*` v3.7.0),
+This document derives from
+[`../research/source-reading-corpus.md`](../research/source-reading-corpus.md). It was
+verified on 2026-08-17 against `kubernetes/kubernetes@master`, with `CHANGELOG-1.37`
+in development. It was verified against `etcd-io/etcd@main` as well, where k/k vendors
+`go.etcd.io/etcd/*` v3.7.0. The other trees checked were
 `etcd-io/raft@main`, `kubernetes/enhancements@master`, `kubernetes/community@main`,
 `kubernetes/design-proposals-archive@main`, `containernetworking/cni@main`,
 `container-storage-interface/spec@master`, `kubernetes-sigs/gateway-api@main` and
-`cilium/cilium@main`. Every path was checked to exist against the git-tree API and
-every KEP number, title and status was read out of that KEP's own `kep.yaml`. Byte
-sizes are quoted where they drive the difficulty rating — a 156 KB file is hostile
-no matter how simple the concept.
+`cilium/cilium@main`. Every path was checked against the git-tree API, to confirm that
+it exists. Every KEP number, title and status was read out of that KEP's own
+`kep.yaml`. Byte sizes are quoted wherever they drive the difficulty rating. Here is
+why. A 156 KB file is hostile, however simple its concept is.
 
-That research file is the frozen record. **This file is the one that gets corrected**
-when a path moves; see [Divergences](#divergences) for where it already has.
+That research file is the frozen record. **This file is the copy that gets corrected**
+when a path moves. See [Divergences](#divergences) for where it already has been.
 
 ## Which phase reads which area
 
@@ -33,36 +36,36 @@ when a path moves; see [Divergences](#divergences) for where it already has.
 | P8 Storage | [Area 6 — Storage](#area-6-storage) |
 | P11 Synthesis | [the three traces](#traces) |
 
-Areas 0 and 2 are also re-entered later: the API-conventions sections in Area 0 are
-prerequisites for anything in Area 2, and Area 2's authn/authz items (36–38) are CKS
-material read again in P10.
+You re-enter Areas 0 and 2 later, for two reasons. The API-conventions sections in
+Area 0 are prerequisites for everything in Area 2. And items 36 to 38 of Area 2, on
+authentication and authorisation, are CKS material, so P10 reads them again.
 
 ---
 
 <a id="markers"></a>
 ## How to read the difficulty markers
 
-The learner is a complete Kubernetes beginner and a solid programmer who can read Go and has barely written it. Reading is the whole job in this document — the writing happens in [`build-mechanics.md`](build-mechanics.md) — so **file size and self-containment matter more than language sophistication**. Markers:
+The learner is a complete Kubernetes beginner. The learner is also a solid programmer, who can read Go and has barely written it. In this document, reading is the whole job. The writing happens in [`build-mechanics.md`](build-mechanics.md) instead. So **file size and self-containment matter more here than language sophistication does.** These are the markers:
 
 | Marker | Meaning |
 | --- | --- |
-| **[A] Approachable** | Readable from Phase 1–2. Self-contained, well-commented, no prior k8s-internals vocabulary needed beyond "what is a Pod". |
-| **[B] Grounded** | Needs ~one phase of grounding: has run a cluster, knows the object model (GVK, spec/status, labels/selectors, resourceVersion). |
-| **[C] Deep** | Needs two-plus phases. Assumes fluency with informers, the reconcile pattern, and the apiserver request path. |
-| **[D] Reference-only / hostile** | Do **not** assign as linear reading. Grep it, or read a named function with a guide. Assigning these early is the single biggest way to stall the learner. |
+| **[A] Approachable** | You can read it from Phase 1 or 2. It is self-contained and well commented. It needs no k8s-internals vocabulary beyond "what is a Pod". |
+| **[B] Grounded** | It needs about one phase of grounding. The reader has run a cluster, and knows the object model: GVK, spec and status, labels and selectors, and resourceVersion. |
+| **[C] Deep** | It needs two phases or more. It assumes fluency with informers, with the reconcile pattern, and with the apiserver request path. |
+| **[D] Reference-only, or hostile** | Do **not** assign it as linear reading. Grep it instead, or read one named function with a guide. Assigning these files early is the single biggest way to stall the learner. |
 
 **Three standing traps for this curriculum:**
 
-1. **`staging/src/k8s.io/api/core/v1/types.go` is 471 KB.** It is the canonical Pod/Service/PV type reference and its doc comments are excellent — but it is a lookup table, never a read. Always point at a *line range or type name*, never the file.
-2. **Most `staging/src/k8s.io/*/README.md` files are ~1.5 KB boilerplate** ("this is a staging repo, do not file issues here"). Only four are worth reading; they are named in the Foundational section. Recommending "the staging READMEs" wholesale wastes the learner's time.
-3. **`apimachinery` is where beginners drown.** `runtime.Scheme`, codec chains and the conversion/defaulting generators are genuinely necessary for control-plane mastery but are *terrible* first reading. They are deferred to [C] throughout, and the Foundational section gives the doc-first substitute.
+1. **`staging/src/k8s.io/api/core/v1/types.go` is 471 KB.** It is the canonical type reference for Pod, Service and PV, and its doc comments are excellent. It is still a lookup table, and never a read. So always point at a *line range or a type name*, and never at the file.
+2. **Most `staging/src/k8s.io/*/README.md` files are about 1.5 KB of boilerplate.** They say "this is a staging repo, do not file issues here". Only four are worth reading, and the Foundational section names them. Recommending "the staging READMEs" wholesale wastes the learner's time.
+3. **`apimachinery` is where beginners drown.** Control-plane mastery genuinely needs `runtime.Scheme`, the codec chains, and the conversion and defaulting generators. They are still *terrible* first reading. So they are deferred to [C] throughout, and the Foundational section gives a doc-first substitute.
 
 ---
 
 <a id="area-0-foundational"></a>
 ## Area 0 — Foundational reading
 
-Read essentially all of this *before* opening Go source. This section is the cheapest leverage in the whole corpus, and most of it is prose, not code.
+Read essentially all of this area *before* you open any Go source. This section is the cheapest leverage in the whole corpus. Most of it is also prose, and not code.
 
 Ordered approachable → hard:
 
@@ -84,7 +87,7 @@ Ordered approachable → hard:
 <a id="staging-readmes"></a>
 ### The four staging READMEs actually worth reading
 
-Verified sizes; the other 29 are stubs.
+The sizes below are verified. The other 29 READMEs are stubs.
 
 | Item | Teaches | Difficulty |
 | --- | --- | --- |
@@ -93,17 +96,17 @@ Verified sizes; the other 29 are stubs.
 | `staging/src/k8s.io/sample-controller/README.md` (7.8 KB) + `docs/controller-client-go.md` + `docs/images/client-go-controller-interaction.jpeg` | The canonical reflector→DeltaFIFO→indexer→workqueue diagram, with prose. Read *before* any `tools/cache` source. | **[A]** |
 | `staging/src/k8s.io/sample-apiserver/README.md` (8.1 KB) | What an aggregated apiserver must implement — the concrete frame for the `kube-aggregator` section. | **[C]** |
 
-**Note on `contributors/design-proposals/`:** in `kubernetes/community` this is now a single `README.md` pointer — the real corpus was moved to the separate **`kubernetes/design-proposals-archive`** repo (334 files). That repo is underused and is cited throughout this document; several of its design docs (PLEG, kubelet eviction, volume-topology scheduling, garbage collection) remain the *only* narrative explanation of code that is otherwise comment-only.
+**Note on `contributors/design-proposals/`:** inside `kubernetes/community`, this is now a single `README.md` pointer. The real corpus moved to a separate repo, **`kubernetes/design-proposals-archive`**, which holds 334 files. That repo is underused, and this document cites it throughout. Several of its design docs, on PLEG, kubelet eviction, volume-topology scheduling and garbage collection, are still the *only* narrative explanation of code that is otherwise comment-only.
 
 ---
 
 <a id="area-1-etcd"></a>
 ## Area 1 — etcd
 
-The one area that needs **no Kubernetes cluster at all** — which matters given `factory`'s ~9.9 GB ceiling. A standalone single-node etcd plus `etcdctl` is enough for revisions, watches, compaction and defrag.
+This is the one area that needs **no Kubernetes cluster at all.** That matters, because `factory` has a ceiling of about 9.9 GB. A standalone single-node etcd, plus `etcdctl`, is enough for revisions, watches, compaction and defrag.
 
 **⭐ ENTRY POINT: `server/storage/mvcc/key_index.go`** (10.4 KB) — https://github.com/etcd-io/etcd/blob/main/server/storage/mvcc/key_index.go
-One small file, one data structure, and it *is* MVCC: generations, `revision{main,sub}`, tombstones, and what `compact()` physically removes. Read this and revisions stop being magic. It rewards reading before anything else in etcd because everything else in the store is built on it.
+This is one small file and one data structure, and it *is* MVCC. It gives you generations, `revision{main,sub}`, tombstones, and what `compact()` physically removes. Read it, and revisions stop being magic. Read it before anything else in etcd, because everything else in the store is built on it.
 
 Ordered approachable → hard:
 
@@ -139,10 +142,10 @@ Ordered approachable → hard:
 <a id="area-2-api-machinery"></a>
 ## Area 2 — API machinery
 
-The area with the highest ratio of *essential* to *readable*. Sequencing matters more here than anywhere else.
+This area has the highest ratio of *essential* to *readable*. So sequencing matters more here than anywhere else.
 
 **⭐ ENTRY POINT: `staging/src/k8s.io/apiserver/pkg/endpoints/handlers/create.go`** (10.4 KB) — https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apiserver/pkg/endpoints/handlers/create.go
-It is short, and it *is* the kubectl→apiserver→etcd path in one readable function: decode the body → `admit` (mutating) → `Validate` → `admit` (validating) → `storage.Create`. Every abstraction the learner will later need is visible here as a single named call, which makes it the ideal index into the rest of the area.
+This file is short, and it *is* the kubectl-to-apiserver-to-etcd path, in one readable function. The steps run: decode the body → `admit`, mutating → `Validate` → `admit`, validating → `storage.Create`. Every abstraction that the learner needs later appears here as a single named call. That makes the file an ideal index into the rest of the area.
 
 Ordered approachable → hard:
 
@@ -194,10 +197,13 @@ Ordered approachable → hard:
 <a id="area-3-scheduler"></a>
 ## Area 3 — Scheduler
 
-The best-documented area in the tree, and the one where SIG-provided reading genuinely removes the need to reverse-engineer. Read the three `contributors/devel/sig-scheduling/` docs first — they were written for exactly this purpose and most people never find them.
+This is the best-documented area in the tree. It is also the one area where the
+SIG-provided reading genuinely removes any need to reverse-engineer. Read the three
+docs in `contributors/devel/sig-scheduling/` first. They were written for exactly this
+purpose, and most people never find them.
 
 **⭐ ENTRY POINT: `pkg/scheduler/framework/interface.go`** (17.6 KB) — https://github.com/kubernetes/kubernetes/blob/master/pkg/scheduler/framework/interface.go
-Every extension point — `PreFilterPlugin`, `FilterPlugin`, `PostFilterPlugin`, `PreScorePlugin`, `ScorePlugin`, `ReservePlugin`, `PermitPlugin`, `PreBindPlugin`, `BindPlugin`, `PostBindPlugin` — declared as a small Go interface with a doc comment explaining when it runs and what returning an error means. It is a table of contents for the whole scheduler, it teaches the architecture without any implementation noise, and a beginner can read it on day one of the scheduler phase.
+This file declares every extension point as a small Go interface: `PreFilterPlugin`, `FilterPlugin`, `PostFilterPlugin`, `PreScorePlugin`, `ScorePlugin`, `ReservePlugin`, `PermitPlugin`, `PreBindPlugin`, `BindPlugin` and `PostBindPlugin`. Each one carries a doc comment that says when it runs, and what returning an error means. So the file is a table of contents for the whole scheduler. It teaches the architecture with no implementation noise, and a beginner can read it on day one of the scheduler phase.
 
 Ordered approachable → hard:
 
@@ -232,10 +238,10 @@ Ordered approachable → hard:
 <a id="area-4-controllers"></a>
 ## Area 4 — Controllers
 
-The area with the best on-ramp in the entire corpus, provided the learner reads `sample-controller` **before** `client-go/tools/cache`. Doing it the other way round is the specific failure mode the ticket warns about: `reflector.go` (55 KB) and `shared_informer.go` (58 KB) are miserable cold, and delightful once the pattern is known.
+This area has the best on-ramp in the whole corpus, on one condition. The learner must read `sample-controller` **before** `client-go/tools/cache`. The other order is the specific failure mode that the ticket warns about. Read cold, `reflector.go` at 55 KB and `shared_informer.go` at 58 KB are miserable. Read once the pattern is known, they are delightful.
 
 **⭐ ENTRY POINT: `staging/src/k8s.io/sample-controller/controller.go`** (16.9 KB) — https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/sample-controller/controller.go
-A complete, working, heavily-commented controller in one file: informer setup, event handlers that enqueue *keys* (not objects), the worker loop, `syncHandler`, owner references, and status update. It is the Rosetta Stone for every other controller in the tree — and it is the direct model for P4's hand-wired build artifact, since the same five moving parts must be wired by hand there before `kubebuilder` hides them.
+This is a complete, working, heavily commented controller in one file. It shows the informer setup, event handlers that enqueue *keys* rather than objects, the worker loop, `syncHandler`, owner references, and the status update. It is the Rosetta Stone for every other controller in the tree. It is also the direct model for the hand-wired build artifact in P4, because you must wire those same five moving parts by hand there, before `kubebuilder` hides them.
 
 Ordered approachable → hard:
 
@@ -270,10 +276,10 @@ Ordered approachable → hard:
 <a id="area-5-networking"></a>
 ## Area 5 — Networking
 
-The area where the *specs* are more readable than the code. `pkg/proxy/*/proxier.go` are 61–71 KB rule-generation machines; the CNI spec is 40-odd pages of clear prose. Lead with specs and API types.
+In this area, the *specs* are more readable than the code. The `pkg/proxy/*/proxier.go` files are rule-generation machines of 61 KB to 71 KB. The CNI spec is about 40 pages of clear prose. So lead with the specs and the API types.
 
 **⭐ ENTRY POINT: `staging/src/k8s.io/api/discovery/v1/types.go`** (11 KB) — https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/api/discovery/v1/types.go
-The EndpointSlice API in one small, thoroughly-commented file: `Endpoint`, `EndpointConditions{Ready,Serving,Terminating}`, `EndpointHints`, `ports`, and the `addressType` split. It is the data structure that *everything* in Kubernetes service networking consumes — kube-proxy, Cilium, every ingress controller — so understanding it first makes the dataplane code legible instead of arbitrary. Small enough to read in one sitting on day one.
+This is the EndpointSlice API, in one small and thoroughly commented file. It gives you `Endpoint`, `EndpointConditions{Ready,Serving,Terminating}`, `EndpointHints`, `ports`, and the `addressType` split. *Everything* in Kubernetes service networking consumes this data structure: kube-proxy, Cilium, and every ingress controller. So understand it first, and the dataplane code becomes legible instead of arbitrary. It is also small enough to read in one sitting, on day one.
 
 Ordered approachable → hard:
 
@@ -315,10 +321,10 @@ Ordered approachable → hard:
 <a id="area-6-storage"></a>
 ## Area 6 — Storage
 
-Read the **CSI spec first**. It is a clean gRPC contract document and it makes the entire in-tree volume subsystem — which is otherwise sprawling, historically layered, and full of in-tree-plugin vestiges — suddenly coherent.
+Read the **CSI spec first.** It is a clean gRPC contract document. It also makes the whole in-tree volume subsystem coherent at once. That subsystem is otherwise sprawling, historically layered, and full of in-tree-plugin vestiges.
 
 **⭐ ENTRY POINT: `container-storage-interface/spec/spec.md`** — https://github.com/container-storage-interface/spec/blob/master/spec.md
-The CSI specification: the Identity/Controller/Node service split, and the five-call lifecycle `CreateVolume` → `ControllerPublishVolume` (attach) → `NodeStageVolume` (mount once per node) → `NodePublishVolume` (bind-mount per pod) and their unwinds. Once the learner can name which component makes which call, every k8s storage component has an obvious job. Read with `csi.proto` beside it. For the **in-tree** entry point, use `pkg/controller/volume/persistentvolume/index.go` (6.8 KB) — the PVC→PV matching predicate, small and immediately intelligible.
+This is the CSI specification. It gives the split between the Identity, Controller and Node services. It also gives the five-call lifecycle: `CreateVolume` → `ControllerPublishVolume`, which attaches → `NodeStageVolume`, which mounts once per node → `NodePublishVolume`, which bind-mounts per pod. It gives their unwinds too. Once the learner can name which component makes which call, every k8s storage component has an obvious job. Read it with `csi.proto` beside it. For the **in-tree** entry point, use `pkg/controller/volume/persistentvolume/index.go`, at 6.8 KB. That file holds the PVC-to-PV matching predicate. It is small, and it is immediately intelligible.
 
 Ordered approachable → hard:
 
@@ -356,10 +362,10 @@ Ordered approachable → hard:
 <a id="area-7-kubelet"></a>
 ## Area 7 — kubelet
 
-**The hardest area to read, and the one where the curriculum must change approach.** `pkg/kubelet/kubelet.go` is **156 KB**, `kuberuntime_manager.go` is **107 KB**, `pod_workers.go` is **78 KB**. There is no readable "main loop" file. The corpus therefore leads with the SIG doc plus the archived design proposals — which, for the kubelet specifically, are unusually good and are the *only* narrative descriptions of PLEG, eviction and the cgroup hierarchy — and then enters code through the small, self-contained sub-managers.
+**This is the hardest area to read. It is also the one area where the curriculum must change approach.** Look at the sizes: `pkg/kubelet/kubelet.go` is **156 KB**, `kuberuntime_manager.go` is **107 KB**, and `pod_workers.go` is **78 KB**. There is no readable "main loop" file at all. So this corpus leads with the SIG doc, plus the archived design proposals. For the kubelet specifically, those proposals are unusually good, and they are the *only* narrative descriptions of PLEG, of eviction, and of the cgroup hierarchy. The corpus then enters the code through the small, self-contained sub-managers.
 
 **⭐ ENTRY POINT: `pkg/kubelet/pleg/generic.go`** (20.8 KB) — https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/pleg/generic.go
-The Pod Lifecycle Event Generator: one file, one loop (`relist`), one clear idea — periodically poll the container runtime, diff against the last known state, and emit `ContainerStarted`/`ContainerDied` events so the kubelet does not have to poll per pod. It is the beating heart of the kubelet reduced to a comprehensible size, it explains the `PLEG is not healthy` error every operator eventually meets, and it is preceded by a 2.7 KB interface file (`pleg/pleg.go`) that frames it perfectly.
+This is the Pod Lifecycle Event Generator. It is one file, one loop called `relist`, and one clear idea. It polls the container runtime periodically, diffs the result against the last known state, and emits `ContainerStarted` and `ContainerDied` events. The kubelet therefore does not have to poll per pod. So this file is the beating heart of the kubelet, reduced to a comprehensible size. It also explains the `PLEG is not healthy` error that every operator eventually meets. A 2.7 KB interface file, `pleg/pleg.go`, precedes it and frames it perfectly.
 
 Ordered approachable → hard:
 
@@ -406,78 +412,88 @@ Ordered approachable → hard:
 <a id="traces"></a>
 ## Cross-area synthesis: three end-to-end traces
 
-The corpus above is organised by subsystem, but mastery is about the seams. Three
-traces, each stitching several areas, that make good phase capstones. All three are
-capstones in the spine: the pod-dies trace at P6, the PVC trace at P8, the full
-create path at P11 — and the last is named in P0 as the visible target from week one.
+The corpus above is organised by subsystem. But mastery is about the seams. So here
+are three traces. Each one stitches several areas together, and each one makes a good
+phase capstone. The spine uses all three as capstones. The pod-dies trace sits at P6,
+the PVC trace at P8, and the full create path at P11. P0 also names that last trace,
+as the visible target from week one.
 
 <a id="trace-pod-create"></a>
 ### Trace 1 — `kubectl run nginx` to a running container
 
-`kubectl/pkg/cmd/…` → `endpoints/filters/*` → `handlers/create.go` → admission chain
-→ `registry/generic/registry/store.go` → `storage/etcd3/store.go` → etcd `Txn` →
-watch cache → scheduler informer → `schedule_one.go` → Binding → kubelet
-`config/apiserver.go` → `pod_workers.go` → `kuberuntime_manager.computePodActions` →
-CRI → CNI. Areas 1+2+3+7+5. **Assign only after all areas have been entered**, but
-state the trace early as the thing being built toward.
+The path runs `kubectl/pkg/cmd/…` → `endpoints/filters/*` → `handlers/create.go` →
+the admission chain → `registry/generic/registry/store.go` → `storage/etcd3/store.go`
+→ etcd `Txn` → the watch cache → the scheduler informer → `schedule_one.go` → Binding
+→ kubelet `config/apiserver.go` → `pod_workers.go` →
+`kuberuntime_manager.computePodActions` → CRI → CNI. It crosses areas 1, 2, 3, 7 and
+5. **Assign it only after every one of those areas has been entered.** State the trace
+early anyway, as the thing that the learner is building toward.
 
 <a id="trace-pod-dies"></a>
 ### Trace 2 — a pod dies and a Service stops sending it traffic
 
-PLEG relist → status manager → apiserver → EndpointSlice reconciler → kube-proxy
-`endpointschangetracker` → `syncProxyRules`. Areas 7+4+5. Shorter, and the superior
-mid-curriculum exercise because **every hop is observable** with `kubectl` and
+The path runs PLEG relist → the status manager → the apiserver → the EndpointSlice
+reconciler → the kube-proxy `endpointschangetracker` → `syncProxyRules`. It crosses
+areas 7, 4 and 5. It is shorter than trace 1, and it is the better mid-curriculum
+exercise, for one reason: **every hop is observable**, with `kubectl` and with
 `nft list ruleset`.
 
 <a id="trace-pvc-bound"></a>
 ### Trace 3 — a PVC gets bound and mounted
 
-PVC created → `pv_controller.syncClaim` (or delayed by the `volumebinding` plugin) →
-`csi-provisioner` `CreateVolume` → attach/detach controller → `VolumeAttachment` →
-kubelet volume manager → `NodeStageVolume`/`NodePublishVolume`. Areas 6+3+4.
+The path runs: a PVC is created → `pv_controller.syncClaim`, or the `volumebinding`
+plugin delays it → `csi-provisioner` calls `CreateVolume` → the attach and detach
+controller → `VolumeAttachment` → the kubelet volume manager → `NodeStageVolume` and
+`NodePublishVolume`. It crosses areas 6, 3 and 4.
 
 <a id="divergences"></a>
 ## Divergences from the research file
 
-Where this living copy has been corrected against the frozen record:
+This section records where the living copy has been corrected against the frozen
+record.
 
-- **The build track is Go, not Rust.** [#9](https://github.com/k3ii/k8s-academy/issues/9)
-  reversed the language decision after the research was written. Consequences here:
-  Area 4 item 23 (`code-generator`) is no longer optional reading; Area 5 item 29's
-  eBPF primer feeds a `cilium/ebpf` artifact rather than an Aya one; and Area 3's
-  scheduler-framework items are now *buildable* rather than read-only, since Go
-  interfaces compiled into the binary were the thing Rust could not reach.
-- **Area 4's entry point is the direct model for a build artifact**, not an analogue
-  of one. `sample-controller/controller.go` and P4's hand-wired operator wire the
-  same five moving parts.
+- **The build track is Go, and not Rust.**
+  [#9](https://github.com/k3ii/k8s-academy/issues/9) reversed the language decision
+  after the research was written. That has three consequences here. Item 23 of Area 4,
+  on `code-generator`, is no longer optional reading. The eBPF primer in item 29 of
+  Area 5 now feeds a `cilium/ebpf` artifact, rather than an Aya one. And the
+  scheduler-framework items in Area 3 are now *buildable*, rather than read-only,
+  because Go interfaces compiled into the binary were the one thing that Rust could
+  not reach.
+- **The entry point of Area 4 is the direct model for a build artifact.** It is not an
+  analogue of one. `sample-controller/controller.go` and the hand-wired operator in P4
+  wire the same five moving parts.
 
 <a id="soft-spots"></a>
 ## Soft spots in this corpus
 
-Stated so nothing here is trusted further than it was checked:
+These soft spots are stated so that nothing here is trusted further than it was
+checked.
 
-- **Gateway API GEP statuses.** GEP-713 (Memorandum), GEP-1364 (Standard) and
-  GEP-1016 (Standard) were read from source; GEP-2648/2649 titles were confirmed but
-  their `status` fields were not cleanly extracted from `metadata.yaml`. Treat those
-  two statuses as unconfirmed; the titles are exact.
-- **`kubernetes-csi/docs`** was confirmed to exist as a repo but its individual page
-  paths were not enumerated. Cite the site root <https://kubernetes-csi.github.io/docs/>
-  rather than deep links.
-- **etcd doc version.** k/k `master` vendors `go.etcd.io/etcd/* v3.7.0` and the
-  website publishes both `v3.7` and `v3.6` trees. Live `200`s were confirmed for the
-  **v3.6** URLs used above; the v3.7 equivalents exist in the website repo but were
-  not individually checked. Prefer v3.7 URLs on etcd 3.7, and expect these to shift.
-- **Cilium docs are `.rst`** rendered at docs.cilium.io; in-repo paths were verified,
-  rendered URLs were not. Read them on GitHub or at
+- **The Gateway API GEP statuses.** GEP-713 (Memorandum), GEP-1364 (Standard) and
+  GEP-1016 (Standard) were read from source. The titles of GEP-2648 and GEP-2649 were
+  confirmed, but their `status` fields were not cleanly extracted from `metadata.yaml`.
+  So treat those two statuses as unconfirmed. The titles are exact.
+- **`kubernetes-csi/docs`.** The repo was confirmed to exist. Its individual page paths
+  were not enumerated. So cite the site root, <https://kubernetes-csi.github.io/docs/>,
+  and do not cite deep links.
+- **The etcd doc version.** k/k `master` vendors `go.etcd.io/etcd/* v3.7.0`, and the
+  website publishes both a `v3.7` tree and a `v3.6` tree. Live `200`s were confirmed
+  for the **v3.6** URLs used above. The v3.7 equivalents exist in the website repo, and
+  they were not checked individually. So prefer the v3.7 URLs on etcd 3.7, and expect
+  these URLs to shift.
+- **The Cilium docs are `.rst` files**, rendered at docs.cilium.io. The in-repo paths
+  were verified. The rendered URLs were not. So read them on GitHub, or at
   <https://docs.cilium.io/en/stable/network/ebpf/>.
-- **KEP `status:` fields lag reality.** KEP-268 (priority and preemption) has been GA
-  for years and its `kep.yaml` still reads `implementable`. **Trust the content, not
-  the status field**, for maturity — and see
-  [`source-archaeology.md`](source-archaeology.md#method) for how to check.
+- **A KEP `status:` field lags reality.** KEP-268, on priority and preemption, has been
+  GA for years, and its `kep.yaml` still reads `implementable`. So for maturity,
+  **trust the content, and not the status field.** See
+  [`source-archaeology.md`](source-archaeology.md#method) for how to check it.
 
 ## Paths that have moved
 
 Six documented refactors make most third-party material actively wrong. That list is
-not repeated here — it lives once, with the method for dating any other path, in
-[`source-archaeology.md`](source-archaeology.md#stale-paths). Read it before trusting
-any file path from a blog post, including the ones in this document.
+not repeated here. It lives in one place only, together with the method for dating any
+other path, in [`source-archaeology.md`](source-archaeology.md#stale-paths). Read it
+before you trust any file path from a blog post. That includes the paths in this
+document.

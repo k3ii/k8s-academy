@@ -1,27 +1,28 @@
 # Build mechanics
 
-Eleven Go artifacts across five phases, one workflow decided once: two stages per
-artifact, one guest that compiles them, one registry, one identity convention, one
-sizing rule, and a named gate per artifact.
+The curriculum builds eleven Go artifacts across five phases. It decides the workflow once,
+and the decision has six parts: two stages per artifact, one guest that compiles them, one
+registry, one identity convention, one sizing rule, and a named gate per artifact.
 
-Settled in [#12](https://github.com/k3ii/k8s-academy/issues/12). The measurements in
+This was settled in [#12](https://github.com/k3ii/k8s-academy/issues/12). The measurements in
 [Measured, not estimated](#measurements) are reproducible from
 [`../research/build-footprints/`](../research/build-footprints/).
 
-The learner's code lives in `build/NN-artifact/` as real Go modules in this repo, with
-notes in `journal/NN-name.md` — so P4's hand-wired-versus-`kubebuilder` comparison is
-literally a `git diff`.
+The learner's code lives in `build/NN-artifact/`, as real Go modules in this repo. The notes
+live in `journal/NN-name.md`. P4 therefore compares a hand-wired operator against a
+`kubebuilder` operator with a literal `git diff`.
 
 <a id="two-stages"></a>
 ## Two stages, and which artifacts get both
 
-**Every artifact that can run outside the cluster is developed that way first, then
-re-shipped inside it.** Stage 1 is an edit/run loop measured in seconds. Stage 2 adds
-ServiceAccount, ClusterRole, leader election, image plumbing and resource sizing as a
-deliberate second exercise rather than a tax paid on every keystroke.
+**Every artifact that can run outside the cluster is developed that way first. Then it is
+re-shipped inside the cluster.** Stage 1 is an edit-and-run loop that is measured in seconds.
+Stage 2 adds the ServiceAccount, the ClusterRole, leader election, image plumbing and
+resource sizing. Stage 2 is a deliberate second exercise, and not a tax that you pay on every
+keystroke.
 
-**The API server cannot tell the difference, which is the point: stage 1 is not a
-simulation.**
+**The API server cannot tell the difference between the two stages. That is the point: stage
+1 is not a simulation.**
 
 <a id="artifact-table"></a>
 | Artifact | Phase | Stage 1 — outside | Stage 2 — inside |
@@ -38,50 +39,50 @@ simulation.**
 
 Two rows are worth more than their width.
 
-**The webhooks get a real stage 1 only because [`forge`](#forge) is on the lab
-bridge.** `ValidatingWebhookConfiguration.clientConfig` is a union: `service` for
-in-cluster, or **`url`** for anything the API server can dial. Stage 1 sets
-`url: https://forge.lab:8443`, so the API server calls a `go run` process on the build
-guest and the whole admission path is live while the code is still being edited. Stage
-2 switches to `service` and discovers what that swap actually costs — Service,
-Endpoints, in-cluster DNS, a cert with the right SANs. **The two halves of
-`clientConfig` are the same lesson from both sides**, and it is only available because
-`forge` sits on `10.10.10.0/24` rather than behind the bastion.
+**The webhooks get a real stage 1 for one reason: [`forge`](#forge) is on the lab bridge.**
+`ValidatingWebhookConfiguration.clientConfig` is a union. It takes `service` for an
+in-cluster target, or **`url`** for anything that the API server can dial. Stage 1 sets `url:
+https://forge.lab:8443`. The API server then calls a `go run` process on the build guest, so
+the whole admission path is live while you are still editing the code. Stage 2 switches to
+`service`, and it discovers what that swap actually costs: a Service, Endpoints, in-cluster
+DNS, and a cert with the right SANs. **The two halves of `clientConfig` are the same lesson
+from both sides.** That lesson is only available because `forge` sits on `10.10.10.0/24`,
+rather than behind the bastion.
 
-**CSI's stage 1 is the harness.** `csi-sanity` drives the driver over `/tmp/csi.sock`
-with no Kubernetes present at all, which is also how P8 gates it. The gate and the fast
-loop are the same tool; the sidecars arrive at stage 2.
+**The stage 1 of CSI is the harness.** `csi-sanity` drives the driver over `/tmp/csi.sock`,
+with no Kubernetes present at all. That is also how P8 gates it. So the gate and the fast
+loop are the same tool. The sidecars arrive at stage 2.
 
-**The `kubectl` plugin is the odd one out and the phase file should say so** rather
-than let the learner notice. P3 builds four artifacts and one of them never practises
-deployment mechanics at all, because it is a client binary. That is correct, not an
+**The `kubectl` plugin is the odd one out, and the phase file should say so** instead of
+letting the learner notice it. P3 builds four artifacts, and one of them never practises
+deployment mechanics at all, because it is a client binary. That is correct, and it is not an
 omission.
 
 <a id="forge"></a>
 ## `forge` — the build guest
 
-**A dedicated Debian 13 guest, `forge`, at 1536MB / 2c / 25G, at `10.10.10.125`,
-never part of any cluster and never torn down** — and therefore
-[never a node in a topology](lab-topologies.md#build-guest), only co-resident with one.
+**`forge` is a dedicated Debian 13 guest, at 1536MB, 2 cores and 25G, on `10.10.10.125`. It
+is never part of any cluster, and it is never torn down.** It is therefore
+[never a node in a topology](lab-topologies.md#build-guest). It is only ever co-resident with
+one.
 
 | Holds | Why there |
 |---|---|
-| Go toolchain, `GOMODCACHE`, `GOCACHE` | Survives every teardown. The k/k module graph is not something to re-download per phase. |
-| clang, libbpf headers, target BTF | The eBPF artifact's C half needs them, and they must match the nodes' kernel — [kernel lockstep](#kernel-lockstep). |
-| `docker` + `buildx`, and the [registry](#registry) container | It is the machine that pushes. Docker stays off a PVE host. |
-| The stage-1 process itself | `go run`, and the `url:`-mode webhook the API server dials. |
+| The Go toolchain, `GOMODCACHE` and `GOCACHE` | They survive every teardown. The module graph of k/k is not something to re-download per phase. |
+| clang, the libbpf headers, and the target BTF | The C half of the eBPF artifact needs them. They must also match the kernel of the nodes. See [kernel lockstep](#kernel-lockstep). |
+| `docker` with `buildx`, and the [registry](#registry) container | This is the machine that pushes. Docker stays off a PVE host. |
+| The stage-1 process itself | That means `go run`, and the `url:`-mode webhook that the API server dials. |
 
-**Why not the control plane of whatever topology is up**, which was the more literal
-reading of "build where it runs": the cache dies at every teardown, and build RAM
-competes with the cluster being studied. `forge` is the same OS, same kernel and same
-architecture as the nodes, so fidelity survives; only co-tenancy is given up, and
-co-tenancy was the part that cost something.
+**Why not the control plane of whatever topology is up?** That was the more literal reading
+of "build where it runs". It fails for two reasons. The cache dies at every teardown. And
+build RAM competes with the cluster that you are studying. `forge` has the same OS, the same
+kernel and the same architecture as the nodes, so fidelity survives. You give up co-tenancy
+only, and co-tenancy was the part that cost something.
 
-**Why 1536MB rather than 2048MB.** The
-[spendable figure is ~9.5GB](lab-topologies.md#ceiling), and `ha` at 7.5GB had already
-spent the margin. Totals are quoted from [the topology
-table](lab-topologies.md#topologies), which owns them; the arithmetic is what is being
-argued here:
+**Why 1536MB rather than 2048MB.** The [spendable figure is about 9.5GB](lab-topologies.md#ceiling),
+and `ha` at 7.5GB had already spent the margin. The totals below are quoted from
+[the topology table](lab-topologies.md#topologies), which owns them. The arithmetic is what
+is being argued here:
 
 | Topology | + `forge` 1536MB | Margin in 9.5GB |
 |---|---|---|
@@ -92,104 +93,105 @@ argued here:
 | [`solo`](lab-topologies.md#solo) 4.0GB | 5.5GB | 4.0GB |
 | [`etcd-only`](lab-topologies.md#etcd-only) 3.0GB · [`k0s-light`](lab-topologies.md#k0s-light) 2.0GB | 4.5GB · 3.5GB | 5.0GB+ |
 
-At 2048MB, `ha` plus `forge` commits all 9.5GB with nothing spare — and with
-`balloon 0` there is no reclaim, so staying under budget rather than trusting the
-6.1GB of swap is binding. 1536MB keeps "always up" **literally** true for every
-topology in the table, which is what makes the persistent cache worth having.
+At 2048MB, `ha` plus `forge` commits all 9.5GB, with nothing spare. And with `balloon 0`
+there is no reclaim, so staying under budget is binding. Do not trust the 6.1GB of swap.
+1536MB keeps "always up" **literally** true for every topology in the table, and that is what
+makes the persistent cache worth having.
 
-> **`forge` is 1536MB by default and 2560MB for the two builds that link a Kubernetes
-> binary with its debug information kept: [P3's apiserver](#p3-raise) and [P5's
-> schedulers](#p5-split).** Up at the start of each and back down in its teardown — a
-> `qm set` and a reboot four times in the curriculum, not twice. `GOMODCACHE` and
-> `GOCACHE` are on disk and do not notice.
+> **`forge` is 1536MB by default. It is 2560MB for the two builds that link a Kubernetes
+> binary and keep its debug information: [the apiserver in P3](#p3-raise) and [the schedulers
+> in P5](#p5-split).** It goes up at the start of each phase, and back down in that phase's
+> teardown. That is a `qm set` and a reboot four times in the curriculum, and not twice.
+> `GOMODCACHE` and `GOCACHE` are on disk, and they do not notice.
 
-Because 1536MB is **not** enough to link `cmd/kube-scheduler` with DWARF kept — see
-[the measurements](#measurements) — and `cmd/kube-apiserver` is the larger binary, so
-**1535 MiB is a floor for it rather than an estimate of it.** That last step is
-inferred: the apiserver link has never been sampled, and the honest form of the claim
-is *at least as large*, which is all the sizing decision needs.
+The raise is needed because 1536MB is **not** enough to link `cmd/kube-scheduler` with DWARF
+kept. See [the measurements](#measurements). And `cmd/kube-apiserver` is the larger binary,
+so **1535 MiB is a floor for it, rather than an estimate of it.** That last step is inferred.
+The apiserver link has never been sampled, so the honest form of the claim is *at least as
+large*, and that is all that the sizing decision needs.
 
-Every artifact in [the table above](#artifact-table) fits with room to spare — the
-operator and webhook shape, five of the eleven, peaks at 564 MiB, and the phases that
-build them (P3, P4, P7, P8) run beside `pair`, leaving 3.0GB. **What does not fit is
-not an artifact at all**: it is the two phases that compile a Kubernetes component in
-order to read it from the inside.
+Every artifact in [the table above](#artifact-table) fits with room to spare. The operator
+and webhook shape covers five of the eleven artifacts, and it peaks at 564 MiB. The phases
+that build them are P3, P4, P7 and P8, and they run beside `pair`, which leaves 3.0GB.
+**What does not fit is not an artifact at all.** It is the two phases that compile a
+Kubernetes component in order to read it from the inside.
 
 <a id="p3-raise"></a>
 ### P3 raises it once, with nothing else up
 
-P3 compiles `cmd/kube-apiserver` with `-gcflags=all="-N -l"` so that it can be stepped
-through under a debugger, which is the same DWARF-heavy link as P5's schedulers and does
-not fit 1536MB either. The resemblance ends there: **P3's first three modules need no
-topology at all**, so the raise is taken while the ceiling is otherwise empty, and the
-guest stays at 2560MB for the rest of the phase.
+P3 compiles `cmd/kube-apiserver` with `-gcflags=all="-N -l"`, so that you can step through it
+under a debugger. That is the same DWARF-heavy link as the schedulers of P5, and it does not
+fit 1536MB either. The resemblance ends there. **The first three modules of P3 need no
+topology at all.** So the raise is taken while the ceiling is otherwise empty, and the guest
+then stays at 2560MB for the rest of the phase.
 
 | P3 modules | Topology | `forge` | Total | Margin |
 |---|---|---|---|---|
 | Hand-start and instrument an apiserver | **none** | **2560MB** | 2.5GB | 7.0GB |
 | From the first provision to the capstone | [`pair`](lab-topologies.md#pair) 5.0GB | **2560MB** | 7.5GB | 2.0GB |
 
-The first row is the argument for deferring that provision rather than a consequence of
-it: the build that wants the largest `forge` in the curriculum is also the one build
-that can have the machine to itself. The capstone's teardown puts the guest back to
-1536MB, so the raise does not follow P3 into P4, whose two operators are the 564 MiB
-shape and have never needed it.
+Read the first row as the argument for deferring that provision, and not as a consequence of
+it. The build that wants the largest `forge` in the curriculum is also the one build that can
+have the machine to itself. The teardown of the capstone puts the guest back to 1536MB, so
+the raise does not follow P3 into P4. The two operators of P4 are the 564 MiB shape, and they
+have never needed it.
 
 <a id="p5-split"></a>
 ### P5 splits its lab
 
-P5 is assigned [`workhorse`](lab-topologies.md#workhorse) (7.0GB) because *"scoring across two nodes teaches almost
-nothing"* — but `workhorse` plus a 2560MB `forge` is the entire budget with zero
-margin. This cannot be dodged by compiling before the cluster is provisioned, because
-**stage 1 *is* `go run`, which links on every iteration**: the peak is needed
-repeatedly, with the cluster up.
+P5 is assigned [`workhorse`](lab-topologies.md#workhorse) at 7.0GB, because *"scoring across
+two nodes teaches almost nothing"*. But `workhorse` plus a 2560MB `forge` is the entire
+budget, with zero margin. You cannot dodge that by compiling before the cluster is
+provisioned, because **stage 1 *is* `go run`, and `go run` links on every iteration.** The
+peak is needed repeatedly, with the cluster up.
 
-The resolution comes from inside that justification rather than against it. The third
-node exists for *scoring*; the two build artifacts do not need it.
+The resolution comes from inside that justification, rather than against it. The third node
+exists for *scoring*. The two build artifacts do not need it.
 
 | P5 modules | Topology | `forge` | Total | Margin |
 |---|---|---|---|---|
 | Build the two schedulers | `pair` 5.0GB | **2560MB** | 7.5GB | 2.0GB |
 | Scoring, preemption, topology spread | `workhorse` 7.0GB | 1536MB | 8.5GB | 1.0GB |
 
-The image built in the first half is pushed to the registry on `forge` and simply run
-in the second, so **nothing is compiled while `workhorse` is up**. The phase now
-separates *building a scheduler* from *watching one make decisions at scale*, which
-were always two different exercises sharing a topology out of convenience.
+The image that you build in the first half is pushed to the registry on `forge`. The second
+half simply runs it. So **nothing is compiled while `workhorse` is up.** The phase now
+separates *building a scheduler* from *watching one make decisions at scale*. Those were
+always two different exercises, and they shared a topology out of convenience.
 
-**Disk is tighter than RAM here.** `workhorse` at 65G plus `forge` at 25G is 90G of
-95G, so **cache eviction is part of teardown discipline, not optional hygiene**:
-`go clean -modcache` and `docker system prune` belong in the teardown runbook alongside
-`tofu destroy`. The `workhorse` phases are where forgetting costs a failed provision.
+**Disk is tighter than RAM here.** `workhorse` at 65G plus `forge` at 25G is 90G out of 95G.
+So **cache eviction is part of teardown discipline, and not optional hygiene.** Put `go clean
+-modcache` and `docker system prune` in the teardown runbook, next to `tofu destroy`. The
+`workhorse` phases are where forgetting that costs you a failed provision.
 
 <a id="kernel-lockstep"></a>
 ## `forge` must track the nodes' kernel
 
-**The one way a dedicated build guest could quietly reintroduce the failure it was
-meant to avoid.** CO-RE resolves against `/sys/kernel/btf/vmlinux`. If `forge` drifts
-to a different Debian 13 kernel than the lab guests, the eBPF artifact compiles
-against BTF for a kernel it will never attach to — which is precisely why
-"cross-compile everything on the Mac" was rejected, re-entering through the back door.
+**This is the one way in which a dedicated build guest could quietly reintroduce the failure
+that it was meant to avoid.** CO-RE resolves against `/sys/kernel/btf/vmlinux`. Suppose that
+`forge` drifts to a different Debian 13 kernel than the lab guests. The eBPF artifact then
+compiles against BTF for a kernel that it will never attach to. That is precisely why
+"cross-compile everything on the Mac" was rejected, and here it re-enters through the back
+door.
 
-The convention: `forge` is provisioned from the same template as the nodes, its kernel
-is pinned in lockstep, and **`uname -r` on `forge` and on a lab node is compared before
-the eBPF module starts.**
+So here is the convention. `forge` is provisioned from the same template as the nodes. Its
+kernel is pinned in lockstep. And **you compare `uname -r` on `forge` and on a lab node
+before the eBPF module starts.**
 
 ```sh
 ssh forge  uname -r
 ssh node-1 uname -r    # these must match, and a mismatch is a stop-and-fix
 ```
 
-A mismatch is a stop-and-fix, not a warning. The failure it prevents is either a
-verifier rejection or a **silently wrong field offset**, and the second one is much
-worse than the first. The [chaos strand](chaos.md#borrowed-drills) takes the deliberate
-mismatch as a drill.
+A mismatch is a stop-and-fix, and not a warning. The failure that it prevents is either a
+verifier rejection or a **silently wrong field offset**, and the second one is much worse
+than the first. The [chaos strand](chaos.md#borrowed-drills) takes the deliberate mismatch as
+a drill.
 
 <a id="registry"></a>
 ## Images reach the nodes through one registry, outside the cluster
 
-`registry:3.0.0` as a container on `forge`, so it costs the cluster nothing and works
-identically on one, two or three nodes.
+Run `registry:3.0.0` as a container on `forge`. It then costs the cluster nothing, and it
+works identically on one, two or three nodes.
 
 ```
 build   docker buildx build --platform linux/amd64 \
@@ -197,17 +199,17 @@ build   docker buildx build --platform linux/amd64 \
 nodes   containerd insecure-registry entry, Ansible-managed
 ```
 
-The alternative — `docker save`, `scp` through the bastion, `ctr -n k8s.io images
-import` on each node — is zero-infrastructure but is per-node manual work, and it
-degrades exactly where the build track needs it most: a DaemonSet artifact (the CNI
-plugin, the CSI node plugin, the eBPF loader) on `pair` or `workhorse` means doing it
-on every node, every iteration.
+The alternative is `docker save`, then `scp` through the bastion, then `ctr -n k8s.io images
+import` on each node. That path needs zero infrastructure, but it is per-node manual work.
+And it degrades exactly where the build track needs it most. A DaemonSet artifact — the CNI
+plugin, the CSI node plugin, or the eBPF loader — on `pair` or `workhorse` means doing that
+work on every node, on every iteration.
 
-**But the node-side trust plumbing is not skipped.** Configuring containerd to pull
-from an insecure registry is a legible piece of trust configuration and it stays
-visible in Ansible rather than hidden. And **the `ctr import` path is done by hand
-exactly once**, so that when an image fails to arrive, the content-addressed store is
-somewhere the learner has already been.
+**But the node-side trust plumbing is not skipped.** Configuring containerd to pull from an
+insecure registry is a legible piece of trust configuration, and it stays visible in Ansible
+rather than hidden. And **the `ctr import` path is done by hand exactly once.** Then, when an
+image fails to arrive, the content-addressed store is somewhere that the learner has already
+been.
 
 <a id="base-image"></a>
 ## `scratch`, with one distroless artifact for contrast
@@ -218,81 +220,81 @@ COPY toy-scheduler /toy-scheduler
 ENTRYPOINT ["/toy-scheduler"]
 ```
 
-~12MB. No shell, no CA bundle, no `/etc/nsswitch.conf`. `kubectl exec` fails with
-`exec: "sh": not found`, and the way in is:
+That image is about 12MB. It has no shell, no CA bundle and no `/etc/nsswitch.conf`.
+`kubectl exec` fails with `exec: "sh": not found`. The way in is this:
 
 ```sh
 kubectl debug -it <pod> --image=busybox --target=toy-scheduler
 ```
 
-— an ephemeral container sharing the process namespace, which is **a mechanism worth
-needing rather than reading about.**
+That is an ephemeral container, and it shares the process namespace. It is **a mechanism
+worth needing, rather than a mechanism to read about.**
 
-One artifact ships `gcr.io/distroless/static:nonroot` instead, so the difference
-between "empty" and "deliberately minimal but debuggable" is felt: +2MB for a CA
-bundle, tzdata and a nonroot UID, still no shell. **The artifact that gets distroless
-should be one that actually needs the CA bundle** — an outbound TLS call to something
-outside the cluster makes `x509: certificate signed by unknown authority` the *reason*
-for the change rather than an illustration of it. Which artifact that is, is a
+One artifact ships `gcr.io/distroless/static:nonroot` instead. You then feel the difference
+between "empty" and "deliberately minimal but debuggable". It costs 2MB more, and it buys a
+CA bundle, tzdata and a nonroot UID. It still has no shell. **The artifact that gets
+distroless should be one that actually needs the CA bundle.** Give it an outbound TLS call to
+something outside the cluster. Then `x509: certificate signed by unknown authority` is the
+*reason* for the change, rather than an illustration of it. Which artifact that is, is a
 phase-file decision.
 
 <a id="identity"></a>
 ## Identity, per artifact
 
-Namespace `academy-build`. **One ServiceAccount and one hand-written least-privilege
-ClusterRole per artifact** — not a shared build-track identity, because the
-least-privilege exercise is CKS material the curriculum wants anyway, and an
-over-broad grant is only visible if the grants are separate.
+The namespace is `academy-build`. **Each artifact gets one ServiceAccount and one
+hand-written least-privilege ClusterRole.** There is no shared build-track identity, for two
+reasons. The least-privilege exercise is CKS material that the curriculum wants anyway. And
+an over-broad grant is only visible if the grants are separate.
 
 ```sh
 kubectl auth can-i list pods \
   --as=system:serviceaccount:academy-build:toy-scheduler
 ```
 
-That command is the check, and it is falsifiable: run it for a verb the artifact should
-*not* have and the expected answer is `no`.
+That command is the check, and it is falsifiable. Run it for a verb that the artifact should
+*not* have, and the expected answer is `no`.
 
 <a id="sizing"></a>
 ## Sizing, per artifact
 
-`resources: {}` is a live hazard on this node — it disqualified Argo CD and forced a
-non-optional `DeploymentRuntimeConfig` override on Crossplane's function pods. Eleven
-of these pods are the learner's own, so the same standard applies to the curriculum's
-own output:
+`resources: {}` is a live hazard on this node. It disqualified Argo CD, and it forced a
+non-optional `DeploymentRuntimeConfig` override on the function pods of Crossplane. Eleven of
+these pods are the learner's own, so the same standard applies to the curriculum's own
+output:
 
-- **A memory request, always** — taken from `kubectl top pod` during stage 1 rather
-  than guessed.
-- **A memory limit is a decision that gets written down**, per artifact, with the
-  reason. The sharpest finding behind this rule was not that limits are good but that
-  a 16× request-to-limit ratio is a lie about the working set. So *"limit equals
-  request"* and *"no limit, and here is why"* are both acceptable answers. **"No limit
-  because the chart didn't have one" is not.**
+- **Always set a memory request.** Take it from `kubectl top pod` during stage 1. Do not
+  guess it.
+- **A memory limit is a decision, and you write the decision down**, per artifact, with the
+  reason. The sharpest finding behind this rule was not that limits are good. It was that a
+  16× request-to-limit ratio is a lie about the working set. So two answers are acceptable:
+  *"limit equals request"*, and *"no limit, and here is why"*. **"No limit because the chart
+  didn't have one" is not acceptable.**
 - **No artifact ships `resources: {}`.**
 
 <a id="webhook-tls"></a>
 ## Webhook TLS: `openssl` first, `cert-manager` second
 
-**Webhook 1 is hand-certed end to end** — generate a CA, sign a serving cert with the
-right SANs, base64 the CA into `caBundle` by hand. Then **break it on purpose**: change
-one SAN, watch admission fail, read the API server log, and recognise `x509:
-certificate signed by unknown authority` from the inside.
+**Webhook 1 is hand-certed end to end.** Generate a CA. Sign a serving cert with the right
+SANs. Then base64 the CA into `caBundle` by hand. Then **break it on purpose**: change one
+SAN, watch admission fail, read the API server log, and recognise `x509: certificate signed
+by unknown authority` from the inside.
 
-**Webhook 2 uses `cert-manager`** — a `Certificate` plus the `ca-injector` annotation
-that writes `caBundle` for you — which now reads as automation of a shape already
-understood rather than an annotation that works for unexamined reasons. Webhook 3 takes
-whichever fits its phase.
+**Webhook 2 uses `cert-manager`.** That means a `Certificate`, plus the `ca-injector`
+annotation that writes `caBundle` for you. It now reads as automation of a shape that you
+already understand, rather than as an annotation that works for unexamined reasons. Webhook 3
+takes whichever method fits its phase.
 
-The drill this hands to the [chaos strand](chaos.md#borrowed-drills): corrupt the
-`caBundle` on a working webhook and diagnose it from the API server logs alone. With
-`failurePolicy: Fail` that is an outage, which is the honest version — a broken
-admission webhook can wedge a cluster, and this is where wedging one costs nothing.
+This section hands one drill to the [chaos strand](chaos.md#borrowed-drills). Corrupt the
+`caBundle` on a working webhook, and diagnose it from the API server logs alone. With
+`failurePolicy: Fail` that is an outage, and the outage is the honest version. A broken
+admission webhook can wedge a cluster, and this is the place where wedging one costs nothing.
 
 <a id="gates"></a>
 ## What "done" means, per artifact
 
-**Name the real harness where one exists rather than inventing a uniform bar.** Six of
-eleven have one; the remaining five fall to the falsifiable-claim tier — a `file:line`
-claim a hostile reader could check and find wrong.
+**Where a real harness exists, name it. Do not invent a uniform bar.** Six of the eleven
+artifacts have such a harness. The remaining five fall to the falsifiable-claim tier, which
+means a `file:line` claim that a hostile reader could check and find wrong.
 
 | Artifact | Gate | Kind |
 |---|---|---|
@@ -306,23 +308,24 @@ claim a hostile reader could check and find wrong.
 | Webhook ×3 | falsifiable written claim | tier 2 |
 | `kubectl` plugin | falsifiable written claim | tier 2 |
 
-**`envtest` is the addition worth flagging.** A hand-wired `client-go` controller had
-no objective gate at all. `sigs.k8s.io/controller-runtime/pkg/envtest` runs genuine
-`kube-apiserver` and `etcd` binaries out-of-cluster, so the reconciler is tested
-against real API semantics — optimistic concurrency, watch delivery, defaulting,
-validation — rather than a fake client that agrees with whatever the code does. It also
-means **both operators are gated by the same harness**, which is what makes the
-hand-wired-versus-`kubebuilder` `git diff` a comparison rather than an anecdote.
+**`envtest` is the addition worth flagging.** A hand-wired `client-go` controller had no
+objective gate at all. `sigs.k8s.io/controller-runtime/pkg/envtest` runs genuine
+`kube-apiserver` and `etcd` binaries out-of-cluster. The reconciler is therefore tested
+against real API semantics: optimistic concurrency, watch delivery, defaulting and
+validation. It is not tested against a fake client that agrees with whatever the code does.
+It also means that **both operators are gated by the same harness**, and that is what makes
+the hand-wired-versus-`kubebuilder` `git diff` a comparison rather than an anecdote.
 
-A learner-written test suite was considered and rejected **as the gate**: a suite you
-wrote can be as weak as you like, so it is good practice and bad evidence.
+A learner-written test suite was considered, and it was rejected **as the gate**. A suite that
+you wrote can be as weak as you like. So it is good practice, and it is bad evidence.
 
 <a id="measurements"></a>
 ## Measured, not estimated: what a build actually costs
 
-Sampling **aggregate** RSS across the whole toolchain process tree — the driver,
-`compile`, `link`, `asm` — because what OOMs a small guest is the sum. Parallelism
-pinned to `forge`'s 2 cores, `CGO_ENABLED=0 GOOS=linux GOARCH=amd64`, Go 1.26.5.
+The sampling measures **aggregate** RSS across the whole toolchain process tree: the driver,
+`compile`, `link` and `asm`. The reason is that what OOMs a small guest is the sum.
+Parallelism was pinned to the 2 cores of `forge`, with `CGO_ENABLED=0 GOOS=linux
+GOARCH=amd64`, on Go 1.26.5.
 
 | Build | Cache | Peak aggregate RSS | Wall |
 |---|---|---|---|
@@ -331,21 +334,21 @@ pinned to `forge`'s 2 cores, `CGO_ENABLED=0 GOOS=linux GOARCH=amd64`, Go 1.26.5.
 | `kube-scheduler`, **link step only**, DWARF kept | warm | **1535 MiB** | 5s |
 | `kube-scheduler`, link only, `-ldflags="-s -w"` | warm | 1177 MiB | 3s |
 
-**Three things this measurement taught that an estimate would have got wrong.**
+**This measurement taught three things that an estimate would have got wrong.**
 
-**1. The link is the peak, not the compile fan-out.** The first cold run reported
-1076 MiB and **that number is wrong** — sampling at 1Hz across a 64-second build missed
-a spike lasting a few seconds. Re-sampling at 5Hz against a warm cache, where nothing
-*but* the link runs, gives 1535 MiB. The methodological point is worth keeping:
-**`/usr/bin/time -l` reports the largest single child's RSS, and a Go build forks dozens
-of `compile` processes** — so the aggregate has to be sampled across the process tree.
+**1. The link is the peak. The compile fan-out is not.** The first cold run reported 1076
+MiB, and **that number is wrong**. Sampling at 1Hz across a 64-second build missed a spike
+that lasted a few seconds. Re-sampling at 5Hz against a warm cache, where nothing *but* the
+link runs, gives 1535 MiB. The methodological point is worth keeping. **`/usr/bin/time -l`
+reports the RSS of the largest single child, and a Go build forks dozens of `compile`
+processes.** So you must sample the aggregate across the process tree.
 
-**2. `-p` is not a lever.** The link is a single process. Reducing build parallelism
-reduces the *compile* phase's aggregate, which was never the constraint. Anyone sizing
-a build guest by throttling `-p` is tuning the wrong number.
+**2. `-p` is not a lever.** The link is a single process. Reducing build parallelism reduces
+the aggregate of the *compile* phase, and that phase was never the constraint. Anyone who
+sizes a build guest by throttling `-p` is tuning the wrong number.
 
-**3. Neither is `GOGC`.** The linker's *live* set is the constraint, not garbage it is
-failing to collect:
+**3. `GOGC` is not a lever either.** The constraint is the *live* set of the linker, and not
+garbage that the linker is failing to collect:
 
 | `GOGC` | Link peak, DWARF kept |
 |---|---|
@@ -353,39 +356,40 @@ failing to collect:
 | 50 | **1352 MiB** |
 | 25 | 1426 MiB — *worse* than 50 |
 
-Roughly 10% at best, then it goes backwards, and identical configurations vary by
-~25 MiB run to run. So `GOGC=50` is worth setting and is not worth relying on.
+That is roughly 10% at best, and then it goes backwards. Identical configurations also vary
+by about 25 MiB from run to run. So `GOGC=50` is worth setting, and it is not worth relying
+on.
 
-**Caveats, stated rather than buried.** Measured on darwin/arm64 cross-linking to
-linux/amd64; a native linux/amd64 link could differ, though not by the ~400 MiB that
-would change any conclusion. And the P5 plugin builds against
-`kubernetes-sigs/scheduler-plugins` rather than `k/k` directly — but that project's
-output *is* a `kube-scheduler` binary with extra plugins linked in, over the same
-staging-repo module graph, so `cmd/kube-scheduler` is the right proxy and if anything a
-slight underestimate.
+**Two caveats, stated rather than buried.** First, this was measured on darwin/arm64,
+cross-linking to linux/amd64. A native linux/amd64 link could differ, although not by the
+400 MiB or so that would change any conclusion. Second, the P5 plugin builds against
+`kubernetes-sigs/scheduler-plugins`, rather than against `k/k` directly. But the output of
+that project *is* a `kube-scheduler` binary with extra plugins linked in, over the same
+staging-repo module graph. So `cmd/kube-scheduler` is the right proxy, and if anything it is
+a slight underestimate.
 
 <a id="open"></a>
 ## Open, and where it bites
 
-- **Re-measure the native link peak on `forge` itself**, before P5 begins — it is the
-  number the 2560MB resize rests on, and a five-minute check on first boot. Run
-  [`link-peak.sh`](../research/build-footprints/link-peak.sh) on the guest. **If a
-  native link exceeds ~2.2GB, 2560MB is not enough and `-s -w` becomes mandatory.**
-- **The `ha`-plus-`forge` margin is 0.5GB**, which is thin. If `ha` needs its full
-  7.5GB in practice, `forge` stops for that topology and the cache survives the pause —
-  a fallback, not the plan.
-- **The eleven artifacts have a directory layout and no module convention.** This doc
-  puts the learner's code in `build/NN-artifact/`, and the thirteen `labs/` directories
-  kept to it — fourteen such paths are cited, from `build/00-scratch` to
-  `build/08-csi-driver`, with no session inventing a second shape. What no ruling covers
-  is what goes *inside*: the module path each `go.mod` declares, whether `cmd/` is
-  mandatory for a single-binary artifact, and the invocation the acceptance harness is
-  run by. Thirty-nine exercises carry a `**Build**` key and only two state a module path
-  at all, both of them `probe` for a throwaway. It bites at the second artifact, not the
-  first: P4's two operators are built to be diffed against each other, and P5's plugin
-  is meant to be carried onto the scheduler binary from earlier in the same phase. A
-  convention chosen after eleven `go.mod` files exist is eleven edits; chosen before the
-  first, it is one paragraph. Left open on purpose when
-  [map #29](https://github.com/k3ii/k8s-academy/issues/29) closed: the exercise *shape*
-  is settled by two prototypes, and the scaffold has no evidence behind it yet, because
-  no artifact in this curriculum has been built.
+- **Re-measure the native link peak on `forge` itself, before P5 begins.** It is the number
+  that the 2560MB resize rests on, and it is a five-minute check on first boot. Run
+  [`link-peak.sh`](../research/build-footprints/link-peak.sh) on the guest. **If a native
+  link exceeds about 2.2GB, then 2560MB is not enough, and `-s -w` becomes mandatory.**
+- **The margin for `ha` plus `forge` is 0.5GB**, which is thin. If `ha` needs its full 7.5GB
+  in practice, then `forge` stops for that topology, and the cache survives the pause. That
+  is a fallback, and not the plan.
+- **The eleven artifacts have a directory layout, and no module convention.** This doc puts
+  the learner's code in `build/NN-artifact/`, and the thirteen `labs/` directories kept to
+  it. Fourteen such paths are cited, from `build/00-scratch` to `build/08-csi-driver`, and no
+  session invented a second shape. What no ruling covers is what goes *inside*. Three things
+  are unspecified: the module path that each `go.mod` declares, whether `cmd/` is mandatory
+  for a single-binary artifact, and the invocation that the acceptance harness is run by.
+  Thirty-nine exercises carry a `**Build**` key, and only two state a module path at all.
+  Both of those two say `probe`, for a throwaway. This bites at the second artifact, and not
+  at the first. The two operators of P4 are built to be diffed against each other, and the
+  plugin of P5 is meant to be carried onto the scheduler binary from earlier in the same
+  phase. A convention that is chosen after eleven `go.mod` files exist costs eleven edits.
+  Chosen before the first one, it costs one paragraph. It was left open on purpose when
+  [map #29](https://github.com/k3ii/k8s-academy/issues/29) closed. The exercise *shape* is
+  settled by two prototypes. The scaffold has no evidence behind it yet, because no artifact
+  in this curriculum has been built.
