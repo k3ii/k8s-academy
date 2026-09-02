@@ -139,20 +139,21 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Fifteen `walk` verdicts, numbered in publication order. All fifteen are *pending* — an
-authoring ticket's to claim. The rubric they are authored against was ratified in
-[#57](https://github.com/k3ii/k8s-academy/issues/57).
+Fifteen `walk` verdicts, numbered in publication order. The first eight are written; the rest are
+*pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
+[#57](https://github.com/k3ii/k8s-academy/issues/57); the section order and the ladder they use
+were amended in [#78](https://github.com/k3ii/k8s-academy/issues/78).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | Leader election moved into the API | pending |
-| 02 | Ubernetes Lite, and the label that outlived its own deprecation | pending |
-| 03 | An Ingress from 2016, ported forward twice | pending |
-| 04 | The manifest that used to validate and mean something | pending |
-| 05 | The one 2016 manifest that still applies, and the trap in it | pending |
-| 06 | Isolation was an annotation on the namespace | pending |
-| 07 | Autoscaling without Heapster | pending |
-| 08 | A 2016 security checklist, item by item | pending |
+| 01 | [The trick in this post is now an API kind, and the object it borrowed is deprecated](01-simple-leader-election-with-kubernetes.md) | written |
+| 02 | [The label in this post is still served, the name is gone, and the spreading it calls automatic is not a guarantee](02-building-highly-available-applications-using-kubernetes-new-multi-zone-clusters-aka-ubernetes-lite.md) | written |
+| 03 | [Nothing in this post's fences ran as printed, and the manifest they were meant to create is three kinds of dead](03-kubernetes-1-2-and-simplifying-advanced-networking-with-ingress.md) | written |
+| 04 | [Every command in this post still runs, the one that made a Deployment now makes a Pod, and the field behind its rollback is gone](04-using-deployment-objects-with.md) | written |
+| 05 | [Neither manifest in this post applies as printed, the API now accepts the defect it used to catch, and the behaviour the post leaves out is the only one that changes](05-configuration-management-with-containers.md) | written |
+| 06 | [The annotation in this post still applies cleanly and has never done anything, and the architecture it describes is now on the API's own list of what it cannot do](06-kubernetes-network-policy-apis.md) | written |
+| 07 | [The closing promise of this post is now a documented pattern, every command in it fails, and the error it prints survives in the current documentation in three incompatible forms](07-autoscaling-in-kubernetes.md) | written |
+| 08 | [The project marked this post partly obsolete without saying which part, its one still-exact snippet is the one nobody should use, and its example manifest contradicts its own table](08-security-best-practices-kubernetes-deployment.md) | written |
 | 09 | kubeadm join, and the hole the hash closed | pending |
 | 10 | Two ways to ask for a volume, and how differently they died | pending |
 | 11 | helm init, and the component removed for existing | pending |
