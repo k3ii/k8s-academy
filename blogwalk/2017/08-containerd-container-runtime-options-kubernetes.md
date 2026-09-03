@@ -147,8 +147,8 @@ A different plugin id *and* a different quote character. Then lines 257-260, for
 down the same page, show how to override the sandbox image — using `[plugins."io.containerd.grpc.v1.cri"]`,
 the 1.x spelling, with no version note at all. The page teaches the rename and then ignores it.
 
-**The diff, and why** — three of the template's five cases land here, and the fifth case lands
-twice.
+**The diff, and why** — four of the template's six cases land here, and the sixth is the one the
+post's own subject ended up in.
 
 *The post is still right.* The technical argument is intact and it won. containerd is the first
 runtime named in the glossary's definition of the term, the first row of kubeadm's runtime table,
@@ -180,10 +180,10 @@ ever since, moved from `kubernetes-incubator/cri-tools` to `kubernetes-sigs/cri-
 its version to your Kubernetes version by hand (`crictl.md:27-32`). Nine years of stability and no
 package.
 
-The case that does *not* apply is the interesting absence. Nothing in this post was wrong when
+The cases that do *not* apply are the interesting absence. Nothing in this post was wrong when
 published, and nothing in it broke. There is no manifest to break. The post's own subject was
-retired by being agreed with, which is the one failure mode this tree's five cases do not have a
-name for, and the closest name is the fourth.
+retired by being agreed with, which is the template's sixth case, and the closest name the first
+five had for it was the fourth.
 
 **The ladder** — the post's subject has no gate and never had one, so the ladders here belong to the
 scope table's three most load-bearing rows: the one the post ticked, the one it disclaimed, and the

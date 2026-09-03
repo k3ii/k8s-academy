@@ -180,7 +180,7 @@ before-and-after of one binary leaving one image. That is the graduation story a
 repeated here. This exercise starts where that one ends: from the field as it stands at the pin, and
 what it will not do.
 
-**The diff, and why** — none of the five cases fits, and the sixth one does. The post did not break
+**The diff, and why** — none of the first five cases fits, and the sixth one does. The post did not break
 by being wrong: its diagnosis of the three mechanisms is intact, line by line, in the pin's own
 descriptions of them. It is not *still right* in the way a hardening checklist is still right,
 because its three instructions are obsolete — nobody should ship that binary now. It was not a plan

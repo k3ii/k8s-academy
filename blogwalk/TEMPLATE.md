@@ -54,20 +54,44 @@ accepted by the API and fails an hour later on a node. **Distinguish these three
 they are the entire difficulty of reading old Kubernetes documentation, and only the first
 one is honest with you.
 
+**A fourth thing belongs here and is not a behaviour**: where the pinned documentation disagrees
+with **itself**. One page giving a resource three different maturities, a stated field count
+contradicted further down by the page's own field list, a comparison against a feature gate
+deleted releases ago — none of these is a diff between the post and the pin, so none of them is a
+case in the next section, where every case is a statement about the *post*. This one is a
+statement about the *pin*, and it is the diff a reader trusting today's documentation actually
+walks into. Cite both halves and say they disagree; do not pick a winner unless a command settles
+it, and if one does, that command belongs in *Do*
+([#100](https://github.com/k3ii/k8s-academy/issues/100), `blogwalk/2018/09`).
+
 On a post that **still works** — most of them, from 2019 on — this section is one line: the post
 is still true, still the default, and needs no correction. Say that and stop. Padding it is the
 failure mode, and the 2024 prototype measured the collapse: 8 lines where behaviour had
 changed, 2 where it had not. The section stays anyway, because the one thing a reader cannot
 check for themselves is whether anybody checked.
 
+**What this exercise does not cover, and where it lives** — an *optional* bolded paragraph
+closing this section, for a post whose subject is partly owned elsewhere. Name what the exercise
+gives up and where the fact already lives, then stop: a backward link if the owner is written, a
+bare pointer to the year and subject if it is not, and no link at all to a forward row, because
+[references point backward only](#conventions-this-tree-inherits). This is the shape that makes
+*a fact lives in exactly one place* enforceable rather than aspirational, and it earns its place
+by frequency — it appears in four of 2018's nine files and none of the 35 before them, because
+it is a symptom of the corpus getting dense, which only continues. Skip it when nothing collides;
+a paragraph saying "nothing was ceded" is padding.
+
 **The diff, and why** — the payload, and on a modern post the section that carries the whole
-exercise. It has **five cases**. The first two were ratified in
-[#57](https://github.com/k3ii/k8s-academy/issues/57); the last three are the failure modes the
-census met and the verdict vocabulary cannot name, ruled in
+exercise. It has **six cases**, and they are **not exclusive**: an exercise names the ones that
+land, and several landing in one post is a finding rather than indecision — four have landed in
+one post (`blogwalk/2017/07`). Naming several is not hedging; the hedge is naming none. The first
+two were ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57); the third, fourth and
+fifth are the failure modes the census met and the verdict vocabulary cannot name, ruled in
 [#78](https://github.com/k3ii/k8s-academy/issues/78) as cases here rather than as new verdicts —
 the census is closed and its 767 rows are immutable, so a fifth verdict would be a value no row
-could ever carry. All three already sit in the `walk` set; what they lacked was a way to be
-written.
+could ever carry. All three already sat in the `walk` set; what they lacked was a way to be
+written. The sixth arrived the same way and by the same test: three exercises across two years
+wrote the shape without a name for it, and
+[#100](https://github.com/k3ii/k8s-academy/issues/100) ratified the name they had improvised.
 
 - The post **broke**: what changed, the release it changed in, and one sentence naming the
   pressure that moved it.
@@ -90,6 +114,18 @@ written.
   argument carries the whole exercise and *Do* has to be honest about what it cannot show
   ([#69](https://github.com/k3ii/k8s-academy/issues/69),
   [#73](https://github.com/k3ii/k8s-academy/issues/73)).
+- The post was **retired by being agreed with**: the forecast came true, and that is *why* the
+  instructions fail. The project adopted the argument so completely that the thing the post tells
+  you to install stopped being a separate thing — no package, no version, no repository, no
+  documentation page, because it is not an alternative any more but the default or a field. It is
+  the fourth case's mirror and must not be filed under it: an abandoned plan is a forecast
+  reversed, this is a forecast honoured, and the wrong verb produces an exercise that reads the
+  outcome backwards. Say what the post asked for, name the release where it landed, and say what
+  the reader does *instead* — because the reader's problem is that correct instructions became
+  obsolete by succeeding, and no error message will ever tell them that. Ratified in
+  [#100](https://github.com/k3ii/k8s-academy/issues/100) on three instances across two years
+  (`blogwalk/2017/08` containerd, `2018/02` CSI at beta, `2018/07` gRPC health checking) after the
+  shape recurred; a single instance stays a *Read on* question.
 
 Cite [`research/blog-era-translation.md`](../research/blog-era-translation.md) rather than
 re-deriving the release history. Removal releases come from the source tree at the release tag,
@@ -252,7 +288,11 @@ Kubernetes vX.Y.
 **As written** — what the post tells you to do, in its own idiom.
 
 **As it runs now** — what happens today: errors, silent no-ops, and late failures, told apart.
-Or, if the post still works: still true, still the default, no correction needed.
+Or, if the post still works: still true, still the default, no correction needed. And where the
+pin contradicts itself, both halves cited.
+
+**What this exercise does not cover, and where it lives.** *(optional)* What is ceded, and to
+which earlier exercise or which unwritten year.
 
 **The diff, and why** — what changed and the pressure that moved it, or what the post could not
 yet know and which release settled it.

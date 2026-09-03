@@ -133,7 +133,7 @@ for getting policy enforcement onto the cluster you built by hand. This exercise
 demonstrate enforcement, and says so in its steps rather than sending you off-site mid-exercise to
 get it.
 
-**The diff, and why** — four of the template's five cases land in this post, which is one more than
+**The diff, and why** — four of the template's six cases land in this post, which is one more than
 [the previous exercise](06-using-rbac-generally-available-18.md) managed, and they land on different
 sentences.
 
