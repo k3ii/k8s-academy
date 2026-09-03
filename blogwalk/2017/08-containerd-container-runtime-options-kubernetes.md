@@ -1,5 +1,5 @@
 <a id="containerd-container-runtime-options-kubernetes"></a>
-# The project this post announces survives in the pinned documentation as a tab id, a PNG filename and an AppArmor profile; the runtime it was written to displace has six migration pages, a glossary entry and a note saying it does not implement CRI at all; and whether this curriculum's two hand-edits to `config.toml` match anything is a test of a containerd major version the pin says will stop working in v1.38
+# The project this post announces survives in the pinned documentation as a tab id, a PNG filename and an AppArmor profile; the runtime it was written to displace has six migration pages, a glossary entry and a note saying it does not implement CRI at all; and of this curriculum's two hand-edits to `config.toml` one is gone because two defaults agreed, and the other is the answer the kubelet now asks for instead of reading its own setting
 
 **Post** — [Containerd Brings More Container Runtime Options for Kubernetes](https://kubernetes.io/blog/2017/11/containerd-container-runtime-options-kubernetes/),
 2017-11-02, Kubernetes v1.8. Lantao Liu (Google) and Mike Brown (IBM). 136 lines, one scope table,
@@ -117,13 +117,18 @@ is the entire containerd install instruction in the pinned documentation: *"To i
 your system, follow the instructions on getting started with containerd. Return to this step once
 you've created a valid `config.toml` configuration file."* One off-site link and a re-entry point.
 `change-runtime-containerd.md:44-59` gives the Linux steps concretely, and they are three: install
-the package, run `containerd config default | sudo tee /etc/containerd/config.toml`, restart the
-service. Those are — line for line, allowing for `>/dev/null` — the commands in this curriculum's
-own [node baseline](../../strands/lab-topologies.md#node-baseline-steps). kubeadm then finds the
-result without being told: `install-kubeadm.md:129-133` says it scans a fixed list of socket paths
-and only asks you which runtime to use if it finds several or none.
+the `containerd.io` package from Docker's own repositories, run
+`containerd config default | sudo tee /etc/containerd/config.toml`, restart the service. This
+curriculum's own [node baseline](../../strands/lab-topologies.md#node-baseline-steps) follows
+exactly one of the three, and the middle one — allowing for `>/dev/null`. It installs no package at
+all. It fetches the containerd tarball, the `containerd.service` unit and a `runc` binary from the
+projects' release pages and verifies their checksums, because a package is a version, and the
+version trixie ships cannot answer a call `kubeadm` now makes. The baseline's own note records
+walking into that, on a node that had already been built. kubeadm still finds the result without
+being told: `install-kubeadm.md:129-133` says it scans a fixed list of socket paths and only asks
+you which runtime to use if it finds several or none.
 
-Two things about that page deserve to be looked at rather than summarised, and step 5 and step 11
+Three things about that page deserve to be looked at rather than summarised, and steps 5, 11 and 12
 below do the looking.
 
 The first is that the pinned documentation's only occurrence of the string `bin_dir` in the whole of
@@ -131,10 +136,15 @@ The first is that the pinned documentation's only occurrence of the string `bin_
 Windows tab, on a page whose own first paragraph says it *"is applicable for cluster operators
 running Kubernetes 1.23 or earlier."* The comment reads `# - cni bin_dir and conf_dir locations`,
 and it is offered as one of two things to review after generating the default config. The Linux tab,
-immediately above it, does not mention either. This curriculum's baseline sets `bin_dir` with a
-`sed`, and the note beneath the baseline records what happens when you skip it: the node still flips
-to `Ready` and no pod can ever start. The one place the pin names the field is a Windows comment
-addressed to operators of a version it no longer serves.
+immediately above it, does not mention either. This curriculum's baseline used to set `bin_dir` with
+a `sed` and now sets nothing: the edit existed because Debian's package patched the field to
+`/usr/lib/cni` while the plugins sat in `/opt/cni/bin` the whole time, put there by `kubernetes-cni`,
+which `kubelet` depends on. Upstream containerd defaults to the directory that was always right, and
+at config schema `version = 3` the field is a list spelled `bin_dirs`. So the one place the pin names
+the field is a Windows comment addressed to operators of a version it no longer serves, and the
+spelling it names is the old one: `bin_dirs` appears nowhere in `content/en/docs` at all. The failure
+the edit prevented outlives the edit, and the note beneath the baseline keeps it in view — the node
+still flips to `Ready` and no pod can ever start.
 
 The second is that `container-runtimes.md` disagrees with itself about how to spell the plugin.
 Lines 206-222 give the `SystemdCgroup` setting twice, once per major version, and the difference is
@@ -146,6 +156,25 @@ not the value:
 A different plugin id *and* a different quote character. Then lines 257-260, forty lines further
 down the same page, show how to override the sandbox image — using `[plugins."io.containerd.grpc.v1.cri"]`,
 the 1.x spelling, with no version note at all. The page teaches the rename and then ignores it.
+
+The third is the mechanism that moved this curriculum's baseline, and four places in the pin do not
+agree on whether it exists. `container-runtimes.md:145-149` says that at the pinned version, with
+`KubeletCgroupDriverFromCRI` enabled and a runtime that supports the `RuntimeConfig` CRI RPC,
+*"the kubelet automatically detects the appropriate cgroup driver from the runtime, and ignores the
+`cgroupDriver` setting within the kubelet configuration."* A hundred lines further down the same
+page, `:248-249` says *"In Kubernetes v1.28, you can enable automatic detection of the cgroup driver
+as an alpha feature."* `kubelet-integration.md:83`, a kubeadm page, says flatly that *"the kubelet
+cannot automatically detect the cgroup driver used by the container runtime."* And the gate file has
+carried a `stable` stage defaulting on since v1.34.
+
+Then the two deadlines, which are not the same deadline. `container-runtimes.md:156-157`: *"In
+Kubernetes 1.38, this fallback behavior will be dropped, and older versions of containerd will fail
+with newer kubelets."* The gate file's own body: *"The kubelet will stop falling back to this
+configuration in Kubernetes 1.36."* The pin is v1.37, so one of those two dates has already gone by
+and the fallback is still there — the node baseline's own note records a `kubeadm` run being handed
+it on 2026-09-02, on a node carrying Debian's containerd 1.7 package, warning included. Nothing in
+the pinned tree picks between the two dates. The node can be asked, though, and steps 11 and 12 ask
+it.
 
 **The diff, and why** — four of the template's six cases land here, and the sixth is the one the
 post's own subject ended up in.
@@ -159,13 +188,18 @@ nothing more, and *"if a container runtime does not support the v1 API, the kube
 as a node."* The post asked to be judged on whether containerd was a good alternative. It is not an
 alternative any more; it is the default, which is a stronger form of the same verdict.
 
-*The post describes a plan the project abandoned — twice, in opposite directions.* cri-containerd was
-going to be a project: an incubator repo, its own release cadence, its own alpha version number, its
-own installation documentation, its own beta due by the end of 2017. None of that exists. Not
-because it failed, but because it was absorbed into containerd and stopped being a thing you install.
-There is no package, no version, no name. The other abandonment is `kube-up.sh`: Next Steps promised
+*The post was retired by being agreed with.* cri-containerd was going to be a project: an incubator
+repo, its own release cadence, its own alpha version number, its own installation documentation, its
+own beta due by the end of 2017. None of that exists — not because it failed, but because it was
+absorbed into containerd and stopped being a thing you install. There is no package, no version, no
+name. The forecast came true, and that is exactly why the post's four installation routes cannot be
+followed: what they install is not missing, it is everywhere, as a section of a TOML file.
+
+*The post describes a plan the project abandoned.* That plan is `kube-up.sh`. Next Steps promised
 integration with it, and the directory that documented it is gone from the pin, so the integration
-target outlived neither the shim nor the post.
+target outlived neither the shim nor the post. The two disappearances read the same from a distance
+and are opposites up close, which is why the template keeps them as separate cases: one forecast was
+honoured and the other was reversed.
 
 *The post has been overtaken by stasis.* Two of the six rows in the scope table were bets on future
 plumbing, and the ladders below measure where that plumbing got to. Metrics was ticked ✔️ in 2017 on
@@ -181,9 +215,8 @@ its version to your Kubernetes version by hand (`crictl.md:27-32`). Nine years o
 package.
 
 The cases that do *not* apply are the interesting absence. Nothing in this post was wrong when
-published, and nothing in it broke. There is no manifest to break. The post's own subject was
-retired by being agreed with, which is the template's sixth case, and the closest name the first
-five had for it was the fourth.
+published, and nothing in it broke. There is no manifest to break, and no instruction here fails on
+its own terms. The sixth case is the only one that can explain why they cannot be followed anyway.
 
 **The ladder** — the post's subject has no gate and never had one, so the ladders here belong to the
 scope table's three most load-bearing rows: the one the post ticked, the one it disclaimed, and the
@@ -223,20 +256,25 @@ learner's own `config.toml`:
 | beta | `true` | — | v1.31 –  |
 | stable | `true` | — | v1.34 –  |
 
-Stable, defaulting on, since v1.34. Read it against `container-runtimes.md:145-157`. With this gate
-enabled *"and a container runtime that supports the `RuntimeConfig` CRI RPC, the kubelet
-automatically detects the appropriate cgroup driver from the runtime, and ignores the `cgroupDriver`
-setting within the kubelet configuration."* Then: *"However, older versions of container runtimes
-(specifically, containerd 1.y and below) do not support the `RuntimeConfig` CRI RPC, and may not
-respond correctly to this query, and thus the Kubelet falls back to using the value in its own
-`--cgroup-driver` flag."* Then the sentence that dates the baseline: *"In Kubernetes 1.38, this
-fallback behavior will be dropped, and older versions of containerd will fail with newer kubelets."*
+Stable, defaulting on, since v1.34, and the `beta` stage in the file has no `toVersion` at all, so
+two stages claim v1.34 onwards. Three facts in the gate file's body carry more than the table does.
+The first names a runtime version: *"containerd: Support was added in v2.0.0"*, which is the whole
+reason this curriculum's baseline fetches a tarball instead of installing a package. The second is a
+deadline the page above disagrees with, and it is the third thing in *As it runs now*. The third is
+an instrument — *"Admins can use the metric `kubelet_cri_losing_support` to see if there are any
+nodes in their cluster that will lose support"* — which
+`docs/reference/instrumentation/metrics.md:2394-2399` records as an ALPHA gauge whose single label
+is `version`.
+
+`container-runtimes.md:151-154` says why the fallback is there at all: *"older versions of container
+runtimes (specifically, containerd 1.y and below) do not support the `RuntimeConfig` CRI RPC… and
+thus the Kubelet falls back to using the value in its own `--cgroup-driver` flag."*
 
 So the direction of the question has reversed. In 2017 you configured the kubelet and hoped the
-runtime agreed. At the pin the runtime is asked and the kubelet's own setting is ignored — unless the
-runtime is too old to be asked, in which case the old behaviour is still there, with an expiry date
-one minor away. Step 4 records which containerd the node installed, and step 11 is where that number
-becomes the answer to a question about the baseline rather than about the post.
+runtime agreed. At the pin the runtime is asked and the kubelet's own setting is ignored, unless the
+runtime is too old to be asked. Step 4 records which containerd the node has, and steps 11 and 12
+are where that number becomes the answer to a question about the baseline rather than about the
+post.
 
 **No gate** — there is no `feature-gates/cri-containerd.md`, no `feature-gates/containerd.md` and no
 gate for CRI itself. The interface graduated by shortcode: `cri.md:24` carries
@@ -261,8 +299,9 @@ both nodes, then `kubeadm init --pod-network-cidr=10.244.0.0/16`, Flannel, and t
 the worker. Take the current minor; step 11 asks you to compare it to a number in the pin, and any
 recent minor gives the same answer. Then `ssh zain@10.10.10.130`.
 
-Do not skip either `sed` in the baseline in order to watch it fail. The failure the second one
-prevents is silent and costs a rebuild, and step 6 shows you both edits without breaking anything.
+Do not skip the baseline's one `sed` in order to watch it fail, and take the tarball rather than the
+package: `apt-get install -y containerd` produces a node this pin's `kubeadm` warns about and the
+next release refuses. Step 6 shows you the edit without changing anything.
 
 **Do**
 
@@ -302,45 +341,54 @@ prevents is silent and costs a rebuild, and step 6 shows you both edits without 
    returns success and an empty list. On these nodes there is no `docker` to run. The quiet failure
    is quieter than the row expected — the command does not return an empty list, it does not exist.
 
-4. Find out what the one `apt-get install containerd` actually put on the node, and record the major
-   version:
+4. Find out what put containerd on this node, and record the major version:
 
    ```sh
    containerd --version
    ctr --version
-   dpkg -L containerd | grep -E '/bin/|/sbin/'
+   ls /usr/local/bin /usr/local/sbin
+   dpkg -S "$(command -v containerd)"; echo "exit $?"
    ```
 
-   Write the containerd major version down. Step 11 is about that number. Compare the binary list to
-   the post: containerd, `ctr`, and one shim. There is no `cri-containerd` binary, because there is
-   no cri-containerd.
+   Write the containerd major version down. Steps 11 and 12 are about that number. The last command
+   is the interesting one: no package owns this binary, so `dpkg -S` exits non-zero and says so. The
+   pin's own concrete instruction, `change-runtime-containerd.md:44`, is to install a package, and
+   this node has none — the reason is under *As it runs now*. Then read the two directory listings
+   against the post: containerd and `ctr` from one release page, a shim beside them, and `runc` from
+   a second project's release page because containerd 2.x needs a newer one than trixie ships. There
+   is no `cri-containerd` binary anywhere in either, because there is no cri-containerd.
 
 5. Read the configuration the baseline generated, and find the plugin the post drew as a separate
    box:
 
    ```sh
-   grep -n 'SystemdCgroup\|bin_dir\|conf_dir\|sandbox_image\|disabled_plugins' /etc/containerd/config.toml
+   grep -n 'SystemdCgroup\|bin_dir\|conf_dir\|sandbox_image\|disabled_plugins\|^version' /etc/containerd/config.toml
    sudo ctr plugin ls | grep -i cri
    ```
 
    Four things to check against the pin. `disabled_plugins` should be an empty list, which is what
    `container-runtimes.md:227-232` requires and the whole of what "install cri-containerd" has become.
-   `SystemdCgroup` and `bin_dir` are the baseline's two `sed` edits. `sandbox_image` names the pause
+   `SystemdCgroup` is the baseline's one `sed` edit, and `bin_dir` is the one it used to make: the
+   spelling your `grep` finds instead tells you which schema this file is written in, and neither
+   spelling is the one the pin names. `sandbox_image` names the pause
    container from the post's Architecture step 2, and `container-runtimes.md:257-260` shows the
    override with a concrete value. And read the plugin id in the section headers your `grep` printed:
    compare it, character for character including the quote marks, to the two spellings at
    `container-runtimes.md:206-222`. Which major version is your `config.toml` written in?
 
-6. See the two edits as edits, without changing anything:
+6. See the edit as an edit, without changing anything:
 
    ```sh
    containerd config default | diff - /etc/containerd/config.toml
    ```
 
    `containerd config default` writes to stdout, so this touches nothing. The diff is the baseline's
-   two `sed` lines and nothing else. Both are one word changed in one line. One of them, per the
-   baseline's own note, is the difference between a working node and a node that reports `Ready`
-   while no pod can ever start.
+   one `sed` line and nothing else: one word changed in one line. It used to be two lines, and the
+   one that went away is the more interesting of the pair — it existed only because a packaged
+   containerd looked for CNI plugins in a directory nothing filled, and its absence is the
+   difference between a working node and a node that reports `Ready` while no pod can ever start.
+   Nothing prevents that failure now except two defaults happening to agree, which is what the note
+   beneath the baseline is for.
 
 7. Confirm that the interface the post is built on is the interface in use, from the kubelet's side:
 
@@ -401,32 +449,65 @@ prevents is silent and costs a rebuild, and step 6 shows you both edits without 
     output to step 8's second list: the same containers, grouped into the concept `ctr` does not
     have.
 
-11. Ask whether the baseline's first `sed` is still doing anything:
+11. Ask which of two cgroup-driver settings the kubelet is obeying:
 
     ```sh
-    sudo grep -n 'cgroupDriver' /var/lib/kubelet/config.yaml
+    sudo grep -n 'cgroupDriver' /var/lib/kubelet/config.yaml; echo "exit $?"
     ```
 
     Now put three facts side by side. The ladder above says `KubeletCgroupDriverFromCRI` has been
     stable and on by default since v1.34. `container-runtimes.md:145-149` says that with that gate
-    the kubelet detects the driver from the runtime and *ignores* this file's `cgroupDriver` setting.
-    `container-runtimes.md:151-154` says containerd 1.y and below cannot answer the query, so the
-    kubelet falls back to its own flag. Your containerd major version is the one you wrote down in
-    step 4. Work out which of the two paths this node is on, and then read
-    `container-runtimes.md:156-157` for what happens to that path in v1.38.
+    the kubelet asks the runtime which driver it uses and *ignores* the key you just grepped for.
+    `container-runtimes.md:151-154` says containerd 1.y cannot answer that query, so on those
+    versions the kubelet falls back to *"the value in its own `--cgroup-driver` flag"* — the pin's
+    words, and worth holding against the fact that the setting you grepped for lives in a file and
+    not in a flag. Your containerd major version is the one you wrote down in step 4.
 
-**Expect** — every command exits zero except the three deliberate probes in steps 3 and 10, whose
+    Work out from those three which of two settings decides this node's cgroup driver: the
+    `cgroupDriver` key in this file, or the `SystemdCgroup = true` that the baseline's one `sed`
+    writes into `config.toml` and step 6 showed you. In the post's era neither component asked the
+    other: you set both by hand and they had to match. Only one of the two is still set by hand on
+    this node, and it is not the kubelet's. If the `grep` finds nothing at all, that is an answer
+    too, and a stronger one: a generated file has stopped carrying a key nothing reads. Then read
+    `container-runtimes.md:156-157` against the deadline quoted from the gate file's body under *As
+    it runs now*, and notice they name different releases for the same removal while the pin you are
+    reading is v1.37.
+
+12. Ask the kubelet whether it is on the path being removed:
+
+    ```sh
+    for N in $(kubectl get nodes -o name | cut -d/ -f2); do
+      echo "== $N"
+      kubectl get --raw "/api/v1/nodes/$N/proxy/metrics" | grep 'kubelet_cri_losing_support'
+      echo "exit $?"
+    done
+    ```
+
+    The gate file's body names this metric for exactly this question, and
+    `reference/instrumentation/metrics.md:2394-2399` gives its shape: an ALPHA gauge with a single
+    `version` label, and help text reading *"the Kubernetes version that the currently running CRI
+    implementation will lose support on if not upgraded."* Do not predict the output. If the metric
+    is absent, the kubelet has nothing to warn about, and that absence answers step 11 a second way.
+    If it is present, its `version` label names the release this node stops working in, and you can
+    hold that number against the two deadlines you have just read and see which of them the running
+    code agrees with. A pinned tree that contradicts itself can be adjudicated by a cluster, and
+    this is the command that does it.
+
+**Expect** — every command exits zero except the four deliberate probes in steps 3, 4 and 10, whose
 non-zero exits are the finding. Nothing in this exercise creates, deletes or modifies an object, a
 file or a service; step 6 is the only command that could and it writes to a pipe. The list in step 8
 differs between the two nodes by exactly the control-plane static pods. The plugin id in step 5
 matches one of the two spellings at `container-runtimes.md:206-222` and not the other, and which one
 it matches is the same fact as the containerd major version from step 4 and the same fact again as
-the fallback path in step 11. Three separate observations, one number.
+the setting the kubelet obeys in step 11. Three separate observations, one number — and step 12 is a
+fourth reading of it, taken from the running kubelet rather than from a file.
 
-The one output that cannot be predicted here is step 10's. Whether `crictl` is on the node depends on
-what the `kubeadm` package pulled in on the minor you installed, and the pin does not say — its own
-instruction assumes you install the tool by hand. Both outcomes are informative and neither is a
-mistake in the lab.
+Three outputs cannot be predicted here, and each of the three is a question rather than a check.
+Step 10's depends on whether `crictl` came in with the `kubeadm` package on the minor you installed,
+and the pin does not say — its own instruction assumes you install the tool by hand. Step 11's
+depends on whether the generator still writes a key the kubelet no longer reads. Step 12's depends on
+whether the kubelet has anything to warn about. Every outcome of all three is informative and none of
+them is a mistake in the lab.
 
 **Read on** — five questions. Four can be answered from the pinned tree; the fifth cannot be
 answered from anywhere and is the one worth carrying.
@@ -435,14 +516,16 @@ answered from anywhere and is the one worth carrying.
    it to *"cluster operators running Kubernetes 1.23 or earlier"*, and it is the only page in the
    tree that names `bin_dir`. Read it end to end and ask which of its steps a reader on a supported
    version could still use, and why the two review items in its Windows tab at `:80-83` — the
-   sandbox image and the CNI directories — appear nowhere in its Linux tab, given that both are keys
-   this curriculum's baseline sets by hand.
+   sandbox image and the CNI directories — appear nowhere in its Linux tab. This curriculum's
+   baseline sets neither key, and one of them the pin no longer spells the way it names it, so ask
+   whether the omission is a gap in the baseline or a gap in the page.
 
 2. The plugin id changed and one page uses both spellings. Read `container-runtimes.md:206-222`
    against `:252-260` and work out what a reader with containerd 2.x would produce if they followed
-   the second section after the first. Then ask the same question of the baseline's two `sed`
-   commands, which are written in the 1.x spelling: on a node whose package installed containerd
-   2.x, how many of the two edits match a line, and what does the node do afterwards?
+   the second section after the first. Then ask the same question of the baseline's one surviving
+   `sed`, and notice that it matches the `SystemdCgroup = false` assignment rather than the plugin
+   header above it, so it lands whichever spelling generated the file. Ask which lines of a generated
+   config are safe to edit by hand on that basis, and what it cost the edit that did not survive.
 
 3. `topics-on-dockershim-and-cri-compatible-runtimes.md` is a fifty-three-line bibliography about a
    removal. `cri-containerd` has three non-prose occurrences. Read the six files in
@@ -474,8 +557,8 @@ is reusable as it stands.
 success and an empty list, which is the quietest failure in the archive, and the lab's own nodes
 already run containerd."* The second clause is right and it is this exercise's foundation. The first
 clause has a premise this curriculum's nodes do not meet. `docker ps` returning an empty list
-requires a Docker Engine to be installed and running, and the node baseline installs the Debian
-`containerd` package and never installs Docker. On these nodes the command is absent, so step 3
+requires a Docker Engine to be installed and running, and the node baseline installs containerd
+from an upstream tarball and never installs Docker. On these nodes the command is absent, so step 3
 substitutes `command -v docker` and gets a non-zero exit rather than a successful empty list. The
 observation the row was reaching for survives in a different place: `sudo ctr containers list` in the
 `default` namespace exits zero and prints a header with no rows, on a node running dozens of
