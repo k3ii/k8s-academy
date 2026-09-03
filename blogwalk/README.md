@@ -61,10 +61,14 @@ Re-create it:
 git init website && cd website
 git remote add origin https://github.com/kubernetes/website.git
 git sparse-checkout init --cone
-git sparse-checkout set content/en/blog/_posts
+git sparse-checkout set content/en/blog/_posts content/en/docs content/en/examples
 git fetch --depth 1 origin 7c76070faf9b19e6a417c446043dbafd10a7aa1d
 git checkout FETCH_HEAD
 ```
+
+The census itself reads only `_posts`. The other two paths are in the checkout because the
+exercises measure the pinned documentation and example trees against the posts, and an exercise
+that cites a `file:line` is citing that commit.
 
 Then, from the root of this repo:
 

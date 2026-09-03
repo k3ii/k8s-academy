@@ -130,7 +130,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Nine `walk` verdicts, numbered in publication order. Five of the nine are written; four are still
+Nine `walk` verdicts, numbered in publication order. Six of the nine are written; three are still
 *pending*. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -141,7 +141,7 @@ Nine `walk` verdicts, numbered in publication order. Five of the nine are writte
 | 03 | [Two kustomizes, one of them inside kubectl](03-announcing-kustomize.md) | written |
 | 04 | [GA is not the end of the ladder](04-ipvs-in-cluster-load-balancing.md) | written |
 | 05 | [A field that still applies and does nothing](05-dynamic-kubelet-configuration.md) | written |
-| 06 | Eleven ways, and the one that was deleted | pending |
+| 06 | [Eleven ways, and the one that was deleted](06-11-ways-not-to-get-hacked.md) | written |
 | 07 | The binary that became a field | pending |
 | 08 | The kind that is not in the cluster | pending |
 | 09 | A spec with nothing in it | pending |
