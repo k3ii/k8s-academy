@@ -133,7 +133,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Eight `walk` verdicts, numbered in publication order. Two are written; the remaining six are
+Eight `walk` verdicts, numbered in publication order. Three are written; the remaining five are
 *pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -141,7 +141,7 @@ Eight `walk` verdicts, numbered in publication order. Two are written; the remai
 |---|---|---|
 | 01 | [The flag that is not there any more](01-apiserver-dry-run-and-kubectl-diff.md) | written |
 | 02 | [A mitigation that was itself removed](02-runc-cve-2019-5736.md) | written |
-| 03 | The manifest that never applied | pending |
+| 03 | [Neither manifest ever applied](03-raw-block-volume-support-to-beta.md) | written |
 | 04 | A reply the client refuses | pending |
 | 05 | The fork bomb and the field that stops it | pending |
 | 06 | A schema that lets anything through | pending |
