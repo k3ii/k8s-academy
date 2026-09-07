@@ -140,14 +140,14 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Nine `walk` verdicts, numbered in publication order. One is written; the other eight are *pending*
+Nine `walk` verdicts, numbered in publication order. Two are written; the other seven are *pending*
 — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
 | 01 | [The limitation the page needs to be false](01-kubernetes-1-18-feature-server-side-apply-beta-2.md) | written |
-| 02 | The field that stopped being optional | pending |
+| 02 | [The field that stopped being optional](02-improvements-to-the-ingress-api-in-kubernetes-1-18.md) | written |
 | 03 | Four names for the same queue | pending |
 | 04 | The constraint survived, the config did not | pending |
 | 05 | A claim that dies with the Pod | pending |
