@@ -133,7 +133,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Eight `walk` verdicts, numbered in publication order. Five are written; the remaining three are
+Eight `walk` verdicts, numbered in publication order. Six are written; the remaining two are
 *pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -144,6 +144,6 @@ Eight `walk` verdicts, numbered in publication order. Five are written; the rema
 | 03 | [Neither manifest ever applied](03-raw-block-volume-support-to-beta.md) | written |
 | 04 | [The drop rule the next mode declines](04-kube-proxy-subtleties-debugging-an-intermittent-connection-resets.md) | written |
 | 05 | [The features shipped, the defaults did not](05-pid-limiting.md) | written |
-| 06 | A schema that lets anything through | pending |
+| 06 | [The plan was kept, the names were not](06-crd-structural-schema.md) | written |
 | 07 | The subcommand that lost its alpha | pending |
 | 08 | Three doors, and two of them are bricked up | pending |
