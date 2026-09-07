@@ -133,13 +133,13 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Eight `walk` verdicts, numbered in publication order. All eight are *pending* — an authoring
-ticket's to claim. The rubric they are authored against was ratified in
+Eight `walk` verdicts, numbered in publication order. One is written; the remaining seven are
+*pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | The flag that is not there any more | pending |
+| 01 | [The flag that is not there any more](01-apiserver-dry-run-and-kubectl-diff.md) | written |
 | 02 | A mitigation that was itself removed | pending |
 | 03 | The manifest that never applied | pending |
 | 04 | A reply the client refuses | pending |
