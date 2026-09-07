@@ -240,6 +240,5 @@ exists at all when `go-template` subsumes it — and what that answer tells you 
 two the post should have taught.
 
 **Teardown** — `kubectl delete pod redis busybox --ignore-not-found`, `rm -f cols.tmpl`, and check
-`jobs` for a stray `port-forward` you did not kill. Leave the guest up;
-[the 1.1 exercise](10-kubernetes-1-1-performance-upgrades-improved-tooling-and-a-growing-community.md)
-runs on it.
+`jobs` for a stray `port-forward` you did not kill. Leave the guest up; the next exercise in this
+year reuses it.

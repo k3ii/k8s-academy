@@ -163,5 +163,5 @@ find the rule that made it legal to delete `v1beta3` weeks after telling everyon
 and the rule that would forbid doing the same to `v1`. Write down the difference between them in
 one sentence.
 
-**Teardown** — `kubectl delete deploy web && kubectl delete hpa web`. Leave the guest up;
-[the sidecar exercise](05-the-distributed-system-toolkit-patterns.md) runs on it.
+**Teardown** — `kubectl delete deploy web && kubectl delete hpa web`. Leave the guest up; the
+next exercise in this year reuses it.

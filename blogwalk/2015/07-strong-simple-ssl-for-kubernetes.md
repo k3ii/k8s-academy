@@ -301,5 +301,5 @@ design without changing it.
 **Teardown** — `kubectl delete pod proxy; kubectl delete deployment jenkins;
 kubectl delete svc jenkins nginx-ssl-proxy; kubectl delete secret ssl-proxy-secret ssl-proxy-tls broken`,
 then `rm -f tls.key tls.crt` — you generated a real private key on the guest and wrote it into
-etcd; do not leave either copy behind. Leave the guest up;
-[the namespaces exercise](08-using-kubernetes-namespaces-to-manage.md) runs on it.
+etcd; do not leave either copy behind. Leave the guest up; the next exercise in this year
+reuses it.

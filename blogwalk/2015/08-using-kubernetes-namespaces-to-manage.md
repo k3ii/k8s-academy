@@ -281,4 +281,4 @@ part of the bill it did not price.
 **Teardown** — `kubectl delete ns mytunes-prod mytunes-staging dev` and
 `kubectl get ns my-other-app` to confirm the delete from step 7 finished. If any namespace is still
 `Terminating` after a minute, look for the finalizer before you look for a bigger hammer. Leave the
-guest up; [the kubectl exercise](09-some-things-you-didnt-know-about-kubectl.md) runs on it.
+guest up; the next exercise in this year reuses it.

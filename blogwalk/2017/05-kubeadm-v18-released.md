@@ -505,7 +505,10 @@ on — its gate went stable and was removed, which is what a finished feature lo
 rotation is the one you cannot finish: setting `serverTLSBootstrap: true` makes the kubelet request a
 serving certificate, and no controller in core Kubernetes will approve it, by the deliberate decision
 recorded at `:450-456`. So the gate that is beta and on by default is the gate whose feature cannot
-complete, and the gate that is gone is the one that worked.
+complete, and the gate that is gone is the one that worked. That self-signed serving pair is also
+what [the 2015 monitoring exercise](../2015/02-resource-usage-monitoring-kubernetes.md) has to
+patch `--kubelet-insecure-tls` around before `metrics-server` will start: a design refusal in one
+year's post is another year's failed rollout.
 
 **Read on** — two questions the corpus answers and this exercise did not ask. `kubeadm-init.md`'s
 description of `RootlessControlPlane` — the single live gate in kubeadm's namespace, alpha since 1.22

@@ -270,5 +270,5 @@ change to honour it.
 
 **Teardown** — `kubectl delete pod counter; kubectl delete ds logtail`. The `pair` guests are the
 only two-node topology 2015 needs;
-[tear the lab down properly](../../strands/lab-topologies.md#teardown) and bring up `solo` again
-for [the checkpoint exercise](06-how-did-quake-demo-from-dockercon-work.md).
+[tear the lab down properly](../../strands/lab-topologies.md#teardown). Everything left in this
+year runs on `solo`.

@@ -170,6 +170,5 @@ find what its authors said would happen to users who could not migrate, and comp
 this post's word "indefinitely". Write down, in one sentence, what a project can honestly promise
 about an interface that it cannot promise about an implementation.
 
-**Teardown** — nothing was created. Leave the guest up;
-[the cluster-level logging exercise](04-cluster-level-logging-with-kubernetes.md) needs a second
-node, so read its *Topology* before you tear anything down.
+**Teardown** — nothing was created, and nothing later in this year reuses this guest: the next
+exercise wants two nodes and wants them fresh. Tear it down or leave it up, as you like.

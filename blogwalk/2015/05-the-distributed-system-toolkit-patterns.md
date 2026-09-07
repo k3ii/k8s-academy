@@ -56,9 +56,11 @@ Full release provenance in
 releases there were confirmed by reading the source tree at each release tag, because
 Kubernetes' own deprecation notices get their own removals wrong in both directions.
 
-**Topology** — [`solo`](../../strands/lab-topologies.md#solo). If you still have the guest from
-[the v1beta3 exercise](01-introducing-kubernetes-v1beta3.md), reuse it; otherwise bring it up
-with [the five provision steps](../../strands/lab-topologies.md#provision), substituting
+**Topology** — [`solo`](../../strands/lab-topologies.md#solo), fresh — not because this exercise
+wants a clean node but because you will not have a dirty one:
+[the logging exercise](04-cluster-level-logging-with-kubernetes.md) tears the lab down when it
+finishes, and that takes any `solo` with it. Bring it up with
+[the five provision steps](../../strands/lab-topologies.md#provision), substituting
 `topology=solo`, then `ssh zain@10.10.10.180`.
 
 **Do**

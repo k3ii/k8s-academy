@@ -237,4 +237,4 @@ does not control.
 **Teardown** — `kubectl delete pod ticker` and
 `sudo rm -rf /var/lib/kubelet/checkpoints/checkpoint-ticker_default-*` — a checkpoint archive is
 a plaintext copy of everything that container had in memory, so do not leave it lying on the
-guest. Leave the guest up; [the TLS exercise](07-strong-simple-ssl-for-kubernetes.md) runs on it.
+guest. Leave the guest up; the next exercise in this year reuses it.

@@ -75,7 +75,7 @@ times. Step 6 is where you find out which one *your* cluster serves, and the ans
 the metrics-server release rather than on the Kubernetes one.
 
 **Topology** — [`solo`](../../strands/lab-topologies.md#solo). If you still have the guest from
-[the sidecar exercise](05-the-distributed-system-toolkit-patterns.md), reuse it; otherwise bring
+[the v1beta3 exercise](01-introducing-kubernetes-v1beta3.md), reuse it; otherwise bring
 it up with [the five provision steps](../../strands/lab-topologies.md#provision), substituting
 `topology=solo`, then `ssh zain@10.10.10.180`.
 
@@ -158,9 +158,9 @@ kubelet, which was answering fine in steps 2 and 3.
 
 Step 5's first rollout does *not* come up. The logs name a TLS failure reaching the kubelet: the
 serving certificate is self-signed and metrics-server will not trust it. That is not a
-monitoring defect — it is [the kubelet serving-certificate
-problem](07-strong-simple-ssl-for-kubernetes.md), which has sat unresolved by default for
-twenty-five releases, arriving here as somebody else's outage.
+monitoring defect — it is the kubelet's own serving certificate, self-signed by default and
+trusted by nothing, which has sat that way for twenty-five releases and arrives here as somebody
+else's outage.
 
 Step 6 succeeds and `kubectl top nodes` prints a table. The group version you get is whatever
 your metrics-server build registers, which is why the *No gate* section above could not tell you
@@ -179,5 +179,4 @@ go stable, and write down why the missing thing was a specification rather than 
 
 **Teardown** — `kubectl -n kube-system delete deploy metrics-server` if you want the node's
 memory back; leaving it installed costs about 100Mi and no later exercise depends on it either
-way. Leave the guest up —
-[the CRI exercise](03-docker-and-kubernetes-and-appc.md) runs on it.
+way. Leave the guest up; the next exercise in this year reuses it.

@@ -141,5 +141,5 @@ original post, in 2024, that would have made it honest about what "alpha" was pr
 find the `kep.yaml` milestones and compare them to the ladder in step 5. Where the two disagree,
 which one happened?
 
-**Teardown** — `kubectl delete pod img --ignore-not-found`. Leave the guest up;
-[the WebSockets exercise](10-websocket-transition.md) runs on it.
+**Teardown** — `kubectl delete pod img --ignore-not-found`. Leave the guest up; a later exercise
+in this year reuses it.
