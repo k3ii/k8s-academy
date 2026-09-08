@@ -140,7 +140,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Nine `walk` verdicts, numbered in publication order. Six are written; the other three are *pending*
+Nine `walk` verdicts, numbered in publication order. Seven are written; the other two are *pending*
 — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -152,6 +152,6 @@ Nine `walk` verdicts, numbered in publication order. Six are written; the other 
 | 04 | [The constraint survived, the config did not](04-introducing-podtopologyspread.md) | written |
 | 05 | [A claim that dies with the Pod](05-ephemeral-volumes-with-storage-capacity-tracking.md) | written |
 | 06 | [The promise that held, and the one that did not](06-scaling-kubernetes-networking-with-endpointslices.md) | written |
-| 07 | A warning that became a refusal | pending |
+| 07 | [The post the reference pages cite](07-warnings.md) | written |
 | 08 | Six years alpha, and the flags went first | pending |
 | 09 | The Pod that waits for a million chowns | pending |
