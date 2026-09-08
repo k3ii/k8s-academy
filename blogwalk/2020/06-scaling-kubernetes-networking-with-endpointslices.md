@@ -141,7 +141,7 @@ adds is the field-level consequence: the per-endpoint map the post points at is 
 `deprecatedTopology` and silently ignored on write.
 
 **Endpoint subsetting has no page, no field and no gate.** `subsetting` and `endpoint subset` return
-nothing in the docs tree. Of the 488 feature-gate files at the pin, the only one whose body contains
+nothing in the docs tree. Of the 487 feature-gate files at the pin, the only one whose body contains
 the word `subset` is `ShardedListAndWatch`, alpha at v1.36, which lets a client shard list and watch
 requests by hash ranges of metadata fields — a general answer to the same watch-volume problem,
 arriving seventeen releases later and not specific to endpoints at all. The post's third forecast
@@ -275,11 +275,11 @@ therefore not announcing the API — it is announcing that a second gate, the pr
 That distinction is invisible in the post and obvious in the ladder.
 
 **The second gate skips beta.** `EndpointSliceNodeName` has two rows, `alpha` at v1.20 and `stable`
-at v1.21, with nothing between them, for a single field. Of the 488 gate files at the pin, four
+at v1.21, with nothing between them, for a single field. Of the 487 gate files at the pin, four
 carry an explicit `alpha` row followed by a `stable` row and no `beta` row at all, and this is one
 of them; the archive has already met another, in the gate for dynamic provisioning, where [the 2016
 exercise](../2016/10-dynamic-provisioning-and-storage-in-kubernetes.md) notes the missing beta
-without a count to put beside it. Four in 488 is the count. It is rarer than abandoning an alpha and
+without a count to put beside it. Four in 487 is the count. It is rarer than abandoning an alpha and
 it means the opposite thing: a change small enough that the project did not think a beta bought it
 anything. The field it governs is `nodeName`, which is one of the two survivors of the topology map
 — so the field that replaced the post's mechanism climbed faster than the mechanism it replaced.
