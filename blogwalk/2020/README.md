@@ -140,7 +140,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Nine `walk` verdicts, numbered in publication order. Four are written; the other five are *pending*
+Nine `walk` verdicts, numbered in publication order. Five are written; the other four are *pending*
 — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -150,7 +150,7 @@ Nine `walk` verdicts, numbered in publication order. Four are written; the other
 | 02 | [The field that stopped being optional](02-improvements-to-the-ingress-api-in-kubernetes-1-18.md) | written |
 | 03 | [The alpha that was three releases old](03-kubernetes-1-18-feature-api-priority-and-fairness-alpha.md) | written |
 | 04 | [The constraint survived, the config did not](04-introducing-podtopologyspread.md) | written |
-| 05 | A claim that dies with the Pod | pending |
+| 05 | [A claim that dies with the Pod](05-ephemeral-volumes-with-storage-capacity-tracking.md) | written |
 | 06 | The API that was not going away | pending |
 | 07 | A warning that became a refusal | pending |
 | 08 | Six years alpha, and the flags went first | pending |
