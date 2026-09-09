@@ -140,8 +140,8 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Nine `walk` verdicts, numbered in publication order. Eight are written; the other one is *pending*
-— an authoring ticket's to claim. The rubric they are authored against was ratified in
+Nine `walk` verdicts, numbered in publication order. All nine are written. The rubric they are
+authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
@@ -154,4 +154,4 @@ Nine `walk` verdicts, numbered in publication order. Eight are written; the othe
 | 06 | [The promise that held, and the one that did not](06-scaling-kubernetes-networking-with-endpointslices.md) | written |
 | 07 | [The post the reference pages cite](07-warnings.md) | written |
 | 08 | [The format the flag tables never learned](08-kubernetes-1-19-introducing-structured-logs.md) | written |
-| 09 | The Pod that waits for a million chowns | pending |
+| 09 | [The values the reference points at and does not list](09-kubernetes-release-1-20-fsgroupchangepolicy-fsgrouppolicy.md) | written |
