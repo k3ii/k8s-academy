@@ -182,7 +182,9 @@ stayed right: it cited it. Four pages depend on this blog entry for the definiti
 use in normative text, one of them at a fragment anchor. That is a load-bearing dependency on a
 dated artifact, and the archive has not seen it before. Every previous *still right* verdict in this
 walk meant the post could be discarded because the docs had absorbed it. Here the docs absorbed the
-post by pointing at it.
+post by pointing at it. The template's seventh case names the difference: the content was **never
+absorbed**, only pointed at, so naming *still right* on its own would tell a reader they can move on
+from a document four normative pages cannot move on from.
 
 **The demonstration broke while the mechanism held.** The post's screenshot and the post's prose
 have opposite fates: the prose is quoted by the reference tree, and the screenshot cannot be

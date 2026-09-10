@@ -183,7 +183,7 @@ is read here only where `pid` is involved. The cgroup interface the limit is fin
 and the difference between the v1 and v2 hierarchies, is a subject a later year's post owns; this
 exercise reads `pids.max` from inside a container without explaining where that file comes from.
 
-**The diff, and why** — four of the six cases, and one of them in its purest form yet.
+**The diff, and why** — four of the seven cases, and one of them in its purest form yet.
 
 **Retired by being agreed with.** This is the case the post's last sentence sets up and the pin
 closes. `:22` says: "Once that graduates from alpha, to beta, then stable in future releases of

@@ -81,7 +81,7 @@ it is a symptom of the corpus getting dense, which only continues. Skip it when 
 a paragraph saying "nothing was ceded" is padding.
 
 **The diff, and why** — the payload, and on a modern post the section that carries the whole
-exercise. It has **six cases**, and they are **not exclusive**: an exercise names the ones that
+exercise. It has **seven cases**, and they are **not exclusive**: an exercise names the ones that
 land, and several landing in one post is a finding rather than indecision — four have landed in
 one post (`blogwalk/2017/07`). Naming several is not hedging; the hedge is naming none. The first
 two were ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57); the third, fourth and
@@ -91,7 +91,12 @@ the census is closed and its 767 rows are immutable, so a fifth verdict would be
 could ever carry. All three already sat in the `walk` set; what they lacked was a way to be
 written. The sixth arrived the same way and by the same test: three exercises across two years
 wrote the shape without a name for it, and
-[#100](https://github.com/k3ii/k8s-academy/issues/100) ratified the name they had improvised.
+[#100](https://github.com/k3ii/k8s-academy/issues/100) ratified the name they had improvised. The
+seventh is the first ratified on **two** instances rather than three, in
+[#102](https://github.com/k3ii/k8s-academy/issues/102), because the survey that found them also
+bounds the shape: the pinned tree cites 23 of the 767 posts by name from `content/en/docs`, only
+four of those carry a `walk`, and two of the four are further-reading bullets. Recurrence is what
+the bar was proxying for, and a measured population settles it better than a third instance.
 
 - The post **broke**: what changed, the release it changed in, and one sentence naming the
   pressure that moved it.
@@ -126,6 +131,31 @@ wrote the shape without a name for it, and
   [#100](https://github.com/k3ii/k8s-academy/issues/100) on three instances across two years
   (`blogwalk/2017/08` containerd, `2018/02` CSI at beta, `2018/07` gRPC health checking) after the
   shape recurred; a single instance stays a *Read on* question.
+- The post was **never absorbed**: the feature shipped, the post is still right, and the project
+  never wrote the post's content down — so the post is not a record of how the mechanism used to
+  work but the pin's only copy of part of how it works now. It is the sixth case's mirror in turn:
+  there the project adopted the argument so completely that the post stopped being needed, here it
+  adopted the feature and left the explanation where the post put it. **Two tests, in order, and
+  both are greps.** Does a pinned page cite the post *inline and load-bearing* —
+  `reference/using-api/deprecation-guide.md:392` says *"Use [client warnings, metrics, and audit
+  information available in 1.19+]"* and links a 2020 post — and does the post name an identifier
+  that occurs **nowhere else under `content/en`**? A bullet under `## {{% heading "whatsnext" %}}`
+  is **not** evidence: further reading is what a healthy page does, and two of the four cited `walk`
+  posts are exactly that. **The identifier test has one false positive and `blogwalk/2019/06` is
+  it**: `preserveUnknownProperties` occurs on exactly two lines of that post and nowhere else in the
+  pinned checkout because the post *invented* it, misspelling in prose a field the API has never
+  had. An identifier the post is alone in naming is evidence of this case only once the identifier
+  is shown to be real; otherwise it is the third case, and the reader needs a correction rather than
+  a source. Do not confuse this with the pin disagreeing with itself, which is a statement about the
+  pin and belongs in *As it runs now*; this is a statement about the post, and what it says is that
+  the post is load-bearing. It almost always lands together with *still right*, and **naming only
+  *still right* is the failure it exists to prevent** — a reader told the post holds will not learn
+  that it is the only thing that holds. Ratified in
+  [#102](https://github.com/k3ii/k8s-academy/issues/102) on two instances, both 2020:
+  `blogwalk/2020/07`, where six identifiers each occur in exactly one file in the whole of
+  `content/en` and that file is the post, and `2020/09`, whose five-line fence is
+  `security-context.md:383-389` byte for byte while the one reference cell covering the post's other
+  half says to refer to values it does not list.
 
 Cite [`research/blog-era-translation.md`](../research/blog-era-translation.md) rather than
 re-deriving the release history. Removal releases come from the source tree at the release tag,

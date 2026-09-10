@@ -171,7 +171,7 @@ exercise](../2015/01-introducing-kubernetes-v1beta3.md). What is left, and what 
 about, is the post as a *document*: where it went, what the thing that replaced it does and does not
 do, and the two of its instructions that a v1.37 cluster will not carry out.
 
-**The diff, and why** — five of the six cases at once, which is what an advisory gets when the thing
+**The diff, and why** — five of the seven cases at once, which is what an advisory gets when the thing
 it advises about completes.
 
 **Retired by being agreed with.** The post argued that six removals needed a single place that

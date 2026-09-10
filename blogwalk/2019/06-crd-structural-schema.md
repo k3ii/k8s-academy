@@ -195,7 +195,7 @@ use admission webhooks to validate CustomResource specs — the advice this post
 argument for — is [the extensible admission exercise](../2018/01-extensible-admission-is-beta.md).
 Conversion webhooks are read here only as a ladder row; nothing in this exercise runs one.
 
-**The diff, and why** — four of the six cases, and the dominant one is the rare one. What happened
+**The diff, and why** — four of the seven cases, and the dominant one is the rare one. What happened
 to this post is that it was **retired by being agreed with**. `:43` plans mandatory structural
 schemas for `apiextensions.k8s.io/v1` "targeted for 1.16"; v1 arrived in 1.16 and
 `custom-resource-definitions.md:205-207` now states the requirement in the past tense. `:165` plans

@@ -176,7 +176,7 @@ it on 2026-09-02, on a node carrying Debian's containerd 1.7 package, warning in
 the pinned tree picks between the two dates. The node can be asked, though, and steps 11 and 12 ask
 it.
 
-**The diff, and why** — four of the template's six cases land here, and the sixth is the one the
+**The diff, and why** — four of the template's seven cases land here, and the sixth is the one the
 post's own subject ended up in.
 
 *The post is still right.* The technical argument is intact and it won. containerd is the first

@@ -222,7 +222,7 @@ leaves the tables there. Kustomize itself — what it is, how it composes — be
 exercise](../2018/03-announcing-kustomize.md); the only Kustomize question here is whether kubeadm
 ever adopted it.
 
-**The diff, and why** — five of the six cases at once, and the interesting thing is that they are
+**The diff, and why** — five of the seven cases at once, and the interesting thing is that they are
 all statements about the same three paragraphs. A release note ages by being superseded. A roadmap
 ages by being scored.
 

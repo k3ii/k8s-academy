@@ -109,7 +109,9 @@ and is not linked from here.
 the semantics the post describes, the sample is still valid, and the section of the documentation
 the post points at is the section that now carries its fence. On the census this is a `walk` on the
 second clause alone: the reading is cheap and correct, and the value is in what you can measure that
-the pin will not tell you.
+the pin will not tell you. The template's seventh case is what makes that worth an exercise: the
+second half of the post was **never absorbed**, so this is not a record of an API but the pin's only
+enumeration of part of one.
 
 **The forecast slipped, and landed in a small cohort.** GA was predicted for 1.21 or 1.22 and
 arrived at 1.23. Of the 487 feature-gate files in the pin, six have a `stable` row beginning at

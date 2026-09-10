@@ -139,7 +139,7 @@ claiming that path, no CRI rule in `hugo.toml`, and no `[[redirects]]` block any
 with `{{< glossary_definition term_id="cri" >}}`. The page and the glossary cite each other, and
 one of the two citations has no target.
 
-**The diff, and why** — this is two of the six cases at once, and the pair is the point.
+**The diff, and why** — this is two of the seven cases at once, and the pair is the point.
 
 The first switch is **the post was right, and being right removed the switch**. `--experimental-cri`
 did not become the default; it stopped existing. That is a stronger outcome than defaulting, and a
