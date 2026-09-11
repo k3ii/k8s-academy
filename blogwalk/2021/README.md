@@ -139,7 +139,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Eleven `walk` verdicts, numbered in publication order. Eight are written and three are *pending* — an
+Eleven `walk` verdicts, numbered in publication order. Nine are written and two are *pending* — an
 authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -153,6 +153,6 @@ authoring ticket's to claim. The rubric they are authored against was ratified i
 | 06 | [One flag, and every Pod's profile changes](06-seccomp-default.md) | written |
 | 07 | [Once per node, and then once per Pod](07-read-write-once-pod-access-mode-alpha.md) | written |
 | 08 | [Fifteen releases on the first rung](08-qos-memory-resources.md) | written |
-| 09 | Three labels where a whole API used to be | pending |
+| 09 | [The default for a namespace nobody labelled](09-pod-security-admission-beta.md) | written |
 | 10 | Delete them in the wrong order and the disk stays | pending |
 | 11 | The claims that used to outlive the set | pending |
