@@ -139,8 +139,8 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Eleven `walk` verdicts, numbered in publication order. Ten are written and one is *pending* — an
-authoring ticket's to claim. The rubric they are authored against was ratified in
+Eleven `walk` verdicts, numbered in publication order. All eleven are written. The rubric they are
+authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
@@ -155,4 +155,4 @@ authoring ticket's to claim. The rubric they are authored against was ratified i
 | 08 | [Fifteen releases on the first rung](08-qos-memory-resources.md) | written |
 | 09 | [The default for a namespace nobody labelled](09-pod-security-admission-beta.md) | written |
 | 10 | [Delete them in the wrong order and the file is still there](10-prevent-persistentvolume-leaks.md) | written |
-| 11 | The claims that used to outlive the set | pending |
+| 11 | [The claim whose owner is the Pod that is leaving](11-statefulset-pvc-auto-deletion.md) | written |
