@@ -139,14 +139,14 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Eleven `walk` verdicts, numbered in publication order. One is written and ten are *pending* — an
+Eleven `walk` verdicts, numbered in publication order. Two are written and nine are *pending* — an
 authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
 | 01 | [The gate that was removed for winning](01-kubernetes-release-1-21-cronjob-ga.md) | written |
-| 02 | The right API in the wrong group | pending |
+| 02 | [Re-grouped, and refused anyway](02-evolving-kubernetes-networking-with-the-gateway-api.md) | written |
 | 03 | The delete that hangs, exactly as promised | pending |
 | 04 | Twelve removals in one release, one manifest at a time | pending |
 | 05 | The setting the kubelet no longer has a word for | pending |
