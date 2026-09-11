@@ -139,7 +139,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Eleven `walk` verdicts, numbered in publication order. Three are written and eight are *pending* — an
+Eleven `walk` verdicts, numbered in publication order. Four are written and seven are *pending* — an
 authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -148,7 +148,7 @@ authoring ticket's to claim. The rubric they are authored against was ratified i
 | 01 | [The gate that was removed for winning](01-kubernetes-release-1-21-cronjob-ga.md) | written |
 | 02 | [Re-grouped, and refused anyway](02-evolving-kubernetes-networking-with-the-gateway-api.md) | written |
 | 03 | [The delete that hangs, exactly as promised](03-using-finalizers-to-control-deletion.md) | written |
-| 04 | Twelve removals in one release, one manifest at a time | pending |
+| 04 | [Eight bullets, twelve removals, one manifest at a time](04-upcoming-changes-in-kubernetes-1-22.md) | written |
 | 05 | The setting the kubelet no longer has a word for | pending |
 | 06 | One flag, and every Pod's profile changes | pending |
 | 07 | Once per node, and then once per Pod | pending |
