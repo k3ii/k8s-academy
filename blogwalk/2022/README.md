@@ -160,14 +160,14 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. One is written; the twelve marked
+Thirteen `walk` verdicts, numbered in publication order. Two are written; the eleven marked
 *pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
 in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
 | 01 | [Thirteen releases in beta, then no gate at all](01-volume-expansion-ga.md) | written |
-| 02 | The probe that speaks its own protocol | pending |
+| 02 | [The probe that speaks its own protocol](02-grpc-probes-now-in-beta.md) | written |
 | 03 | The taint that lets a StatefulSet move on | pending |
 | 04 | Two halves of one Service CIDR | pending |
 | 05 | Alpha for eleven releases, and counting | pending |
