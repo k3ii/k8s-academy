@@ -160,7 +160,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. Four are written; the nine marked
+Thirteen `walk` verdicts, numbered in publication order. Five are written; the eight marked
 *pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
 in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -170,7 +170,7 @@ in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 02 | [The probe that speaks its own protocol](02-grpc-probes-now-in-beta.md) | written |
 | 03 | [The taint that lets a StatefulSet move on](03-kubernetes-1-24-non-graceful-node-shutdown-alpha.md) | written |
 | 04 | [Two halves of one Service CIDR](04-service-ip-dynamic-and-static-allocation.md) | written |
-| 05 | Alpha for eleven releases, and counting | pending |
+| 05 | [Eleven releases in alpha, then a default that would not settle](05-maxunavailable-for-statefulset.md) | written |
 | 06 | The kubelet that will not start on cgroup v1 | pending |
 | 07 | The chain that was never yours to read | pending |
 | 08 | The one gate that remembers its old name | pending |
