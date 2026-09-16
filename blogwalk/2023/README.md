@@ -164,8 +164,8 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order, and eleven of them are written. The other
-two are *pending* — an authoring ticket's to claim. The rubric they are authored against was
+Thirteen `walk` verdicts, numbered in publication order, and twelve of them are written. The other
+one is *pending* — an authoring ticket's to claim. The rubric they are authored against was
 ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
@@ -181,5 +181,5 @@ ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 09 | [The one sentence about the new field that is wrong in both halves, and a link with no target](09-native-sidecar-containers.md) | written |
 | 10 | [The gate is gone, the word learner survives once, and the guide never mentions the change](10-kubeadm-use-etcd-learner-mode.md) | written |
 | 11 | [The escape hatch that now stops the binary, and a guide whose starting state cannot be reached](11-cloud-provider-integration-changes.md) | written |
-| 12 | The rung after stable | pending |
+| 12 | [An API version the server refuses, a second type that was never in that group, and the rung after stable](12-kubernetes-1-29-volume-attributes-class.md) | written |
 | 13 | The gate file that names two stages at once | pending |
