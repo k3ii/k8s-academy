@@ -164,8 +164,8 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order, and six of them are written. The other
-seven are *pending* — an authoring ticket's to claim. The rubric they are authored against was
+Thirteen `walk` verdicts, numbered in publication order, and seven of them are written. The other
+six are *pending* — an authoring ticket's to claim. The rubric they are authored against was
 ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
@@ -176,7 +176,7 @@ ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 04 | [Which side of the wire caught the typo, the class of typo the post never names, and one history off by two](04-openapi-v3-field-validation-ga.md) | written |
 | 05 | [The arithmetic nobody checks, the ordinal shift that strands a volume, and a lock only one page records](05-statefulset-start-ordinal.md) | written |
 | 06 | [The switch that is an environment variable, the flag no reference page lists, and two alphas that never ended](06-introducing-kubectl-applyset-pruning.md) | written |
-| 07 | Resizing a container without restarting it | pending |
+| 07 | [The instruction the API server refuses, the status field that became two conditions, and a locked gate](07-in-place-pod-resize-alpha.md) | written |
 | 08 | The beta you still had to ask for | pending |
 | 09 | An init container that never finishes, on purpose | pending |
 | 10 | The gate that is not where gates live | pending |
