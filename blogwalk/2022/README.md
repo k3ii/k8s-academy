@@ -160,7 +160,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. Six are written; the seven marked
+Thirteen `walk` verdicts, numbered in publication order. Seven are written; the six marked
 *pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
 in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -172,7 +172,7 @@ in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 04 | [Two halves of one Service CIDR](04-service-ip-dynamic-and-static-allocation.md) | written |
 | 05 | [Eleven releases in alpha, then a default that would not settle](05-maxunavailable-for-statefulset.md) | written |
 | 06 | [Fifteen bullets absorbed word for word, and the eight the page added since](06-cgroupv2-ga-1-25.md) | written |
-| 07 | The chain that was never yours to read | pending |
+| 07 | [A declaration no documentation page repeats, and a chain two pages still hand out](07-iptables-chains-not-api.md) | written |
 | 08 | The one gate that remembers its old name | pending |
 | 09 | Rejected by the CRD, before any webhook runs | pending |
 | 10 | Root in the container, nobody on the node | pending |
