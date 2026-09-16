@@ -160,9 +160,9 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. Twelve are written; the one marked
-*pending* is an authoring ticket's to claim. The rubric they are authored against was ratified
-in [#57](https://github.com/k3ii/k8s-academy/issues/57).
+Thirteen `walk` verdicts, numbered in publication order, and all thirteen are written. The rubric
+they are authored against was ratified in
+[#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
@@ -178,4 +178,4 @@ in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 10 | [A rename recorded once, forward only, and in prose, in the body of the gate it retired](10-userns-alpha.md) | written |
 | 11 | [A name at zero in the documentation tree that still answers on the wire, and three decayed escape hatches](11-registry-k8s-io-faster-cheaper-ga.md) | written |
 | 12 | [Two gate bodies with one opening sentence, and a replacement neither of them names](12-dynamic-resource-allocation.md) | written |
-| 13 | The Pod the scheduler is told to ignore | pending |
+| 13 | [An extension point placed three ways, and the use case that never left the post that proposed it](13-pod-scheduling-readiness-alpha.md) | written |
