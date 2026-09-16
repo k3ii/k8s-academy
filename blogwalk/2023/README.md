@@ -164,13 +164,13 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. All thirteen are *pending* — an
-authoring ticket's to claim. The rubric they are authored against was ratified in
+Thirteen `walk` verdicts, numbered in publication order, and one of them is written. The other
+twelve are *pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | A default that arrives after the claim it binds | pending |
+| 01 | [A default that arrives after the claim, and the empty string it refuses to touch](01-retroactive-default-storage-class.md) | written |
 | 02 | The webhook you no longer have to write | pending |
 | 03 | A node's own logs, read through the API server | pending |
 | 04 | Which side of the wire caught the typo | pending |
