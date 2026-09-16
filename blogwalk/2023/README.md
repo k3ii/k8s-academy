@@ -164,8 +164,8 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order, and four of them are written. The other
-nine are *pending* — an authoring ticket's to claim. The rubric they are authored against was
+Thirteen `walk` verdicts, numbered in publication order, and five of them are written. The other
+eight are *pending* — an authoring ticket's to claim. The rubric they are authored against was
 ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
@@ -174,7 +174,7 @@ ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 02 | [Two names for one policy, an API version that is gone, and a binding that binds nothing](02-kubescape-validating-admission-policy-library.md) | written |
 | 03 | [The last release where you must do what this post says, and a subresource with two answers](03-node-log-query-alpha.md) | written |
 | 04 | [Which side of the wire caught the typo, the class of typo the post never names, and one history off by two](04-openapi-v3-field-validation-ga.md) | written |
-| 05 | Two clusters, one StatefulSet, no shared PVC name | pending |
+| 05 | [The arithmetic nobody checks, the ordinal shift that strands a volume, and a lock only one page records](05-statefulset-start-ordinal.md) | written |
 | 06 | Still alpha, and no gate to name it | pending |
 | 07 | Resizing a container without restarting it | pending |
 | 08 | The beta you still had to ask for | pending |
