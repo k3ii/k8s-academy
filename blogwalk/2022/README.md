@@ -160,7 +160,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. Nine are written; the four marked
+Thirteen `walk` verdicts, numbered in publication order. Ten are written; the three marked
 *pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
 in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -175,7 +175,7 @@ in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 07 | [A declaration no documentation page repeats, and a chain two pages still hand out](07-iptables-chains-not-api.md) | written |
 | 08 | [The one gate file in 487 that records its former name, and still links through it](08-pod-has-network-condition.md) | written |
 | 09 | [The disjoint-sets rule, given correctly in one table and negated in the next](09-crd-validation-rules-beta.md) | written |
-| 10 | Root in the container, nobody on the node | pending |
+| 10 | [A rename recorded once, forward only, and in prose, in the body of the gate it retired](10-userns-alpha.md) | written |
 | 11 | The registry that no longer answers | pending |
 | 12 | An alpha that was replaced, not promoted | pending |
 | 13 | The Pod the scheduler is told to ignore | pending |
