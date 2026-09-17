@@ -113,14 +113,14 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. Three are written; the ten marked
+Thirteen `walk` verdicts, numbered in publication order. Four are written; the nine marked
 *pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
 in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
 | 01 | [The image filesystem that was never ignored, and a split that shipped where this lab cannot reach](01-kubernetes-separate-image-filesystem.md) | written |
-| 02 | User namespaces | pending |
+| 02 | [Both runtimes the post rules out are the two this lab runs, and one root writes two files the node gives two owners](02-userns-beta.md) | written |
 | 03 | Recursive read-only mounts | pending |
 | 04 | ValidatingAdmissionPolicy | pending |
 | 05 | cgroup v1 in maintenance mode | pending |
