@@ -6,12 +6,12 @@
 2024-08-14.
 
 4,742 bytes, 102 lines, one author: Harshal Patil. Forty-seventh of 2024's 54 posts by size, 6,026
-below the year's mean of 10,768, and the shortest post in this year's `walk` set. Eleven links, of
-which two reach kubernetes.io and both of those are in *Further reading*; three go to github.com;
-two to the kernel's own cgroup documentation; two to `man7.org`; one to `systemd.io`; and one is an
-in-page anchor to the post's own definition of its subject. The KEP this post exists to announce,
-4569, is not among them — the only KEP it links is 2033, for rootless kubelets, cited in passing for
-one of cgroup v2's benefits.
+below the year's mean of 10,768, and the third shortest of the thirteen in this year's `walk` set.
+Eleven links, of which two reach kubernetes.io and both of those are in *Further reading*; three go
+to github.com; two to the kernel's own cgroup documentation; two to `man7.org`; one to `systemd.io`;
+and one is an in-page anchor to the post's own definition of its subject. The KEP this post exists
+to announce, 4569, is not among them — the only KEP it links is 2033, for rootless kubelets, cited
+in passing for one of cgroup v2's benefits.
 
 **As written**
 
