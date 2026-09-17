@@ -113,7 +113,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. Six are written; the seven marked
+Thirteen `walk` verdicts, numbered in publication order. Seven are written; the six marked
 *pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
 in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -123,7 +123,7 @@ in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 02 | [Both runtimes the post rules out are the two this lab runs, and one root writes two files the node gives two owners](02-userns-beta.md) | written |
 | 03 | [One page tells you to require read-only mounts and, eight hundred lines later, says read-only is not recursive](03-recursive-read-only-mounts.md) | written |
 | 04 | [The only Go file the blog archive ships dereferences the nil pointer it has just finished proving is nil](04-validating-admission-policy-ga.md) | written |
-| 05 | cgroup v1 in maintenance mode | pending |
+| 05 | [A state the deprecation policy does not define, a phrase the documentation never took, and one field with no flag](05-cgroup-v1-maintenance-mode.md) | written |
 | 06 | Honouring the reclaim policy | pending |
 | 07 | [A gate is not a schedule](07-image-volume-source.md) | written |
 | 08 | matchLabelKeys in PodAffinity | pending |
