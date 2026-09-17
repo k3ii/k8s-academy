@@ -113,7 +113,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. Eight are written; the five marked
+Thirteen `walk` verdicts, numbered in publication order. Nine are written; the four marked
 *pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
 in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -126,7 +126,7 @@ in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 05 | [A state the deprecation policy does not define, a phrase the documentation never took, and one field with no flag](05-cgroup-v1-maintenance-mode.md) | written |
 | 06 | [Fifty lines of evidence republished unchanged, and the prediction the rewrite quietly reversed](06-honor-pv-reclaim-policy-beta.md) | written |
 | 07 | [A gate is not a schedule](07-image-volume-source.md) | written |
-| 08 | matchLabelKeys in PodAffinity | pending |
+| 08 | [A worked example the API would have rejected, and the object the API writes but will not accept](08-matchlabelkeys-podaffinity.md) | written |
 | 09 | Pod failure policy for Jobs | pending |
 | 10 | [The protocol changed, and so did who is allowed to use it](10-websocket-transition.md) | written |
 | 11 | Custom profiling in kubectl debug | pending |
