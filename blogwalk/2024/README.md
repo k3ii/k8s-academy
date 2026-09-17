@@ -113,7 +113,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. Ten are written; the three marked
+Thirteen `walk` verdicts, numbered in publication order. Eleven are written; the two marked
 *pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
 in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -129,6 +129,6 @@ in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 | 08 | [A worked example the API would have rejected, and the object the API writes but will not accept](08-matchlabelkeys-podaffinity.md) | written |
 | 09 | [A reason string nothing else in the tree spells that way, and a rule no component can fire](09-pod-failure-policy-for-jobs-goes-ga.md) | written |
 | 10 | [The protocol changed, and so did who is allowed to use it](10-websocket-transition.md) | written |
-| 11 | Custom profiling in kubectl debug | pending |
+| 11 | [A JSON example two-thirds forbidden, and a default profile two pages disagree about](11-custom-profiling-kubectl-debug.md) | written |
 | 12 | Fine-grained SupplementalGroups | pending |
 | 13 | kubeadm v1beta4 | pending |
