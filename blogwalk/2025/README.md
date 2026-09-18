@@ -160,7 +160,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Twelve `walk` verdicts, numbered in publication order. Two are written; the other ten are
+Twelve `walk` verdicts, numbered in publication order. Three are written; the other nine are
 *pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -168,7 +168,7 @@ Twelve `walk` verdicts, numbered in publication order. Two are written; the othe
 |---|---|---|
 | 01 | [The one incompatibility the post names, and the alpha gate that puts it back](01-nftables-kube-proxy.md) | written |
 | 02 | [A link that survives only in the redirect table, and a label the tree defines twice](02-endpoints-deprecation.md) | written |
-| 03 | An image already on the node, and no proof you may use it | pending |
+| 03 | [The definition still gives the old answer, and the enum that fixes it is spelled two ways](03-ensure-secret-pulled-images.md) | written |
 | 04 | Five releases alpha, and no end version | pending |
 | 05 | Started is not ready | pending |
 | 06 | A second file kubectl reads before your flags | pending |
