@@ -160,14 +160,14 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Twelve `walk` verdicts, numbered in publication order. One is written; the other eleven are
+Twelve `walk` verdicts, numbered in publication order. Two are written; the other ten are
 *pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
 | 01 | [The one incompatibility the post names, and the alpha gate that puts it back](01-nftables-kube-proxy.md) | written |
-| 02 | A warning header, and a reference page that moved | pending |
+| 02 | [A link that survives only in the redirect table, and a label the tree defines twice](02-endpoints-deprecation.md) | written |
 | 03 | An image already on the node, and no proof you may use it | pending |
 | 04 | Five releases alpha, and no end version | pending |
 | 05 | Started is not ready | pending |
