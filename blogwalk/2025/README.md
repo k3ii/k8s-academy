@@ -160,7 +160,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Twelve `walk` verdicts, numbered in publication order. Four are written; the other eight are
+Twelve `walk` verdicts, numbered in publication order. Five are written; the other seven are
 *pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -170,7 +170,7 @@ Twelve `walk` verdicts, numbered in publication order. Four are written; the oth
 | 02 | [A link that survives only in the redirect table, and a label the tree defines twice](02-endpoints-deprecation.md) | written |
 | 03 | [The definition still gives the old answer, and the enum that fixes it is spelled two ways](03-ensure-secret-pulled-images.md) | written |
 | 04 | [The half that shipped left no documentation, and the half that stalled got a section](04-kubernetes-v1-33-updates-to-container-lifecycle.md) | written |
-| 05 | Started is not ready | pending |
+| 05 | [The gate that starts your application is a status field the API reference never defines](05-start-sidecar-first.md) | written |
 | 06 | A second file kubectl reads before your flags | pending |
 | 07 | One container's restart policy, and the exit code that decides | pending |
 | 08 | Devices, from a driver with no devices | pending |
