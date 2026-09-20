@@ -160,7 +160,7 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Twelve `walk` verdicts, numbered in publication order. Seven are written; the other five are
+Twelve `walk` verdicts, numbered in publication order. Eight are written; the other four are
 *pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -173,7 +173,7 @@ Twelve `walk` verdicts, numbered in publication order. Seven are written; the ot
 | 05 | [The gate that starts your application is a status field the API reference never defines](05-start-sidecar-first.md) | written |
 | 06 | [A second file kubectl reads before your flags, and the reference page that does not list its subcommand](06-kubernetes-v1-34-kubectl-kuberc-beta.md) | written |
 | 07 | [The reference calls one action the only possible one, and four files use a second that is on by default](07-kubernetes-v1-34-per-container-restart-policy.md) | written |
-| 08 | Devices, from a driver with no devices | pending |
+| 08 | [The page this GA post links six times has moved, and the alias saves the path but none of the fragments](08-kubernetes-v1-34-dra-updates.md) | written |
 | 09 | The typo you can take back | pending |
 | 10 | The Job nothing is listening for | pending |
 | 11 | A gate removed for being merged | pending |
