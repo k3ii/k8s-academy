@@ -35,8 +35,7 @@ jobs:
           path: site
 
   deploy:
-    # Only publishes on a manual run — never on an ordinary push.
-    if: github.event_name == 'workflow_dispatch'
+    # Publishes on every push to main (and on a manual run).
     needs: build
     runs-on: ubuntu-latest
     permissions:

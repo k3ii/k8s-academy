@@ -1,35 +1,53 @@
 # k8s-academy
 
-A self-paced **expert-track Kubernetes curriculum** — from never having touched Kubernetes to
-control-plane-level mastery: able to design, operate, debug, extend and secure production
-clusters, read and reason about `kubernetes/kubernetes` source, and diagnose problems from
-first principles. Then back up the stack, to building GitOps delivery and internal platforms on
-top of it. CKAD, CKA and CKS along the way as external validation.
+k8s-academy is a self-paced Kubernetes curriculum. It starts at zero and ends at
+control-plane-level skill.
 
-Optimised hard for **depth over speed**. A month on etcd internals beats a week skimming ten
-topics.
+When you finish, you can do these things:
 
-The curriculum runs in two directions. Eleven phases **remove** abstraction — down through the
-API machinery to Raft, cgroups and veth pairs, building toy versions of the scheduler, the
-controller, the CNI plugin and the CSI driver along the way. One final phase **rebuilds** it
-deliberately, as a platform other people could use. Knowing what your abstraction costs its
-users is the point of doing it in that order.
+- design, operate, debug, extend, and secure production clusters
+- read and reason about the `kubernetes/kubernetes` source code
+- find the cause of a problem from first principles
+- build GitOps delivery and internal platforms on top of Kubernetes
+
+The curriculum also prepares you for three certificates: CKAD, CKA, and CKS.
+
+This curriculum chooses depth, not speed. It is better to study one topic for a
+month than ten topics for a week.
+
+## How the curriculum works
+
+The curriculum goes in two directions.
+
+- **Descend (P0–P10).** You remove one layer of abstraction at a time. You go
+  down to the API machinery, Raft, cgroups, and veth pairs. You build small
+  versions of the scheduler, the controller, the CNI plugin, and the CSI driver.
+- **Synthesise (P11).** You follow one request all the way down the stack.
+- **Rebuild (P12).** You put the abstraction back. You build a platform for
+  other people to use.
+
+You build the platform last for a reason. First you learn what each abstraction
+costs the people who use it.
 
 ## Status
 
-**The curriculum is written, and so are its labs.** All thirteen phase files (P0–P12) are on
-`main` in [`phases/`](phases/), every [strand doc](strands/) exists, and all thirteen
-[`labs/`](labs/) directories are populated — 357 exercises, one file per idea, each stating a
-claim to test or an artifact to produce, with its exact commands, expected outcome, resource
-footprint and teardown. `python3 strands/check-anchors.py` is green in both directions, with
-module→exercise coverage enforced. What remains is the learner's to *produce*: walk the
-exercises, keep the [`journal/`](journal/) writeups and source traces, and build the eleven
-[`build/`](build/) Go modules the hand-wired-versus-scaffolded comparisons rest on.
+The curriculum and its labs are complete.
 
-### Phases
+- All 13 phase files (P0–P12) are in [`phases/`](phases/).
+- All 13 lab directories are in [`labs/`](labs/).
+- The [strand docs](strands/) hold the cross-cutting material.
+- The labs hold 357 exercises. Each exercise is one file. Each file gives a
+  claim to test or an artifact to build, the exact commands, the expected
+  result, the resource cost, and the teardown steps.
+- `python3 strands/check-anchors.py` passes in both directions.
 
-Two directions: **descend** (P0–P10), remove abstraction to the syscalls; **synthesise** (P11),
-trace one request all the way down; **rebuild** (P12), put abstraction back deliberately.
+The rest of the work is yours. Walk the exercises. Write your journal and source
+traces. Build the Go modules.
+
+## Phases
+
+The phases run in three stages: **descend** (P0–P10), **synthesise** (P11), and
+**rebuild** (P12).
 
 | # | Phase | Weeks | Cert |
 |---|-------|-------|------|
@@ -47,61 +65,43 @@ trace one request all the way down; **rebuild** (P12), put abstraction back deli
 | P11 | [Synthesis](phases/11-synthesis.md) | 2–3 | |
 | P12 | [GitOps & platform engineering](phases/12-gitops-platform.md) | 5–6 | |
 
-[`phases/08-storage.md`](phases/08-storage.md) is the worked example the other twelve were
-copied from — the phase drafted first, against real source, to settle the format.
-
-### How it was planned
-
-Planning ran as a [wayfinder map](../../issues/1) in this repo's issues, now complete — every
-ticket closed, the frontier empty. The record is worth reading before the phases, because it
-carries the *why*:
-
-- The **map** ([#1](../../issues/1), label `wayfinder:map`) holds the destination, the fixed
-  inputs, and every decision made along the way — including the learner profile and lab
-  constraints that every phase assumes. **Read it first.**
-- Each **ticket** was a child issue resolving exactly one decision or question
-  (`wayfinder:research` agent-driven, `wayfinder:grilling` worked with a human,
-  `wayfinder:prototype`, `wayfinder:task`), chained by GitHub's native issue dependencies so
-  only the frontier was ever takeable.
-- The **phase spine** ([#10](../../issues/10)) is the single resolution to read before any phase
-  file — thirteen phases, their order, durations, capstones and strand attachment, plus the
-  recorded argument for where "Kubernetes the Very Hard Way" sits and why kubeadm and k0s are
-  deliberately separated. Everything in this repo is written in Go ([#9](../../issues/9)).
+[`phases/08-storage.md`](phases/08-storage.md) is the worked example. It was
+written first, against real source code, to set the format. The other twelve
+phases follow it.
 
 ## Lab environment
 
-The lab is the [`k3ii/factory`](https://github.com/k3ii/factory) homelab: a single Proxmox VE 9
-node, Debian 13 guests provisioned by OpenTofu and configured by Ansible, on an isolated NAT'd
-`10.10.10.0/24` bridge reachable only through the `factory` bastion.
+The lab is the [`k3ii/factory`](https://github.com/k3ii/factory) homelab. It has
+one Proxmox VE 9 node. The guests run Debian 13. OpenTofu provisions the guests.
+Ansible configures them. The network is an isolated NAT `10.10.10.0/24` bridge.
+You reach it through the `factory` bastion.
 
-The binding constraint on the whole curriculum: **~9.9GB available RAM and 6 cores**
-(i5-8400T) — of which [**~9.5GB is spendable on a lab
-topology**](strands/lab-topologies.md#ceiling) once the guests that must stay up and the
-page-cache holdback come out. Labs are designed for that ceiling — one cluster at a time,
-aggressive teardown, and deliberate use of topics that need no cluster at all. Resource pressure, OOMKills and
-eviction cascades are on the syllabus anyway, so a cramped lab produces them for real.
+The hardware sets the main limit: about 9.9 GB of RAM and 6 cores (i5-8400T).
+About [9.5 GB is available for a lab topology](strands/lab-topologies.md#ceiling)
+after the always-on guests and the page-cache reserve. The labs work within this
+limit. They run one cluster at a time and tear it down quickly. Some topics need
+no cluster at all. Resource pressure, OOMKills, and eviction cascades are part of
+the syllabus, so a small lab creates them for real.
 
 ## Layout
 
-The document format is settled ([#11](../../issues/11)) — chosen by drafting one full phase
-against real source material rather than in the abstract. That prototype,
-[`phases/08-storage.md`](phases/08-storage.md), and the six [strand docs](strands/) it links
-into ([#16](../../issues/16)) came first; the other twelve phases were copied from it and are
-now all on `main`.
-
 | Path | Contents |
 |------|----------|
-| `phases/NN-name.md` | One file per phase, `00`–`12`. Ten fixed sections: objectives, modules, build artifact, chaos drills, talks, ecosystem, cert drill block, capstone, checklist, gate — absent sections omitted, not padded |
-| `labs/NN/` | One directory per phase, one numbered file per exercise, in the order the phase intends them. Each states a claim to test or an artifact to produce, the exact commands, the observable outcome, its [topology](strands/lab-topologies.md#topologies) and its teardown |
-| `strands/` | The cross-cutting material each phase links into rather than restates: source corpus, chaos catalogue, talk index, cert curricula, build mechanics, source archaeology, lab topologies. The **living** form — corrected as paths move and tools release. See [`strands/README.md`](strands/README.md) |
-| `research/` | Findings from `wayfinder:research` tickets. The **dated record** of what was verified, against which tree, on which date — including what could not be verified. Not edited to stay current; a stale research doc is still an accurate record |
-| `journal/NN-name.md` | The learner's own notes, traces and lab writeups |
-| `build/NN-artifact/` | The learner's Go modules — eleven of them, real and buildable, so the hand-wired-versus-scaffolded comparisons are a `git diff` |
+| `phases/NN-name.md` | One file per phase, `00`–`12`. Each file has up to ten fixed sections: objectives, modules, build artifact, chaos drills, talks, ecosystem, cert drill block, capstone, checklist, and gate. A phase omits a section it does not need. |
+| `labs/NN/` | One directory per phase. One numbered file per exercise, in the order the phase intends. Each file gives a claim to test or an artifact to build, the exact commands, the observable result, its [topology](strands/lab-topologies.md#topologies), and its teardown. |
+| `strands/` | The cross-cutting material each phase links to instead of repeating: source corpus, chaos catalogue, talk index, cert curricula, build mechanics, source archaeology, and lab topologies. This material is kept current as paths move and tools release. See [`strands/README.md`](strands/README.md). |
+| `research/` | The findings from research tickets. This is a dated record of what was verified, against which tree, and on which date. It also records what could not be verified. It is not edited to stay current. A stale research doc is still an accurate record. |
+| `journal/NN-name.md` | Your own notes, traces, and lab writeups. |
+| `build/NN-artifact/` | Your Go modules. There are eleven of them. They are real and they build, so the hand-wired-versus-scaffolded comparison is a `git diff`. |
 
-Three conventions worth knowing before reading any phase file. **No source-reading item gets a
-bare link** — every one carries a question to answer from the source, so reading has a target. The
-words *understand* and *know* appear in no objective, checklist item or gate; everything is an
-artifact, a timed production, or a claim you could be publicly wrong about. And **a fact lives in
-exactly one place**: if it appears in both a strand doc and a phase file, the phase file is wrong
-and the phase file is what gets edited. Phase files reach strand docs through explicit
-`<a id>` anchors, which `python3 strands/check-anchors.py` verifies in both directions.
+Three rules apply to every phase file.
+
+- **Every source-reading item has a question.** No item is only a bare link. You
+  read the source to answer something.
+- **The words *understand* and *know* are not used** in any objective, checklist
+  item, or gate. Every goal is an artifact, a timed task, or a claim that someone
+  can prove wrong.
+- **Each fact lives in one place.** If a fact is in both a strand doc and a phase
+  file, the phase file is wrong, and you edit the phase file. Phase files link to
+  strand docs through `<a id>` anchors. `python3 strands/check-anchors.py` checks
+  these anchors in both directions.
