@@ -160,8 +160,8 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Twelve `walk` verdicts, numbered in publication order. Eleven are written; the other one is
-*pending* — an authoring ticket's to claim. The rubric they are authored against was ratified in
+Twelve `walk` verdicts, numbered in publication order. All twelve are written. The rubric they
+are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
@@ -177,4 +177,4 @@ Twelve `walk` verdicts, numbered in publication order. Eleven are written; the o
 | 09 | [Neither manifest can be applied, and the quota promise lives in one table cell for another field](09-kubernetes-v1-34-recover-expansion-failure.md) | written |
 | 10 | [The Job that sits still, and the conformance rules documented only as sentences in a table](10-kubernetes-v1-35-job-managedby-for-jobs-goes-ga.md) | written |
 | 11 | [The API group that wore four version strings, and two field shapes that cannot both be right](11-kubernetes-v1-35-introducing-workload-aware-scheduling.md) | written |
-| 12 | The debug endpoints you no longer have to enable | pending |
+| 12 | [The Accept header that asks for a version the tree does not publish, and a group the ClusterRole never names](12-kubernetes-v1-35-structured-zpages.md) | written |
