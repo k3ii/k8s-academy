@@ -173,7 +173,7 @@ The **Exercises** table below is the progress record.
 ## Exercises
 
 Fourteen `walk` verdicts, numbered in the order the census lists them — publication order, with the
-five unpublished drafts last. Two are written; the other twelve are *pending* — an authoring
+five unpublished drafts last. Three are written; the other eleven are *pending* — an authoring
 ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -181,7 +181,7 @@ ticket's to claim. The rubric they are authored against was ratified in
 |---|---|---|
 | 01 | [Two new operators, a gloss that reverses one of them, and an eviction nobody enabled the gate for](01-kubernetes-v1-35-numeric-toleration-operators.md) | written |
 | 02 | [The only step-by-step lab the project promised to maintain, resting on nothing the pin ships](02-experimenting-gateway-api-with-kind.md) | written |
-| 03 | The weight that changed without a release | pending |
+| 03 | [The default weight the curve was built to hit, the 102 the post printed instead, and the band wrong at both ends](03-new-cgroup-v1-to-v2-cpu-conversion-formula.md) | written |
 | 04 | One API's objects, printed as another's | pending |
 | 05 | The permission that stopped covering everything | pending |
 | 06 | Three releases, and a number that moves under load | pending |
