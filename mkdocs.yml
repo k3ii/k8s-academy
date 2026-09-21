@@ -1,0 +1,96 @@
+site_name: k8s-academy
+site_description: >-
+  A self-paced expert-track Kubernetes curriculum — from never having touched
+  Kubernetes to control-plane-level mastery, and back up the stack to platforms.
+site_url: https://k3ii.github.io/k8s-academy/
+repo_url: https://github.com/k3ii/k8s-academy
+repo_name: k3ii/k8s-academy
+edit_uri: edit/main/
+
+# The repo root is the content root: phases/, strands/, labs/, blogwalk/, research/
+# all live at the top level and cross-link with relative .md paths that MkDocs rewrites.
+docs_dir: docs
+site_dir: site
+
+# Dot-directories (.git, .claude, .agents) are ignored by MkDocs automatically.
+# These are the non-content files that share the tree with the docs.
+exclude_docs: |
+  **/*.py
+  **/*.tsv
+  **/*.sh
+  **/*.go.txt
+
+not_in_nav: |
+  blogwalk/TEMPLATE.md
+
+# The blogwalk corpus quotes absolute kubernetes.io links and uses directory-style
+# links that resolve on GitHub; these are expected, so they don't fail the build.
+validation:
+  absolute_links: ignore
+  unrecognized_links: ignore
+  anchors: info
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.view
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - awesome-pages
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
