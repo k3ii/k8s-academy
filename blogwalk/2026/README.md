@@ -172,14 +172,14 @@ The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Fourteen `walk` verdicts, numbered in the order the census lists them — publication order, with
-the five unpublished drafts last. All fourteen are *pending* — an authoring ticket's to claim.
-The rubric they are authored against was ratified in
+Fourteen `walk` verdicts, numbered in the order the census lists them — publication order, with the
+five unpublished drafts last. One is written; the other thirteen are *pending* — an authoring
+ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | The taint you can compare, once you turn it on | pending |
+| 01 | [Two new operators, a gloss that reverses one of them, and an eviction nobody enabled the gate for](01-kubernetes-v1-35-numeric-toleration-operators.md) | written |
 | 02 | A Gateway with an address, on one laptop | pending |
 | 03 | The weight that changed without a release | pending |
 | 04 | One API's objects, printed as another's | pending |
