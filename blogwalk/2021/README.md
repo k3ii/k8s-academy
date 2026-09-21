@@ -139,20 +139,20 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Eleven `walk` verdicts, numbered in publication order. All eleven are *pending* — an authoring
-ticket's to claim. The rubric they are authored against was ratified in
+Eleven `walk` verdicts, numbered in publication order. All eleven are written. The rubric they are
+authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | Two apiVersions, and only one of them still answers | pending |
-| 02 | The right API in the wrong group | pending |
-| 03 | The delete that hangs, exactly as promised | pending |
-| 04 | Twelve removals in one release, one manifest at a time | pending |
-| 05 | The setting the kubelet no longer has a word for | pending |
-| 06 | One flag, and every Pod's profile changes | pending |
-| 07 | Once per node, and then once per Pod | pending |
-| 08 | Fifteen releases on the first rung | pending |
-| 09 | Three labels where a whole API used to be | pending |
-| 10 | Delete them in the wrong order and the disk stays | pending |
-| 11 | The claims that used to outlive the set | pending |
+| 01 | [The gate that was removed for winning](01-kubernetes-release-1-21-cronjob-ga.md) | written |
+| 02 | [Re-grouped, and refused anyway](02-evolving-kubernetes-networking-with-the-gateway-api.md) | written |
+| 03 | [The delete that hangs, exactly as promised](03-using-finalizers-to-control-deletion.md) | written |
+| 04 | [Eight bullets, twelve removals, one manifest at a time](04-upcoming-changes-in-kubernetes-1-22.md) | written |
+| 05 | [The setting the kubelet no longer has a word for](05-run-nodes-with-swap-alpha.md) | written |
+| 06 | [One flag, and every Pod's profile changes](06-seccomp-default.md) | written |
+| 07 | [Once per node, and then once per Pod](07-read-write-once-pod-access-mode-alpha.md) | written |
+| 08 | [Fifteen releases on the first rung](08-qos-memory-resources.md) | written |
+| 09 | [The default for a namespace nobody labelled](09-pod-security-admission-beta.md) | written |
+| 10 | [Delete them in the wrong order and the file is still there](10-prevent-persistentvolume-leaks.md) | written |
+| 11 | [The claim whose owner is the Pod that is leaving](11-statefulset-pvc-auto-deletion.md) | written |

@@ -113,22 +113,21 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. Two are written; the eleven marked
-*pending* are an authoring ticket's to claim. The rubric they are authored against was ratified
-in [#57](https://github.com/k3ii/k8s-academy/issues/57).
+Thirteen `walk` verdicts, numbered in publication order. All thirteen are written. The rubric they
+are authored against was ratified in [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | Image filesystem on its own disk | pending |
-| 02 | User namespaces | pending |
-| 03 | Recursive read-only mounts | pending |
-| 04 | ValidatingAdmissionPolicy | pending |
-| 05 | cgroup v1 in maintenance mode | pending |
-| 06 | Honouring the reclaim policy | pending |
+| 01 | [The image filesystem that was never ignored, and a split that shipped where this lab cannot reach](01-kubernetes-separate-image-filesystem.md) | written |
+| 02 | [Both runtimes the post rules out are the two this lab runs, and one root writes two files the node gives two owners](02-userns-beta.md) | written |
+| 03 | [One page tells you to require read-only mounts and, eight hundred lines later, says read-only is not recursive](03-recursive-read-only-mounts.md) | written |
+| 04 | [The only Go file the blog archive ships dereferences the nil pointer it has just finished proving is nil](04-validating-admission-policy-ga.md) | written |
+| 05 | [A state the deprecation policy does not define, a phrase the documentation never took, and one field with no flag](05-cgroup-v1-maintenance-mode.md) | written |
+| 06 | [Fifty lines of evidence republished unchanged, and the prediction the rewrite quietly reversed](06-honor-pv-reclaim-policy-beta.md) | written |
 | 07 | [A gate is not a schedule](07-image-volume-source.md) | written |
-| 08 | matchLabelKeys in PodAffinity | pending |
-| 09 | Pod failure policy for Jobs | pending |
+| 08 | [A worked example the API would have rejected, and the object the API writes but will not accept](08-matchlabelkeys-podaffinity.md) | written |
+| 09 | [A reason string nothing else in the tree spells that way, and a rule no component can fire](09-pod-failure-policy-for-jobs-goes-ga.md) | written |
 | 10 | [The protocol changed, and so did who is allowed to use it](10-websocket-transition.md) | written |
-| 11 | Custom profiling in kubectl debug | pending |
-| 12 | Fine-grained SupplementalGroups | pending |
-| 13 | kubeadm v1beta4 | pending |
+| 11 | [A JSON example two-thirds forbidden, and a default profile two pages disagree about](11-custom-profiling-kubectl-debug.md) | written |
+| 12 | [A group nobody granted, three files at three stages, and no built-in policy that can require the fix](12-fine-grained-supplementalgroups-control.md) | written |
+| 13 | [A migration the docs absorbed, five fields they never named, and an example that does not parse](13-kubeadm-v1beta4.md) | written |

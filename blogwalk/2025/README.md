@@ -160,21 +160,21 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Twelve `walk` verdicts, numbered in publication order. All twelve are *pending* — an
-authoring ticket's to claim. The rubric they are authored against was ratified in
+Twelve `walk` verdicts, numbered in publication order. All twelve are written. The rubric they
+are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | The default that did not move when the gate locked | pending |
-| 02 | A warning header, and a reference page that moved | pending |
-| 03 | An image already on the node, and no proof you may use it | pending |
-| 04 | Five releases alpha, and no end version | pending |
-| 05 | Started is not ready | pending |
-| 06 | A second file kubectl reads before your flags | pending |
-| 07 | One container's restart policy, and the exit code that decides | pending |
-| 08 | Devices, from a driver with no devices | pending |
-| 09 | The typo you can take back | pending |
-| 10 | The Job nothing is listening for | pending |
-| 11 | A gate removed for being merged | pending |
-| 12 | The debug endpoints you no longer have to enable | pending |
+| 01 | [The one incompatibility the post names, and the alpha gate that puts it back](01-nftables-kube-proxy.md) | written |
+| 02 | [A link that survives only in the redirect table, and a label the tree defines twice](02-endpoints-deprecation.md) | written |
+| 03 | [The definition still gives the old answer, and the enum that fixes it is spelled two ways](03-ensure-secret-pulled-images.md) | written |
+| 04 | [The half that shipped left no documentation, and the half that stalled got a section](04-kubernetes-v1-33-updates-to-container-lifecycle.md) | written |
+| 05 | [The gate that starts your application is a status field the API reference never defines](05-start-sidecar-first.md) | written |
+| 06 | [A second file kubectl reads before your flags, and the reference page that does not list its subcommand](06-kubernetes-v1-34-kubectl-kuberc-beta.md) | written |
+| 07 | [The reference calls one action the only possible one, and four files use a second that is on by default](07-kubernetes-v1-34-per-container-restart-policy.md) | written |
+| 08 | [The page this GA post links six times has moved, and the alias saves the path but none of the fragments](08-kubernetes-v1-34-dra-updates.md) | written |
+| 09 | [Neither manifest can be applied, and the quota promise lives in one table cell for another field](09-kubernetes-v1-34-recover-expansion-failure.md) | written |
+| 10 | [The Job that sits still, and the conformance rules documented only as sentences in a table](10-kubernetes-v1-35-job-managedby-for-jobs-goes-ga.md) | written |
+| 11 | [The API group that wore four version strings, and two field shapes that cannot both be right](11-kubernetes-v1-35-introducing-workload-aware-scheduling.md) | written |
+| 12 | [The Accept header that asks for a version the tree does not publish, and a group the ClusterRole never names](12-kubernetes-v1-35-structured-zpages.md) | written |

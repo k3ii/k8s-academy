@@ -160,22 +160,22 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. All thirteen are *pending* — an
-authoring ticket's to claim. The rubric they are authored against was ratified in
+Thirteen `walk` verdicts, numbered in publication order, and all thirteen are written. The rubric
+they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | Thirteen releases in beta, then no gate at all | pending |
-| 02 | The probe that speaks its own protocol | pending |
-| 03 | The taint that lets a StatefulSet move on | pending |
-| 04 | Two halves of one Service CIDR | pending |
-| 05 | Alpha for eleven releases, and counting | pending |
-| 06 | The kubelet that will not start on cgroup v1 | pending |
-| 07 | The chain that was never yours to read | pending |
-| 08 | The one gate that remembers its old name | pending |
-| 09 | Rejected by the CRD, before any webhook runs | pending |
-| 10 | Root in the container, nobody on the node | pending |
-| 11 | The registry that no longer answers | pending |
-| 12 | An alpha that was replaced, not promoted | pending |
-| 13 | The Pod the scheduler is told to ignore | pending |
+| 01 | [Thirteen releases in beta, then no gate at all](01-volume-expansion-ga.md) | written |
+| 02 | [The probe that speaks its own protocol](02-grpc-probes-now-in-beta.md) | written |
+| 03 | [The taint that lets a StatefulSet move on](03-kubernetes-1-24-non-graceful-node-shutdown-alpha.md) | written |
+| 04 | [Two halves of one Service CIDR](04-service-ip-dynamic-and-static-allocation.md) | written |
+| 05 | [Eleven releases in alpha, then a default that would not settle](05-maxunavailable-for-statefulset.md) | written |
+| 06 | [Fifteen bullets absorbed word for word, and the eight the page added since](06-cgroupv2-ga-1-25.md) | written |
+| 07 | [A declaration no documentation page repeats, and a chain two pages still hand out](07-iptables-chains-not-api.md) | written |
+| 08 | [The one gate file in 487 that records its former name, and still links through it](08-pod-has-network-condition.md) | written |
+| 09 | [The disjoint-sets rule, given correctly in one table and negated in the next](09-crd-validation-rules-beta.md) | written |
+| 10 | [A rename recorded once, forward only, and in prose, in the body of the gate it retired](10-userns-alpha.md) | written |
+| 11 | [A name at zero in the documentation tree that still answers on the wire, and three decayed escape hatches](11-registry-k8s-io-faster-cheaper-ga.md) | written |
+| 12 | [Two gate bodies with one opening sentence, and a replacement neither of them names](12-dynamic-resource-allocation.md) | written |
+| 13 | [An extension point placed three ways, and the use case that never left the post that proposed it](13-pod-scheduling-readiness-alpha.md) | written |

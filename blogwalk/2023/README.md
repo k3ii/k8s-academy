@@ -164,22 +164,22 @@ changes once written. The **Exercises** table below is the progress record.
 
 ## Exercises
 
-Thirteen `walk` verdicts, numbered in publication order. All thirteen are *pending* — an
-authoring ticket's to claim. The rubric they are authored against was ratified in
+Thirteen `walk` verdicts, numbered in publication order, and all thirteen are written. The rubric
+they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
 | # | exercise | state |
 |---|---|---|
-| 01 | A default that arrives after the claim it binds | pending |
-| 02 | The webhook you no longer have to write | pending |
-| 03 | A node's own logs, read through the API server | pending |
-| 04 | Which side of the wire caught the typo | pending |
-| 05 | Two clusters, one StatefulSet, no shared PVC name | pending |
-| 06 | Still alpha, and no gate to name it | pending |
-| 07 | Resizing a container without restarting it | pending |
-| 08 | The beta you still had to ask for | pending |
-| 09 | An init container that never finishes, on purpose | pending |
-| 10 | The gate that is not where gates live | pending |
-| 11 | A migration guide whose starting state is gone | pending |
-| 12 | The rung after stable | pending |
-| 13 | The gate file that names two stages at once | pending |
+| 01 | [A default that arrives after the claim, and the empty string it refuses to touch](01-retroactive-default-storage-class.md) | written |
+| 02 | [Two names for one policy, an API version that is gone, and a binding that binds nothing](02-kubescape-validating-admission-policy-library.md) | written |
+| 03 | [The last release where you must do what this post says, and a subresource with two answers](03-node-log-query-alpha.md) | written |
+| 04 | [Which side of the wire caught the typo, the class of typo the post never names, and one history off by two](04-openapi-v3-field-validation-ga.md) | written |
+| 05 | [The arithmetic nobody checks, the ordinal shift that strands a volume, and a lock only one page records](05-statefulset-start-ordinal.md) | written |
+| 06 | [The switch that is an environment variable, the flag no reference page lists, and two alphas that never ended](06-introducing-kubectl-applyset-pruning.md) | written |
+| 07 | [The instruction the API server refuses, the status field that became two conditions, and a locked gate](07-in-place-pod-resize-alpha.md) | written |
+| 08 | [The beta you still had to ask for, the section that became documentation, and three dead pointers](08-swap-linux-beta.md) | written |
+| 09 | [The one sentence about the new field that is wrong in both halves, and a link with no target](09-native-sidecar-containers.md) | written |
+| 10 | [The gate is gone, the word learner survives once, and the guide never mentions the change](10-kubeadm-use-etcd-learner-mode.md) | written |
+| 11 | [The escape hatch that now stops the binary, and a guide whose starting state cannot be reached](11-cloud-provider-integration-changes.md) | written |
+| 12 | [An API version the server refuses, a second type that was never in that group, and the rung after stable](12-kubernetes-1-29-volume-attributes-class.md) | written |
+| 13 | [A gate file that declares one live alpha and one live beta, and a binary that answers in one word](13-contextual-logging-in-kubernetes-1-29.md) | written |
