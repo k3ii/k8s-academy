@@ -173,7 +173,7 @@ The **Exercises** table below is the progress record.
 ## Exercises
 
 Fourteen `walk` verdicts, numbered in the order the census lists them — publication order, with the
-five unpublished drafts last. Six are written; the other eight are *pending* — an authoring
+five unpublished drafts last. Seven are written; the other seven are *pending* — an authoring
 ticket's to claim. The rubric they are authored against was ratified in
 [#57](https://github.com/k3ii/k8s-academy/issues/57).
 
@@ -185,7 +185,7 @@ ticket's to claim. The rubric they are authored against was ratified in
 | 04 | [One second in, ten seconds out, and a 1.0 release that stamps `-dev` on every manifest it prints](04-ingress2gateway-1-0-release.md) | written |
 | 05 | [A grant the endpoint never checked, a lock the pin does not record, and a gate that widens `nodes/proxy`](05-kubernetes-v1-36-fine-grained-kubelet-authorization-ga.md) | written |
 | 06 | [A sample that is not JSON in two files, a schema link to nothing, and a stall figure off by ten](06-kubernetes-v1-36-psi-metrics-ga.md) | written |
-| 07 | The field two pages disagree about | pending |
+| 07 | [Two live pages give opposite advice about a field the cluster still accepts in silence](07-kubernetes-v1-36-deprecation-and-removal-of-service-externalips.md) | written |
 | 08 | The metric nobody was producing yet | pending |
 | 09 | Output nothing has to guess at | pending |
 | 10 | Twenty-one releases, and then zero replicas | pending |
