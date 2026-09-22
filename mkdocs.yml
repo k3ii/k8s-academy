@@ -22,6 +22,9 @@ exclude_docs: |
 
 not_in_nav: |
   blogwalk/TEMPLATE.md
+  phases/*
+  strands/*
+  research/*
 
 # The blogwalk corpus quotes absolute kubernetes.io links and uses directory-style
 # links that resolve on GitHub; these are expected, so they don't fail the build.
