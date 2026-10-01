@@ -45,7 +45,7 @@ A **night** is a weeknight slot of ~70 min. A **long slot** is a Saturday. A **f
 | Mon 28 Sep | the map; nothing to run | `pair` |
 | Tue 29 Sep | — free (B1 not needed) | `pair` |
 | Wed 30 Sep | fault-injector smoke test · policy controller installed and proved | `pair` |
-| **Thu 1 Oct** | **Capture the baseline.** Record what makes the running cluster work: sysctls, kernel modules, containerd config, the kubeadm pin, the CNI and `kube-network-policies` manifests. | `pair` |
+| **Thu 1 Oct** | **Capture the baseline** — done: [`baseline.md`](baseline.md). Sysctls, modules, containerd, the apt pin, the CNI and policy manifests, the rebuild order, and four sharp edges nobody knew about. | `pair` |
 | Fri 2 Oct | **Fault-injection night**, light. Plant the diagnostic's faults and sleep on them. | `pair` |
 | **Sat 3 Oct** | **The diagnostic** — 13 tasks / 65 min, then 45 min review. One sitting, 110 min. | `pair` |
 
@@ -166,7 +166,7 @@ There is **no composite bring-up recipe**. Each apply above is followed by hand:
 3. `just play` — the Ansible baseline
 4. `kubeadm` by hand — **this part is the drill**, not plumbing
 
-**The lab pins Kubernetes v1.35 from Sat 10 onward.** `pair` currently runs v1.37, and three things make that the wrong base: `kubectl debug`'s default profile silently changed `legacy` → `general` and `legacy` was removed (30% domain, in no changelog); `RelaxedServiceNameValidation` makes the lab *accept* Service names the exam *rejects* (20% domain, and permissive-lab/strict-exam is the bad direction); and **B2 is patch-only at a 1.37 base**, because v1.38 does not exist. kubeadm 1.37 refuses to go below 1.36, so the pin costs a rebuild — which every topology pays anyway.
+**The lab pins Kubernetes v1.35 from Sat 10 onward.** `pair` runs v1.37.0, held by `apt-mark` against the `pkgs.k8s.io/core:/stable:/v1.37` repo ([baseline §2](baseline.md#node)), and three things make that the wrong base: `kubectl debug`'s default profile silently changed `legacy` → `general` and `legacy` was removed (30% domain, in no changelog); `RelaxedServiceNameValidation` makes the lab *accept* Service names the exam *rejects* (20% domain, and permissive-lab/strict-exam is the bad direction); and **B2 is patch-only at a 1.37 base**, because v1.38 does not exist. kubeadm 1.37 refuses to go below 1.36, so the pin costs a rebuild — which every topology pays anyway.
 
 **Each build applies the policy controller.** `kube-network-policies` v1.1.2, pinned by hand because the manifest published at that tag still references the v1.1.1 image — the build whose random nfqueue packet loss v1.1.2 exists to fix. Without it Flannel enforces no NetworkPolicy, and **N1–N4 and TS17 stop being provable**. It is plumbing, not a drill: v1.32 removed *"choose an appropriate CNI plugin"* from the curriculum.
 
@@ -181,7 +181,7 @@ There is **no composite bring-up recipe**. Each apply above is followed by hand:
 
 **This is the plan's single point of failure.** `factory` manages no sysctls, so `kubeadm init` preflight rests entirely on B1's first clause — and Sat 10 is the first time that clause is ever exercised. Week 1 had four nights of slack behind a failure; Sat 10 has Sunday and a rebuild obligation.
 
-**Contingency.** Sun 11 is the valve. **If `pair` is not serving by Sunday evening, stop debugging and rebuild from Thursday's captured baseline** — week 3's Mon–Wed become rebuild nights, and the drills they lose come off the top of [the drop order](#what-does-not-run).
+**Contingency.** Sun 11 is the valve. **If `pair` is not serving by Sunday evening, stop debugging and rebuild from [the captured baseline](baseline.md#rebuild)** — week 3's Mon–Wed become rebuild nights, and the drills they lose come off the top of [the drop order](#what-does-not-run).
 
 ---
 
