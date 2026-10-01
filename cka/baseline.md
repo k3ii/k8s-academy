@@ -203,6 +203,30 @@ kubectl annotate sc local-path storageclass.kubernetes.io/is-default-class=true
 
 **What was not verified:** `cka-inject.sh --only F12` end to end. The script sources `scripts/env.sh`, which needs the state-encryption passphrase from `gpg`, and `gpg` needs a tty — its own error text says to run it from an interactive shell rather than over `ssh <host> <command>`. The guard and the mechanism were checked by hand instead. **Running the real thing once, interactively, belongs at the start of Fri 2 Oct**, before the night's faults go in.
 
+### What it does to S1 — read this before scoring Saturday
+
+The provisioner binds `WaitForFirstConsumer`, which gives **two different ways for a PVC to sit `Pending`**, and the diagnostic's only storage task is *"a PVC is stuck `Pending`. Say why, and fix it."* Measured on the cluster, 1 Oct:
+
+| | `STORAGECLASS` column | Event |
+|---|---|---|
+| **F12 live** — no default class | **empty** | `FailedBinding: no persistent volumes available for this claim and no storage class is set` |
+| **Nothing wrong** — no consumer yet | `local-path` | `WaitForFirstConsumer: waiting for first consumer to be created before binding` |
+
+Both tells are visible in `kubectl get pvc` and `describe`. This is a **gift**, not a problem: it makes S1 a read-the-event task rather than a guess-the-cause one, which is the shape [the catalogue's near-miss pairs](https://github.com/k3ii/factory/blob/main/scripts/cka-faults.md) are built around. F12 simply acquired a distractor for free.
+
+**But it changes what counts as a pass, and the trap runs the expensive way.** Re-annotating the default class — the correct fix — does **not** make the PVC `Bound`. It stays `Pending` and merely changes its event:
+
+```
+Normal  FailedBinding         32s                no persistent volumes available ... and no storage class is set
+Normal  WaitForFirstConsumer  12s (x2 over 27s)  waiting for first consumer to be created before binding
+```
+
+It binds only once a consumer pod exists. So **S1 passes on two actions, not one**: restore the default class *and* give the claim a consumer.
+
+A candidate who does the first, sees `Pending`, and concludes the fix failed has in fact got it right — and self-scoring pass/fail would mark it wrong. Storage is **one task wide**, so that single misread swings the domain from 0 to 100% of its allocation, which is precisely the failure the diagnostic warns is *"wrong in the expensive direction."*
+
+> **Checked, not reasoned.** A PVC created while no default class existed **does** pick up `storageClassName: local-path` retroactively once the annotation is restored — the controller re-evaluates rather than defaulting only at admission. So the fix genuinely is the annotation, and the claim does not need recreating. That was worth testing, because the opposite would have made the documented fix wrong.
+
 ### What this costs the rebuild
 
 One more step at [§4](#rebuild) step 6, alongside Flannel and the policy controller — and one more thing that is **plumbing, not a drill**, for the same reason the CNI is: the curriculum tests using storage, not installing a provisioner.
