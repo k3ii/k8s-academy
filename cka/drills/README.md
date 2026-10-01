@@ -9,7 +9,7 @@
 | **Tier and band** | Defined once in [the plan](../plan.md#how-to-read) and **not restated here**. Tier is size, band is priority, and they are different axes. |
 | **Counts** | 59 Reflex + 7 Builds · **14 Pinned / 42 Core / 10 Optional** |
 | **Topologies** | [`pair`](../../strands/lab-topologies.md#pair) 56 · [`workhorse`](../../strands/lab-topologies.md#workhorse) 8 · [`ha`](../../strands/lab-topologies.md#ha) 2 |
-| **Written** | **5 of 66** |
+| **Written** | **19 of 66** |
 | **Provenance** | The `t04` and `t07` inventories of the wayfinder map in `k3ii/factory` at `thoughts/shared/wayfinder/cka-sprint/`. Ids, titles, tiers, bands and topologies come from there unchanged; the bodies are new work. |
 
 ---
@@ -44,15 +44,15 @@ Ids are **path-scoped**, as `labs/` ids are. Forty-odd files reusing `#do` and `
 
 <a id="architecture"></a>
 
-## 2. Cluster Architecture, Installation and Configuration — 13 objects, 2 written
+## 2. Cluster Architecture, Installation and Configuration — 13 objects, 6 written
 
 | # | Drill | Tier | Band | Topology | Serves |
 |---|---|---|---|---|---|
-| B1 | Prepare the underlying infrastructure, then `kubeadm init` and join a worker from nothing | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Prepare infrastructure · Create clusters with kubeadm |
-| B2 | `kubeadm upgrade` — control plane first, then the node; drain and uncordon around it | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Manage cluster lifecycle |
-| B3 | Stand up three stacked control planes, then lose one and keep quorum | Build | **Pinned** | [`ha`](../../strands/lab-topologies.md#ha) | HA control plane |
+| [**B1**](architecture/b01-kubeadm-init-from-nothing.md) | Prepare the underlying infrastructure, then `kubeadm init` and join a worker from nothing | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Prepare infrastructure · Create clusters with kubeadm |
+| [**B2**](architecture/b02-kubeadm-upgrade.md) | `kubeadm upgrade` — control plane first, then the node; drain and uncordon around it | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Manage cluster lifecycle |
+| [**B3**](architecture/b03-three-stacked-control-planes.md) | Stand up three stacked control planes, then lose one and keep quorum | Build | **Pinned** | [`ha`](../../strands/lab-topologies.md#ha) | HA control plane |
 | [**B4**](architecture/b04-helm-and-kustomize.md) | Install metrics-server, a Gateway controller and MetalLB with Helm; then one Kustomize overlay on top | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Helm and Kustomize · unlocks W10, N7, N13 |
-| B5 | Install a CRD and its operator, create a CR, watch it reconcile | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | CRDs and operators |
+| [**B5**](architecture/b05-crd-and-operator.md) | Install a CRD and its operator, create a CR, watch it reconcile | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | CRDs and operators |
 | A1 | Role + RoleBinding for a ServiceAccount, proved with `auth can-i --as` | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | RBAC |
 | A2 | ClusterRole + ClusterRoleBinding over a cluster-scoped resource | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | RBAC |
 | A3 | A ClusterRole bound by a *RoleBinding* — cluster role, namespace scope | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | RBAC |
@@ -66,29 +66,29 @@ Ids are **path-scoped**, as `labs/` ids are. Forty-odd files reusing `#do` and `
 
 <a id="networking"></a>
 
-## 3. Servicing and Networking — 13 objects, 1 written
+## 3. Servicing and Networking — 13 objects, 4 written
 
 | # | Drill | Tier | Band | Topology | Serves |
 |---|---|---|---|---|---|
 | N1 | Default-deny ingress across a namespace, proved | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Network Policies |
 | N2 | Allow from a `podSelector` label; prove both the allow and the block | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Network Policies |
-| N3 | Egress policy **including the DNS carve-out** | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Network Policies |
+| [**N3**](networking/n03-egress-with-dns-carve-out.md) | Egress policy **including the DNS carve-out** | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Network Policies |
 | N4 | `namespaceSelector` allow across namespaces | Reflex | Optional | [`pair`](../../strands/lab-topologies.md#pair) | Network Policies |
 | [**N5**](networking/n05-clusterip-and-endpoints.md) | ClusterIP and endpoints — break the selector, watch endpoints empty | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Service types · endpoints |
 | N6 | NodePort reached from the node, then from off-node | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Service types |
 | N7 | LoadBalancer against MetalLB with an address pool | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Service types |
 | N8 | Resolve `svc`, `svc.ns`, `svc.ns.svc.cluster.local` — and say why each works | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | CoreDNS |
-| N9 | Edit the Corefile ConfigMap, add a forward, make CoreDNS reload | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | CoreDNS |
+| [**N9**](networking/n09-corefile-forward.md) | Edit the Corefile ConfigMap, add a forward, make CoreDNS reload | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | CoreDNS |
 | N10 | Pod to pod across nodes; find the pod CIDR and the node route that carries it | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Pod connectivity |
 | N11 | Debug a distroless pod with `kubectl debug` and an ephemeral container | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Pod connectivity |
 | N12 | Ingress with host and path rules against the installed controller | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Ingress |
-| N13 | A minimal Gateway plus HTTPRoute | Reflex | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Gateway API |
+| [**N13**](networking/n13-gateway-and-httproute.md) | A minimal Gateway plus HTTPRoute | Reflex | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Gateway API |
 
 ---
 
 <a id="workloads"></a>
 
-## 4. Workloads and Scheduling — 11 objects, 0 written
+## 4. Workloads and Scheduling — 11 objects, 1 written
 
 | # | Drill | Tier | Band | Topology | Serves |
 |---|---|---|---|---|---|
@@ -101,7 +101,7 @@ Ids are **path-scoped**, as `labs/` ids are. Forty-odd files reusing `#do` and `
 | W7 | `maxSurge` and `maxUnavailable` tuned; watch the pod churn change | Reflex | Optional | [`pair`](../../strands/lab-topologies.md#pair) | Rolling updates |
 | W8 | ConfigMap as env and as volume — change it, see which one reloads | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | ConfigMaps and Secrets |
 | W9 | Secret from literal and from file, consumed as a volume | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | ConfigMaps and Secrets |
-| W10 | HPA on CPU against metrics-server, driven under real load | Reflex | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Workload autoscaling |
+| [**W10**](workloads/w10-hpa-under-real-load.md) | HPA on CPU against metrics-server, driven under real load | Reflex | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Workload autoscaling |
 | W11 | Liveness, readiness and startup probes; break one, watch the restarts | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Self-healing primitives |
 
 ---
@@ -125,12 +125,12 @@ Ids are **path-scoped**, as `labs/` ids are. Forty-odd files reusing `#do` and `
 
 <a id="troubleshooting"></a>
 
-## 6. Troubleshooting — 21 objects, 2 written
+## 6. Troubleshooting — 21 objects, 8 written
 
 | # | Drill | Tier | Band | Topology | Serves |
 |---|---|---|---|---|---|
-| TB1 | **Build the fault catalogue and the injector.** Induce each fault class once by hand, record its signature, then wrap the set in a script that plants a random subset and reveals only after the clock stops | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Harness for TS1–TS19 · all five |
-| TB2 | **The broken-cluster hour.** Five faults at once across the five sub-competencies. Read all five before touching anything, bank the cheap ones, flag and skip the expensive one, report what you deliberately did not fix | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Triage across all five |
+| [**TB1**](troubleshooting/tb01-fault-catalogue-and-injector.md) | **Build the fault catalogue and the injector.** Induce each fault class once by hand, record its signature, then wrap the set in a script that plants a random subset and reveals only after the clock stops | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Harness for TS1–TS19 · all five |
+| [**TB2**](troubleshooting/tb02-the-broken-cluster-hour.md) | **The broken-cluster hour.** Five faults at once across the five sub-competencies. Read all five before touching anything, bank the cheap ones, flag and skip the expensive one, report what you deliberately did not fix | Build | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Triage across all five |
 | TS1 | A node is `NotReady` — work the ladder: kubelet unit, kubelet config and certs, runtime socket, CNI config on disk. Name the rung before you fix it | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Clusters and nodes |
 | TS2 | Drive a node into `DiskPressure`, then `MemoryPressure`. Read the condition, the eviction order and the taint that appears; then clear it | Reflex | Core | [`workhorse`](../../strands/lab-topologies.md#workhorse) | Clusters and nodes |
 | [**TS3**](troubleshooting/ts03-cordon-drain-uncordon.md) | Cordon, drain, uncordon — against a PDB and a DaemonSet. Make `drain` refuse, say exactly why, then get it through legitimately | Reflex | **Pinned** | [`workhorse`](../../strands/lab-topologies.md#workhorse) | Clusters and nodes |
@@ -138,15 +138,15 @@ Ids are **path-scoped**, as `labs/` ids are. Forty-odd files reusing `#do` and `
 | TS5 | A static pod is broken and `kubectl` is therefore dead. Diagnose from `crictl ps -a`, `crictl logs` and `journalctl -u kubelet` alone | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Cluster components |
 | TS6 | `kube-scheduler` or `kube-controller-manager` is down. Name which **from the symptom** before opening a manifest | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Cluster components |
 | TS7 | The API server is up and refusing you. Separate a TLS failure from a 401 from a 403; then check and rotate the expiring certificate | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Cluster components |
-| TS8 | CoreDNS is down or its Corefile is wrong. Diagnose it from cluster-wide symptoms rather than from the Deployment, repair, confirm | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Cluster components |
+| [**TS8**](troubleshooting/ts08-coredns-down.md) | CoreDNS is down or its Corefile is wrong. Diagnose it from cluster-wide symptoms rather than from the Deployment, repair, confirm | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Cluster components |
 | TS9 | Stop one control-plane member and read what the remaining two do; stop a second and read what the survivor does | Reflex | Optional | [`ha`](../../strands/lab-topologies.md#ha) | Cluster components |
 | TS10 | `kubectl top` returns nothing, or lies. Separate not-installed from not-ready from failing-TLS-to-the-kubelet, and fix the one in front of you | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Resource usage |
 | TS11 | A pod was OOMKilled. Prove it from exit code 137, `describe`'s Last State, the limit and the cgroup — then right-size it | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Resource usage |
-| TS12 | The full flag surface on one pass: a named container, an init container, `--previous`, `--since`, `--tail`, `--timestamps`, and `-l` across a Deployment | Reflex | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Container output streams |
+| [**TS12**](troubleshooting/ts12-the-whole-logs-flag-surface.md) | The full flag surface on one pass: a named container, an init container, `--previous`, `--since`, `--tail`, `--timestamps`, and `-l` across a Deployment | Reflex | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Container output streams |
 | TS13 | `kubectl logs` is empty because the process writes to a file. Find the file, get it out of the container, and state the fix | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Container output streams |
 | TS14 | Output on disk: `/var/log/pods`, `/var/log/containers`, the symlink chain to the runtime's log, rotation — and `journalctl` when the pod never started | Reflex | Optional | [`pair`](../../strands/lab-topologies.md#pair) | Container output streams |
 | [**TS15**](troubleshooting/ts15-service-with-no-endpoints.md) | A Service has no endpoints. Walk selector, pod labels, readiness, and `targetPort` against the container's port name — and say which of the four it was | Reflex | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Services and networking |
-| TS16 | One pod resolves the name and another does not. Work `resolv.conf`, `ndots`, the search list and `dnsPolicy` before you blame CoreDNS | Reflex | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Services and networking |
-| TS17 | Traffic that should flow is silently dropped by a NetworkPolicy you did not write — usually an egress rule with no DNS carve-out. Prove it is the policy and not the app | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Services and networking |
+| [**TS16**](troubleshooting/ts16-one-pod-resolves-one-does-not.md) | One pod resolves the name and another does not. Work `resolv.conf`, `ndots`, the search list and `dnsPolicy` before you blame CoreDNS | Reflex | **Pinned** | [`pair`](../../strands/lab-topologies.md#pair) | Services and networking |
+| [**TS17**](troubleshooting/ts17-a-policy-you-did-not-write.md) | Traffic that should flow is silently dropped by a NetworkPolicy you did not write — usually an egress rule with no DNS carve-out. Prove it is the policy and not the app | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Services and networking |
 | TS18 | NodePort or Ingress unreachable from off-node. Chain it: endpoints, then kube-proxy's mode and its rules, then the node firewall, then the controller's own logs | Reflex | Core | [`pair`](../../strands/lab-topologies.md#pair) | Services and networking |
 | TS19 | Pod-to-pod across nodes is slow or lossy. Find the planted `tc` qdisc or the `iptables` DROP with `tc -s qdisc show` and `iptables-save`, not by guessing | Reflex | Optional | [`workhorse`](../../strands/lab-topologies.md#workhorse) | Services and networking |
