@@ -11,26 +11,28 @@
 
 Build one pod that exercises all of it: an init container, two named containers, and a main container that crashes once and then runs. Then read it eight ways, in one unbroken pass, without the help.
 
-1. `-c <name>` — a named container. Without it, a multi-container pod errors and lists the names, which is a usable way to discover them.
+1. `-c <name>` — a named container. Without it, **`kubectl` does not error**: it defaults to the first container and says so — `Defaulted container "app" out of: app, car, seed (init)`. Measured on v1.37. That warning line is a usable way to discover the names, but it goes to stderr and is easy to scroll past, so read it rather than assume you got what you asked for.
 2. `-c <init>` — **an init container is addressed the same way**, and this surprises people. Init container logs are where a pod stuck in `Init:` explains itself.
 3. `--previous` — the instance before the current one. Only exists if the container restarted; a pod that was *deleted and recreated* has no previous, and the error says so.
 4. `--since=10m` and `--since-time=<RFC3339>` — relative and absolute. Know both; the relative one is what you want under time pressure.
 5. `--tail=50` — and know that the default is all of it, which on a chatty pod is how you lose thirty seconds to a scrollback.
 6. `--timestamps` — not on by default, and essential the moment you are correlating two containers.
-7. `-l app=x` with `--max-log-requests` — across every pod matching a label. Note that `kubectl logs deploy/x` is **not** this: it picks one pod and does not tell you which.
+7. `-l app=x` with `--max-log-requests` — across every pod matching a label. Note that `kubectl logs deploy/x` is **not** this: it reads **one** pod out of however many the Deployment has. It does name the one it chose — `Found 2 pods, using pod/web-…` — so the hazard is not that it hides the choice, it is that a fleet-wide question gets a single-pod answer and the line announcing it looks like noise.
 8. `--all-containers` and `-f`.
 
 **Observe**
 
 ```sh
-kubectl logs <pod>                      # errors usefully on a multi-container pod
+kubectl logs <pod>                      # defaults to container 1 and names the rest
 kubectl logs <pod> -c <init> --timestamps
 kubectl logs <pod> -c app --previous --tail=50
 kubectl logs -l app=web --all-containers --since=10m --prefix
-kubectl logs deploy/web                 # one pod, unnamed -- know the difference
+kubectl logs deploy/web                 # ONE pod of N, named in a line above -- know the difference
 ```
 
 **Done when** — all eight run first time, from memory, in one pass under ten minutes, and you can say without checking whether `--previous` will have anything to show for a given pod.
+
+> **Two of `kubectl`'s stderr lines carry the whole lesson** — the `Defaulted container` warning and `Found N pods, using …`. Both look like noise and both are telling you that you did not read what you thought you read.
 
 **Passes**
 
