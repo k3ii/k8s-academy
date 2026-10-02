@@ -5,14 +5,14 @@
 
 > **"Default StorageClass" is one annotation on one object**, `storageclass.kubernetes.io/is-default-class: "true"`. Nothing else makes a class default. Being able to set it, unset it, and recognise its absence turns a whole family of `Pending` PVCs into a ten-second fix.
 
-> **On this cluster there is no default class right now** — `local-path` exists and carries no such annotation. So the "unset" state is the starting state, which means you can see the symptom *before* you cause it.
+> **On this cluster `local-path` is the default**, and it has not always been — it was annotated after the week-1 baseline, which is why [`baseline.md`](../../baseline.md) and the drills written against it disagree with a cluster you read today. Confirm the annotation yourself before starting; this drill both removes it and puts it back.
 
 **Do**
 
-1. Confirm the starting state: list classes and look at the annotation column. Nothing is `(default)` in `kubectl get sc` output.
-2. Create a PVC with **no** `storageClassName`. It is `Pending` and no provisioner touches it. Read the event, or rather note how little it says.
-3. **Annotate `local-path` as default.** The PVC you already created does **not** rescue itself — check it, do not assume either way — and a *new* class-less PVC binds immediately. Whether the old one recovers is a question worth answering by looking rather than reasoning.
-4. Unset it (`…is-default-class=false`, or remove the annotation with a trailing dash) and confirm a new class-less PVC goes back to `Pending`.
+1. Confirm the starting state: `kubectl get sc` prints `local-path (default)`, and that suffix comes from the annotation and nothing else. Read the annotation directly so you know what produces the suffix.
+2. **Unset it** (`…is-default-class=false`, or remove it with a trailing dash) and confirm the suffix disappears.
+3. Create a PVC with **no** `storageClassName`. It is `Pending` and no provisioner touches it. Read the event, or rather note how little it says — the absence of a default produces an absence of complaint, and that silence is the signature.
+4. **Restore the annotation.** The PVC you already created does **not** necessarily rescue itself — check it, do not assume either way — while a *new* class-less PVC binds immediately. Whether the old one recovers is worth answering by looking rather than reasoning.
 5. **Two defaults at once.** Make a second class default too. The API allows it; the behaviour is that the most recently created default wins and the rest are ignored, with a warning. Create a PVC in that state and see which class it got. This is an exam-flavoured trick and it is three commands.
 6. Finally, note the field that overrides all of it: an explicit `storageClassName` on the PVC. Default class only ever answers "what if the PVC did not say".
 
@@ -36,6 +36,6 @@ kubectl describe pvc noclass | sed -n '/Events/,$p'
 | **2** | A cluster where the default is set to the wrong class. Move it. | 8 min |
 | **3** | Cold, no notes. Make a class default and prove a class-less PVC binds. | 5 min |
 
-**Teardown** — **return `local-path` to having no default annotation**, because that is how you found it, and **S2** depends on that state.
+**Teardown** — **leave `local-path` marked default.** Two things depend on it: **S2**'s "no default" case is meant to be induced rather than inherited, and fault **F12** removes the default class and `die`s if it cannot find one, so a drill that walks away with the annotation off silently disables a fault in the catalogue.
 
 **See also** — **S2** lists the other reasons for `Pending`; **F12** in the fault catalogue removes the default class on purpose.

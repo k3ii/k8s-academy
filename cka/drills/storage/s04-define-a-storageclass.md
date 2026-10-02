@@ -13,7 +13,7 @@
    - `provisioner` — who acts. Immutable; a typo means a PVC that waits forever with no error.
    - `reclaimPolicy` — `Delete` or `Retain`, what happens to the PV when the PVC goes (**S8**).
    - `volumeBindingMode` — `Immediate` or `WaitForFirstConsumer` (**S6**).
-   - `allowVolumeExpansion` — whether a bound PVC can grow. The installed class does **not** set it, so resizing is unavailable here until a class does.
+   - `allowVolumeExpansion` — whether a bound PVC can grow. The installed class sets it **`false`**, so resizing is unavailable here until a class turns it on.
    - and `parameters`, which are provisioner-specific and are the one part you cannot guess.
 2. Provision a PVC through your class and confirm the PV carries your policy, not the original's.
 3. **Prove classes are immutable where it counts.** Edit the `provisioner` of a live class and read the rejection. The workflow is delete-and-recreate, and existing PVs keep the old behaviour because the policy was copied onto the PV at creation — check that. A class is consulted once, not continuously.

@@ -5,7 +5,7 @@
 
 > **`Pending` has one display and four causes, and `describe pvc` names the cause every time.** The skill is not diagnosis, it is the reflex of reading the event instead of guessing. Create each cause deliberately so the four event texts are familiar before one of them arrives as a fault.
 
-> **Read this before scoring yourself.** On this cluster `local-path` binds `WaitForFirstConsumer` **and is not marked as the default class**. So a PVC is `Pending` both when something is wrong *and* when everything is right but no pod has claimed it yet, and a PVC with no `storageClassName` gets no class at all rather than the obvious one. Both are normal here and neither is normal everywhere — know which you are looking at.
+> **Read this before scoring yourself.** On this cluster `local-path` binds `WaitForFirstConsumer`, so a PVC is `Pending` both when something is wrong *and* when everything is right but no pod has claimed it yet. That benign `Pending` is normal here and is **not** normal everywhere — know which of the two you are looking at before you debug anything. `local-path` **is** currently the default class, so cause 2 below has to be induced rather than observed.
 
 **Do**
 
