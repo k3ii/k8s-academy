@@ -119,5 +119,6 @@ With the terminal closed, you can say: why a crash-looping pod appears to have n
 |---|---|---|
 | [Deployment, ReplicaSet, Pod: what is actually connected to what](pass0/w05-w06-the-object-chain.md) | **W5**, **W6** | 2 Oct |
 | [Manifests: `spec` against `status`, `explain`, and never typing YAML](pass0/manifests-spec-status-and-explain.md) | **every drill that writes YAML** | 2 Oct |
+| [The API surface: `api-resources`, scope, and finding things fast](pass0/the-api-surface.md) | **mechanics under every drill** | 4 Oct |
 
 **The drill bodies are not rewritten.** Fifty-six of them are correct as reflex objects and stay that way. A pass-0 write-up is a **separate** document, written for one drill, at the point the diagnostic shows it is needed — and never before.
