@@ -121,5 +121,10 @@ With the terminal closed, you can say: why a crash-looping pod appears to have n
 | [Manifests: `spec` against `status`, `explain`, and never typing YAML](pass0/manifests-spec-status-and-explain.md) | **every drill that writes YAML** | 2 Oct |
 | [The API surface: `api-resources`, scope, and finding things fast](pass0/the-api-surface.md) | **mechanics under every drill** | 4 Oct |
 | [kubeconfig and contexts: which cluster are you talking to?](pass0/kubeconfig-and-contexts.md) | **mechanics under every drill** | 5 Oct |
+| [Reading a crash: `CrashLoopBackOff`, exit codes, and why `exec` fails](pass0/reading-a-crash.md) | **TS11**, **TS12**, **TS13** | 5 Oct |
+| [Static pods and the control plane: what runs where, and who starts it](pass0/static-pods-and-the-control-plane.md) | **TS05**, **TS06** | 5 Oct |
+| [Node health: who decides a node is `Ready`](pass0/node-health-and-who-decides-ready.md) | **TS01**, **TS02**, **TS04** | 5 Oct |
+
+> **The last three were chosen by the rule rather than by guesswork.** The first four were picked on a hunch about what a beginner would need. The [diagnostic](plan.md#diagnostic) of 5 Oct was abandoned after four tasks, but it tested Troubleshooting three times and returned **1 of 3** — *cold*, under 50%. All three write-ups come straight out of the tasks that were failed, which is exactly what [§1](#which-drills) says is supposed to happen: a low score sends the domain to pass 0 before it drills.
 
 **The drill bodies are not rewritten.** Fifty-six of them are correct as reflex objects and stay that way. A pass-0 write-up is a **separate** document, written for one drill, at the point the diagnostic shows it is needed — and never before.
